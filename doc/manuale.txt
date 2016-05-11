@@ -1,0 +1,72 @@
+CHAPTER 1 COUPLING
+The coupling is realized in 2 principal sections of code:
+1. the initialization routine
+2. the step routine
+?? e le finalization?
+
+The main part of coupling occurs in the time step loop, 
+in the trcbio.F subroutine. Here, because of the 0D approach of BFM,
+the calls of BFM libraries occur inside a loop over the water points of the three-dimensional domain.
+Inside that loop:
+ - we define a tracer state vector, a 1-D array called "a"
+ - we set an environmental regulator vector (er) assigned with the values of the parameters needed by BFM
+...
+
+
+CHAPTER 2 INSTALLATION
+
+Pre-requisites
+- fortran compiler (gnu, intel)
+- NetCDF libraries installed
+- MPI libraries
+- account on github and dev.cmcc.it
+ - python2.7, numpy, scipy, matplotlib
+ 
+
+Download
+  Definition of OGSTM_HOME
+  simple script
+
+
+
+The OGSTM-BFM configuration is performed in 6 steps:
+ 1. definition of layout (state variables)
+ 2. definition of parameters (actually used runtime)
+ 3. definition of compiler flags
+ 4. BFM Code generation and compilation
+ 5. Definition of OGSTM compiler flags
+ 6. Ogstm build, by compilation and linking the BFM library
+
+
+In order to build ogstm with the default bfm configuration we can simply execute poins 5 and 6 :
+ - 5. edit ogstm_builder.sh, in order to define machine modules
+ - 6 run  ./ogstm_builder.sh $OGSTM_HOME/bfm $OGSTM_HOME/ogstm
+
+
+Here there is the complete description of every point
+
+The bfm configuration is done by providing a set of predefined configurations, called preset.
+A preset is 
+  - (una migliore definizione?) 
+  - a directory in $OGSTM_HOME/bfm/build/configurations/ containg at least 3 files: layout, namelists_bfm, configuration
+
+This manual takes as example the preset OGS_PELAGIC
+
+
+1. layout. Così com'è.
+2. parameters. Così com'è
+3. configuration. Così com'è  + 
+   Just edit the ARCH value in order to choose your inc file in $OGSTM_HOME/bfm/compilers
+  
+
+4. BFM Code generation and compilation
+   cd $OGSTM_HOME/bfm/build
+   ./bfm_configure.sh -gc -o ../lib/libbfm.a -p OGS_PELAGIC
+   This command performs:
+   - generation of code (-g, by reading layout of choosen preset)
+   - compilation (-c,  by reading configuration of choosen preset)
+   - generation of library
+   
+  
+
+
