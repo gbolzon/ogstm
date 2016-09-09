@@ -365,11 +365,9 @@
        s = nf90_def_var(nc,'nav_lev', nf90_double,  (/depid/)  , idLev)
        !s = nf90_def_var(nc,'time'   , nf90_double,  (/timid/)  , idTim)
 
-        s = nf90_def_var(nc,'TRB'//trim(VAR), nf90_double, (/xid,yid,depid,timid/), idB)
         s = nf90_def_var(nc,'TRN'//trim(VAR), nf90_double, (/xid,yid,depid,timid/), idN)
 
         !s= nf90_put_att(nc,idTim ,'Units', 'seconds since 1582-10-15 00:00:00');
-        s = nf90_put_att(nc,idB   , 'missing_value',1.e+20)
         s = nf90_put_att(nc,idN   , 'missing_value',1.e+20)
         s =nf90_enddef(nc)
 
@@ -379,7 +377,6 @@
 
         !s = nf90_put_var(nc, idTim,    julian); call handle_err1(s,counter,fileNetCDF)
 
-        s = nf90_put_var(nc, idB,      tottrb); call handle_err1(s,counter,fileNetCDF)
         s = nf90_put_var(nc, idN,      tottrn); call handle_err1(s,counter,fileNetCDF)
 
         s =nf90_close(nc)
