@@ -334,7 +334,7 @@
        REAL(8) julian
 
        ! local
-       CHARACTER(LEN=20) VAR
+       CHARACTER*(*) VAR
        CHARACTER(LEN=17) TimeString
        integer istart, iend
        integer s, nc, counter
@@ -347,7 +347,7 @@
 !      VAR        =fileNetCDF(istart:iend)
 
 
-      s = nf90_create(fileNetCDF, or(nf90_clobber,NF90_HDF5), nc)
+      s = nf90_create(fileNetCDF, and(nf90_clobber,NF90_HDF5), nc)
 
       s = nf90_put_att(nc, nf90_global, 'TimeString'     , TimeString)
         ! *********** DIMENSIONS ****************
@@ -368,7 +368,7 @@
         s = nf90_def_var(nc,'TRB'//trim(VAR), nf90_double, (/xid,yid,depid,timid/), idB)
         s = nf90_def_var(nc,'TRN'//trim(VAR), nf90_double, (/xid,yid,depid,timid/), idN)
 
-        s= nf90_put_att(nc,idTim ,'Units', 'seconds since 1582-10-15 00:00:00');
+        !s= nf90_put_att(nc,idTim ,'Units', 'seconds since 1582-10-15 00:00:00');
         s = nf90_put_att(nc,idB   , 'missing_value',1.e+20)
         s = nf90_put_att(nc,idN   , 'missing_value',1.e+20)
         s =nf90_enddef(nc)
@@ -377,7 +377,7 @@
         s = nf90_put_var(nc, idLat,  totgphit); call handle_err1(s,counter,fileNetCDF)
         s = nf90_put_var(nc, idLev,     gdept); call handle_err1(s,counter,fileNetCDF)
 
-        s = nf90_put_var(nc, idTim,    julian); call handle_err1(s,counter,fileNetCDF)
+        !s = nf90_put_var(nc, idTim,    julian); call handle_err1(s,counter,fileNetCDF)
 
         s = nf90_put_var(nc, idB,      tottrb); call handle_err1(s,counter,fileNetCDF)
         s = nf90_put_var(nc, idN,      tottrn); call handle_err1(s,counter,fileNetCDF)
@@ -827,8 +827,7 @@
         integer idvartime, idgdept, idphit, idlamt
         integer idT, idS, idU, idV, idW, idEddy, ide3t, idR, idWs, idE
 
-
-        s = nf90_create(fileNetCDF, or(nf90_clobber,NF90_HDF5), nc)
+        s = nf90_create(fileNetCDF, and(nf90_clobber,NF90_HDF5), nc)
         ! *********** GLOBAL ********************
         s = nf90_put_att(nc, nf90_global, 'Convenctions'   ,   'COARDS')
         s = nf90_put_att(nc, nf90_global, 'DateStart'     ,    datefrom)
