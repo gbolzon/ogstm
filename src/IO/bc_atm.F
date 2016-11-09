@@ -156,7 +156,7 @@
 ! ****************************************************
       SUBROUTINE swap_ATM
           use myalloc ! oink oink
-          use BC_mem  ! for jn_atm, Asize, atm_dtatrc
+          use BC_mem  ! for jn_atm, atm_dtatrc
           IMPLICIT NONE
 
 !         local

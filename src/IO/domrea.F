@@ -204,17 +204,7 @@
 
 ! ******************************************* Atmospherical inputs
       filename       = 'BC/ATM_'//TC_ATM%TimeStrings(1)//'.nc'
-      ! CALL readnc_int_1d(filename, 'atm_idxt',Asizeglo,atm_idxtglo)
-      ! Asize = COUNT_InSubDomain(Asizeglo,atm_idxtglo)
-
-      ! if (Asize.NE. 0) then
       call alloc_DTATRC_local_atm
-      !    write(*,*) 'domrea->ATMRE_Indexing ATM iniziata, rank=', rank
-      !    B=ATMRe_Indexing()
-      !    write(*,*) 'domrea->ATMRE_Indexing ATM finita, rank=', rank
-      ! endif
-
-
 
 ! **************************************** FLUXES
       if (FSizeGlo.GT.0) then ! file could not exist
@@ -342,37 +332,6 @@
       END FUNCTION GIBRE_Indexing
 
 
-
-! *************************************************************************
-
-      !     LOGICAL FUNCTION  ATMRE_Indexing()
-      !
-      !     IMPLICIT NONE
-      !
-      !     ! local
-      !     INTEGER ii,jj,kk,jv
-      !     INTEGER counter,junk
-      !
-      !
-      !     counter=0
-      !      do kk =1, jpk
-      !       do jj =1, jpj
-      !        do ii =1, jpi
-      !           junk = idxt(ii,jj,kk)
-      !           do jv =1, AsizeGLO
-      !              if ( junk.EQ.atm_idxtglo(jv) )  then
-      !                 counter = counter + 1
-      !                 atm_ridxt(1,counter) = jv
-      !                 atm_ridxt(2,counter) = ii
-      !                 atm_ridxt(3,counter) = jj
-      !                 atm_ridxt(4,counter) = kk
-      !              endif
-      !         enddo
-      !        enddo
-      !       enddo
-      !      enddo
-      !   ATMRE_Indexing =.true.
-      ! END FUNCTION ATMRE_Indexing
 
 ! *************************************************************************
       LOGICAL FUNCTION  FLXRE_Indexing()

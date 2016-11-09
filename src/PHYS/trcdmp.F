@@ -114,23 +114,22 @@
 
 
 ! Boundary conditions for Atmosphere
-       IF (Asize .NE. 0) THEN
          DO jn=1, jn_atm, ntids
-!$omp   parallel default(none) private(mytid,ji,jj,jk,jv,tra_idx,shift)
-!$omp&                         shared(jn,tra,atm,Asize, atm_ridxt,tra_matrix_atm,jn_atm,tra_DIA)
+!$omp   parallel default(none) private(mytid,ji,jj,jk,tra_idx,shift)
+!$omp&                         shared(jn,tra,atm, tra_matrix_atm,jn_atm)
 #ifdef __OPENMP
         mytid = omp_get_thread_num()  ! take the thread ID
 #endif
 
       IF( mytid + jn <= jn_atm ) THEN
           tra_idx=tra_matrix_atm(jn+mytid)
-          ! DO jv=1, Asize
+
           !
           !    ji = atm_ridxt(2,jv)
           !    jj = atm_ridxt(3,jv)
           !    jk = atm_ridxt(4,jv)
 !!!!           tra(ji,jj,jk,tra_idx) = tra(ji,jj,jk,tra_idx) + atm(ji,jj,jn+mytid)
-        !  ENDDO
+
 
 
       ENDIF
@@ -139,7 +138,6 @@
 
          ENDDO
 
-       ENDIF
 
 
 

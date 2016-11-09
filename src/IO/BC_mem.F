@@ -18,7 +18,7 @@
 !  ---------------------------------------------------------------------
       INTEGER jn_gib, jn_riv, jn_atm
       INTEGER(4) Gsizeglo, Rsizeglo, Asizeglo
-      INTEGER(4) Gsize, Rsize, Asize, lat, lon
+      INTEGER(4) Gsize, Rsize, lat, lon
 
       INTEGER(4), allocatable, DIMENSION(:) ::  tra_matrix_gib, tra_matrix_riv, tra_matrix_atm
 
