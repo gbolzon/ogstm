@@ -119,6 +119,7 @@
          call tau2datestring(TauAVEfrom_1, datefrom_1)
          if (IsStartBackup_1) datefrom_1 = BKPdatefrom_1 ! overwrite
          CALL trcdia(datemean, datefrom_1, datestring,1)
+         CALL fluxdump(datemean, datefrom_1, datestring)
          TauAVEfrom_1    = TAU
          ave_counter_1   = 0   !  reset the counter
          IsStartBackup_1 = .false.
