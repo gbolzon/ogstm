@@ -38,7 +38,6 @@
       ! epascolo USE myalloc_mpp
       USE BIO_mem
       USE BC_mem
-      use global_mem, ONLY:RLEN 
       USE mpi
       
       IMPLICIT NONE
@@ -48,8 +47,7 @@
 !!! local declarations
 !!! ==================
       logical :: sur,bot
-      double precision,dimension(:,:,:,:),allocatable :: A
-      double precision,dimension(jptra) :: b
+      double precision,dimension(jptra) :: a,b
       double precision,dimension(4) :: c
       double precision,dimension(jptra_dia) :: d
       double precision,dimension(10) :: er
@@ -83,20 +81,6 @@
       tra_DIA    = 0.
       tra_DIA_2d = 0.
 
-allocate(A(jptra,jpk,jpj,jpi))
-
- DO jn=1,jptra
-  DO ji=1,jpi
-   DO jj=1,jpj
-    DO jk=1,jpk
-      A(jn,jk,jj,ji) =  trn(jk,jj,ji,jn)
-    END DO
-   END DO
-  END DO
- END DO
-
-
-
 ! $omp   parallel do default(none)  private(jb,jk,jj,ji,mytid,sur,bot,jtr,a,b,c,d,d2,er)
 ! $omp&      shared(NBFMPOINTS, BFMpoints,tra_idx,tra_matrix_gib,
 ! $omp&               restotr,jtrmax,trn,tn,sn,xpar,e3t,vatm,surf_mask,DAY_LENGTH,
@@ -111,6 +95,7 @@ allocate(A(jptra,jpk,jpj,jpi))
                  jj = BFMpoints(2, jb)
                  jk = BFMpoints(1, jb)
 
+<<<<<<< HEAD
                         IF(jk .eq. 1) then
                               SRFindices = .TRUE.
                         ELSE
@@ -179,88 +164,64 @@ allocate(A(jptra,jpk,jpj,jpi))
                         !      a(jtr) = trn(jk,jj,ji,jtr) ! current biogeochemical concentrations
                         !       WRITE(*,200) ,'I',jk,jj,ji,jtr,trn(jk,jj,ji,jtr)   
                         !   END DO
+=======
+
+                          sur = (jk .eq. 1)
+                          bot = .FALSE.
+
+                          DO jtr=1, jtrmax
+                             a(jtr) = trn(jk,jj,ji,jtr) ! current biogeochemical concentrations
+                        !      WRITE(*,200) ,'I',jk,jj,ji,jtr,trn(jk,jj,ji,jtr)
+                             
+                          END DO
+>>>>>>> b0695c1... change index in tra_dia_*
 ! Environmental regulating factors (er)
 
-                          ETW  = tn (jk,jj,ji)        ! Temperature (Celsius)
-                          ESW  = sn (jk,jj,ji)        ! Salinity PSU
-                          ERHO  = rho(jk,jj,ji)        ! Density Kg/m3
-                          EICE  = ice                  ! from 0 to 1 adimensional
-                          EPCO2air  = ogstm_co2(jj,ji)           ! CO2 Mixing Ratios (ppm)  390
-                          BFM0D_Irr  = xpar(jk,jj,ji)*86400.0_RLEN      ! PAR umoles/m2/s | Watt to umoles photons W2E=1./0.217
-                          SUNQ  = DAY_LENGTH(jj,ji)    ! fotoperiod expressed in hours
-                          DEPTH  = e3t(jk,jj,ji)        ! depth in meters of the given cell
-                          EWIND  = vatm(jj,ji) * surf_mask(jk) ! wind speed (m/s)
-                          ph = ogstm_PH(jk,jj,ji)         ! PH
+                          er(1)  = tn (jk,jj,ji)        ! Temperature (Celsius)
+                          er(2)  = sn (jk,jj,ji)        ! Salinity PSU
+                          er(3)  = rho(jk,jj,ji)        ! Density Kg/m3
+                          er(4)  = ice                  ! from 0 to 1 adimensional
+                          er(5)  = ogstm_co2(jj,ji)           ! CO2 Mixing Ratios (ppm)  390
+                          er(6)  = xpar(jk,jj,ji)       ! PAR umoles/m2/s | Watt to umoles photons W2E=1./0.217
+                          er(7)  = DAY_LENGTH(jj,ji)    ! fotoperiod expressed in hours
+                          er(8)  = e3t(jk,jj,ji)        ! depth in meters of the given cell
+                          er(9)  = vatm(jj,ji) * surf_mask(jk) ! wind speed (m/s)
+                          er(10) = ogstm_PH(jk,jj,ji)         ! PH
                         !   WRITE(*,201),'ERR',jk,jj,ji,er(:)
-                          !call BFM0D_Input_EcologyDynamics(sur,bot,A(:,jk,jj,ji),jtrmax,er)
+                          call BFM0D_Input_EcologyDynamics(sur,bot,a,jtrmax,er)
 
                           call BFM0D_reset()
 
                          call EcologyDynamics()
 
-                        !   if (SRFindices) then
-                        !      call BFM0D_Output_EcologyDynamics_surf(b, c, d ,d2)
-                        !    else
-                        !       call BFM0D_Output_EcologyDynamics(b, c, d)
-                        !   endif
+                          if (sur) then
+                             call BFM0D_Output_EcologyDynamics_surf(b, c, d ,d2)
+                           else
+                              call BFM0D_Output_EcologyDynamics(b, c, d)
+                           endif
 
-                          tra(jk,jj,ji,:) =tra(jk,jj,ji,:) + D3SOURCE(:)/86400.0_RLEN
+                          DO jtr=1, jtrmax
+                             tra(jk,jj,ji,jtr) =tra(jk,jj,ji,jtr) +b(jtr) ! trend
+                        !      WRITE(*,200),'OB',jk,jj,ji,jtr,b(jtr)
+                        !      WRITE(*,200),'TRA',jk,jj,ji,jtr,tra(jk,jj,ji,jtr)
+                          END DO
 
-                        !   DO jtr=1, jtrmax
-                        !      tra(jk,jj,ji,jtr) =tra(jk,jj,ji,jtr) +b(jtr) ! trend
-                        ! !      WRITE(*,200),'OB',jk,jj,ji,jtr,b(jtr)
-                        ! !      WRITE(*,200),'TRA',jk,jj,ji,jtr,tra(jk,jj,ji,jtr)
-                        !   END DO
+                          DO jtr=1,4
+                             ogstm_sediPI(jk,jj,ji,jtr) = c(jtr) ! BFM output of sedimentation speed (m/d)
+                          END DO
 
-                          !! sedimenti
-                          ogstm_sediPI(jk,jj,ji,1) = sediPI( iiP1 ) ! BFM output of sedimentation speed (m/d)
-                          ogstm_sediPI(jk,jj,ji,2) = sediPI( iiP2 ) ! BFM output of sedimentation speed (m/d)
-                          ogstm_sediPI(jk,jj,ji,3) = sediPI( iiP3 ) ! BFM output of sedimentation speed (m/d)
-                          ogstm_sediPI(jk,jj,ji,4) = sediPI( iiP4 ) ! BFM output of sedimentation speed (m/d)
+                          DO jtr=1,jptra_dia
+                             tra_DIA(jtr,jk,jj,ji) = d(jtr) ! diagnostic
+                        !      WRITE(*,200),'IO3',jk,jj,ji,jtr,tra_DIA(jk,jj,ji,jtr)
+                          END DO
+                          if (sur) then
+                              DO jtr=1,jptra_dia_2d
+                                 tra_DIA_2d(jj,ji,jtr) = d2(jtr) ! diagnostic
+                              !    WRITE(*,202),'IO2',jj,ji,jtr,tra_DIA_2d(jj,ji,jtr)
+                              END DO
+                          endif
 
-                        
-                        tra_DIA(jk,jj,ji,1)  = BFM0D_ppg(1) + BFM0D_ppg(2) + BFM0D_ppg(3) + BFM0D_ppg(4) ! gross primary production:mg C/m3/d
-                        tra_DIA(jk,jj,ji,2)  = BFM0D_ppn(1) + BFM0D_ppn(2) + BFM0D_ppn(3) + BFM0D_ppn(4) ! net primary production:mg C/m3/d
-                        tra_DIA(jk,jj,ji,3)  = BFM0D_ppb ! bacterial production:mg C/m3/d
-
-                        !CO2 module state variables
-
-#ifdef INCLUDE_PELCO2
-                        tra_DIA(jk,jj,ji,4)  = DIC
-                        tra_DIA(jk,jj,ji,5)  = CO2
-                        tra_DIA(jk,jj,ji,6)  = HCO3
-                        tra_DIA(jk,jj,ji,7)  = CO3
-                        tra_DIA(jk,jj,ji,8)  = Ac
-                        tra_DIA(jk,jj,ji,9)  = pH
-                        tra_DIA(jk,jj,ji,10) = pCO2
-                        tra_DIA(jk,jj,ji,11) = - D3SOURCE(ppN3n) - D3SOURCE(ppN1p)! impact on alcalinity of NO3 and PO4 uptake (F02)
-                        tra_DIA(jk,jj,ji,12) =   D3SOURCE(ppN4n)                  ! impact of ammonia uptake                   (F03)
-#endif
-                        tra_DIA(jk,jj,ji,13) = BFM0D_phr(1) ! respiration diatoms             (F04)
-                        tra_DIA(jk,jj,ji,14) = BFM0D_phr(2) ! respiration flagellates         (F05)
-                        tra_DIA(jk,jj,ji,15) = BFM0D_phr(3) ! respiration pico                (F06)
-                        tra_DIA(jk,jj,ji,16) = BFM0D_phr(4) ! respiration dinaflagellates     (F07)
-                        tra_DIA(jk,jj,ji,17) = BFM0D_bar    ! respiration bacteria            (F08)
-                        tra_DIA(jk,jj,ji,18) = BFM0D_uzr(1) ! respiration microzooplancton    (F09)
-                        tra_DIA(jk,jj,ji,19) = BFM0D_uzr(2) ! respiration nanoflagellates     (F10)
-                        tra_DIA(jk,jj,ji,20) = BFM0D_mzr(1) ! respiration meso carnivorous    (F11)
-                        tra_DIA(jk,jj,ji,21) = BFM0D_mzr(2) ! respiration meso omnivorous     (F12)
-                        if (SRFindices) then
-                        tra_DIA_2d(jj,ji,1) =CO2airflux
-                        endif
-                        !   DO jtr=1,jptra_dia
-                        !      tra_DIA(jk,jj,ji,jtr) = d(jtr) ! diagnostic
-                        ! !      WRITE(*,200),'IO3',jk,jj,ji,jtr,tra_DIA(jk,jj,ji,jtr)
-                        !   END DO
-                          
-                        !   if (SRFindices) then
-                        !       DO jtr=1,jptra_dia_2d
-                        !          tra_DIA_2d(jj,ji,jtr) = d2(jtr) ! diagnostic
-                        !       !    WRITE(*,202),'IO2',jj,ji,jtr,tra_DIA_2d(jj,ji,jtr)
-                        !       END DO
-                        !   endif
-
-                          ogstm_PH(jk,jj,ji)=pH ! Follows solver guess, put 8.0 if pppH is not defined
+                          ogstm_PH(jk,jj,ji)=d(pppH) ! Follows solver guess, put 8.0 if pppH is not defined
 
 
              !ENDIF
@@ -270,8 +231,7 @@ allocate(A(jptra,jpk,jpj,jpi))
 ! 201    FORMAT(' ',A3,I4,I4,I4,10D30.23)
 ! 202    FORMAT(' ',A3,I4,I4,I4,10D30.23)
                 
-
-                  deallocate(A)                          
+                          
 ! $omp end parallel do
 
                 BIOparttime =  MPI_WTIME() -BIOparttime
