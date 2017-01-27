@@ -96,7 +96,10 @@
                  jk = BFMpoints(1, jb)
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b0695c1... change index in tra_dia_*
                           sur = (jk .eq. 1)
                           bot = .FALSE.
 
@@ -105,7 +108,10 @@
                         !      WRITE(*,200) ,'I',jk,jj,ji,jtr,trn(jk,jj,ji,jtr)
                              
                           END DO
+<<<<<<< HEAD
 
+=======
+>>>>>>> b0695c1... change index in tra_dia_*
 ! Environmental regulating factors (er)
 
                           er(1)  = tn (jk,jj,ji)        ! Temperature (Celsius)
