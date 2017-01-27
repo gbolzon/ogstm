@@ -95,76 +95,7 @@
                  jj = BFMpoints(2, jb)
                  jk = BFMpoints(1, jb)
 
-<<<<<<< HEAD
-                        IF(jk .eq. 1) then
-                              SRFindices = .TRUE.
-                        ELSE
-                              SRFindices = .FALSE.
-                        ENDIF
 
-                        bot = .FALSE.
-          
-                       D3STATE(:) = A(:,jk,jj,ji)
-
-                        O2o = A(ppO2o,jk,jj,ji)
-                        N1p = A(ppN1p,jk,jj,ji)
-                        N3n = A(ppN3n,jk,jj,ji)
-                        N4n = A(ppN4n,jk,jj,ji)
-                        O4n = A(ppO4n,jk,jj,ji)
-                        N5s = A(ppN5s,jk,jj,ji)
-                        N6r = A(ppN6r,jk,jj,ji)
-                        B1c = A(ppB1c,jk,jj,ji)
-                        B1n = A(ppB1n,jk,jj,ji)
-                        B1p = A(ppB1p,jk,jj,ji)
-                        P1c = A(ppP1c,jk,jj,ji)
-                        P2c = A(ppP2c,jk,jj,ji)
-                        P3c = A(ppP3c,jk,jj,ji)
-                        P4c = A(ppP4c,jk,jj,ji)
-                        P1n = A(ppP1n,jk,jj,ji)
-                        P2n = A(ppP2n,jk,jj,ji)
-                        P3n = A(ppP3n,jk,jj,ji)
-                        P4n = A(ppP4n,jk,jj,ji)
-                        P1p = A(ppP1p,jk,jj,ji)
-                        P2p = A(ppP2p,jk,jj,ji)
-                        P3p = A(ppP3p,jk,jj,ji)
-                        P4p = A(ppP4p,jk,jj,ji)
-                        P1s = A(ppP1s,jk,jj,ji)
-                        P1i = A(ppP1l,jk,jj,ji)
-                        P2i = A(ppP2l,jk,jj,ji)
-                        P3i = A(ppP3l,jk,jj,ji)
-                        P4i = A(ppP4l,jk,jj,ji)
-                        Z3c = A(ppZ3c,jk,jj,ji)
-                        Z4c = A(ppZ4c,jk,jj,ji)
-                        Z3n = A(ppZ3n,jk,jj,ji)
-                        Z4n = A(ppZ4n,jk,jj,ji)
-                        Z3p = A(ppZ3p,jk,jj,ji)
-                        Z4p = A(ppZ4p,jk,jj,ji)
-                        Z5c = A(ppZ5c,jk,jj,ji)
-                        Z6c = A(ppZ6c,jk,jj,ji)
-                        Z5n = A(ppZ5n,jk,jj,ji)
-                        Z6n = A(ppZ6n,jk,jj,ji)
-                        Z5p = A(ppZ5p,jk,jj,ji)
-                        Z6p = A(ppZ6p,jk,jj,ji)
-                        R1c = A(ppR1c,jk,jj,ji)
-                        R1n = A(ppR1n,jk,jj,ji)
-                        R1p = A(ppR1p,jk,jj,ji)
-                        R1s = A(ppR1s,jk,jj,ji)
-                        R2c = A(ppR2c,jk,jj,ji)
-                        R6c = A(ppR6c,jk,jj,ji)
-                        R6n = A(ppR6n,jk,jj,ji)
-                        R6p = A(ppR6p,jk,jj,ji)
-                        R6s = A(ppR6s,jk,jj,ji)
-                        R7c = A(ppR7c,jk,jj,ji)
-#ifdef  INCLUDE_PELCO2
-                        O3c = A(ppO3c,jk,jj,ji)
-                        O3h = A(ppO3h,jk,jj,ji)
-#endif
-
-                        !   DO jtr=1, jtrmax
-                        !      a(jtr) = trn(jk,jj,ji,jtr) ! current biogeochemical concentrations
-                        !       WRITE(*,200) ,'I',jk,jj,ji,jtr,trn(jk,jj,ji,jtr)   
-                        !   END DO
-=======
 
                           sur = (jk .eq. 1)
                           bot = .FALSE.
@@ -174,7 +105,7 @@
                         !      WRITE(*,200) ,'I',jk,jj,ji,jtr,trn(jk,jj,ji,jtr)
                              
                           END DO
->>>>>>> b0695c1... change index in tra_dia_*
+
 ! Environmental regulating factors (er)
 
                           er(1)  = tn (jk,jj,ji)        ! Temperature (Celsius)
