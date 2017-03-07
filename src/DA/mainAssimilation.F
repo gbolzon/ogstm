@@ -3,6 +3,8 @@
 
       use filenames
       use DA_mem
+      use mpi_str, only: Var3DCommunicator
+
       IMPLICIT NONE
 
       CHARACTER(LEN=17), INTENT(IN) :: datestr, dateFrom
@@ -13,6 +15,7 @@
       character (LEN=8) DAY
       character MISFIT_OPT
       logical ISLOG
+      integer ierr
 
 
       DAparttime  = MPI_WTIME()
@@ -44,14 +47,22 @@
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
-      if (rank == 0 ) then
-          call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
+      if(rank .lt. 20) then
+        call MPI_Comm_split(MPI_COMM_WORLD, 0, rank, Var3DCommunicator)
+      else
+        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator)
+      endif
+
+      if (rank .lt. 20 ) then
+          if(rank .eq. 0) call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
+
+          call MPI_Barrier(Var3DCommunicator, ierr)
 
           write(*,*) 'eof = ',   trim(EOF_FILE)
           write(*,*) 'grid = ',  trim(GRID_FILE)
 
           call OCEANVAR
-          CALL SNUTELL(datestr, ISLOG)
+          if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG)
       endif
 
       call mppsync()
