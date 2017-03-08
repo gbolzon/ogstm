@@ -15,7 +15,7 @@
       character (LEN=8) DAY
       character MISFIT_OPT
       logical ISLOG
-      integer ierr
+      integer :: ierr, color ! , TmpComm
 
 
       DAparttime  = MPI_WTIME()
@@ -48,18 +48,23 @@
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
       if(rank .lt. 20) then
-        call MPI_Comm_split(MPI_COMM_WORLD, 0, rank, Var3DCommunicator)
+        color = 0
+        call MPI_Comm_split(MPI_COMM_WORLD, color, rank, Var3DCommunicator, ierr)
+        ! Var3DCommunicator = TmpComm
       else
-        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator)
+        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator, ierr)
       endif
 
       if (rank .lt. 20 ) then
-          if(rank .eq. 0) call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
+          print*, "MyRank", rank, " before createmisfit"
+          if(rank .eq. 0) then
+            call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
+            write(*,*) 'eof = ',   trim(EOF_FILE)
+            write(*,*) 'grid = ',  trim(GRID_FILE)
+          endif
 
           call MPI_Barrier(Var3DCommunicator, ierr)
 
-          write(*,*) 'eof = ',   trim(EOF_FILE)
-          write(*,*) 'grid = ',  trim(GRID_FILE)
 
           call OCEANVAR
           if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG)
