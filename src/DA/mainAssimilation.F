@@ -15,7 +15,7 @@
       character (LEN=8) DAY
       character MISFIT_OPT
       logical ISLOG
-      integer :: ierr, color ! , TmpComm
+      integer :: ierr, color, DA_Nprocs
 
 
       DAparttime  = MPI_WTIME()
@@ -47,16 +47,8 @@
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
-      if(rank .lt. 20) then
-        color = 0
-        call MPI_Comm_split(MPI_COMM_WORLD, color, rank, Var3DCommunicator, ierr)
-        ! Var3DCommunicator = TmpComm
-      else
-        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator, ierr)
-      endif
-
-      if (rank .lt. 20 ) then
-          print*, "MyRank", rank, " before createmisfit"
+      DA_Nprocs = 20
+      if (rank .lt. DA_Nprocs ) then
           if(rank .eq. 0) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
             write(*,*) 'eof = ',   trim(EOF_FILE)

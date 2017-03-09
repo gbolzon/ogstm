@@ -32,9 +32,12 @@ CC       additions : 98-05 (M. Imbard, J. Escobar, L. Colombet )
 CC                          SHMEM and MPI versions
 C-----------------------------------------------------------------------
 
+#include <petsc/finclude/petscvecdef.h>
 
        USE myalloc
        USE myalloc_mpp
+       use mpi_str, only: Var3DCommunicator
+       use petscvec, only: PETSC_COMM_WORLD, PETSC_NULL_CHARACTER
 
 C-----------------------------------------------------------------------
 
@@ -44,7 +47,8 @@ C
 C
 C MPI VERSION
 C
-      INTEGER mynode,ierr
+      INTEGER mynode,ierr, DA_Nprocs
+      PetscErrorCode :: stat
 C         -------------
 C         Enroll in MPI
 C         -------------
@@ -54,6 +58,18 @@ C
       CALL mpi_comm_size(mpi_comm_world,size,ierr)
 
       mynode=rank
+
+      DA_Nprocs = 20
+      if(rank .lt. DA_Nprocs) then
+        call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, rank, Var3DCommunicator, ierr)
+      else
+        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator, ierr)
+      endif
+
+      PETSC_COMM_WORLD = Var3DCommunicator
+      call PetscInitialize(PETSC_NULL_CHARACTER,stat)
+      CHKERRQ(stat)
+
       RETURN
 #  else
       INTEGER mynode
@@ -1038,16 +1054,25 @@ CCC  purpose :
 CCC  --------
 CCC     Stop massilively parallel processors method
 CC
-
+#include "petsc/finclude/petscvecdef.h"
+      
       USE myalloc
       USE myalloc_mpp
+      use petscvec
+      use mpi_str
+
       IMPLICIT NONE
 CC local declarations
 CC ==================
       INTEGER info
+      PetscErrorCode stat
 #ifdef key_mpp_mpi
 
       CALL mppsync
+
+      call PetscFinalize(stat)
+      
+      call MPI_Comm_free(Var3DCommunicator, info)
 
       CALL mpi_finalize(info)
 
