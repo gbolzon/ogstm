@@ -33,6 +33,7 @@ import deploy_code as d_code
 import create_events as c_events
 
 import create_da_nc as DA
+import create_fluxes
 
 # MAIN PROGRAM
 
@@ -54,6 +55,8 @@ for test in TEST_LIST:
     
     c_bc.create_bc_nc(test)
     
+    create_fluxes.create_fluxes(test)
+ 
     c_init.create_init_nc(test)
 
     d_code.deploy_code(test)
