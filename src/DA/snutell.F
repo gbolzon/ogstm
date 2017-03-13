@@ -1,11 +1,11 @@
-      SUBROUTINE SNUTELL(datestr, ISLOG)
+      SUBROUTINE SNUTELL(datestr, ISLOG, ApplyConditions)
       use myalloc
       use DA_MEM
       use filenames
 
       IMPLICIT NONE
       character*17 datestr
-      logical ISLOG
+      logical ISLOG, ApplyConditions
 
 
       ! LOCAL
@@ -35,21 +35,22 @@
 !        float P3(depth, latitude, longitude) ;
 !        float P4(depth, latitude, longitude) ;
 !        float chl(depth, latitude, longitude) ; --> ci scrivo Factor appena calcolato
-        do k=1,jpk_200
-        do j=1,jpjglo
-        do i=1,jpiglo
-           if (Factor(i,j,k).gt.10.0) Factor(i,j,k)=  10.0
-        enddo
-        enddo
-        enddo
-       write(*,*) 'Factor limitation to 10.0 ... done '
-
+        if(ApplyConditions) then
+          do k=1,jpk_200
+          do j=1,jpjglo
+          do i=1,jpiglo
+            if (Factor(i,j,k).gt.10.0) Factor(i,j,k)=  10.0
+          enddo
+          enddo
+          enddo
+        write(*,*) 'Factor limitation to 10.0 ... done '
+       endif
 
         DO Itype=1,4
 
            write(ctype, '(i1)') Itype
            write(*,*) 'chiamata NEWCORRFACTOR', Itype
-           CALL NEWCORRFACTOR(datestr,ctype)
+           CALL NEWCORRFACTOR(datestr,ctype, ApplyConditions)
 
         ENDDO
 
@@ -63,7 +64,7 @@
 !****************************************************************************
 !****************************************************************************
 
-      SUBROUTINE NEWCORRFACTOR(datestr, CTYPE)
+      SUBROUTINE NEWCORRFACTOR(datestr, CTYPE, ApplyConditions)
         USE myalloc
         USE DA_MEM
         USE TIME_MANAGER
@@ -88,6 +89,7 @@
         real(4) ONE
         CHARACTER(LEN=37) filename
         real(8) julian
+        logical ApplyConditions
 !        real fillValueAVE
 !        integer(1) fillVAlueCOND
 !        fillValueAVE  = 1.0e+20
@@ -156,16 +158,29 @@
         ICOND4      = 0
         IFactor_LT0 = 0
 
-        do k=1,jpk_200
-        do j=1,jpjglo
-        do i=1,jpiglo
-           if (COND2     (i,j,k))    ICOND2  (i,j,k)=1
-           if (COND3     (i,j,k))    ICOND3  (i,j,k)=1
-           if (COND4     (i,j,k))    ICOND4  (i,j,k)=1
-           if (Factor_LT0(i,j,k)) IFactor_LT0(i,j,k)=1
-        enddo
-        enddo
-        enddo
+        if(ApplyConditions) then
+          do k=1,jpk_200
+          do j=1,jpjglo
+          do i=1,jpiglo
+            if (COND2     (i,j,k))    ICOND2  (i,j,k)=1
+            if (COND3     (i,j,k))    ICOND3  (i,j,k)=1
+            if (COND4     (i,j,k))    ICOND4  (i,j,k)=1
+            if (Factor_LT0(i,j,k)) IFactor_LT0(i,j,k)=1
+          enddo
+          enddo
+          enddo
+        else
+          do k=1,jpk_200
+          do j=1,jpjglo
+          do i=1,jpiglo
+            if (Factor_LT0(i,j,k)) IFactor_LT0(i,j,k)=1
+          enddo
+          enddo
+          enddo
+          COND2 = .false.
+          COND3 = .false.
+          COND4 = .false.
+        endif
 
 !        if (CTYPE.eq.'1') then
 !          call setFillValue_3D_byte(jpiglo,jpjglo,jpk,CHL,fillValueAVE, IFactor_LT0, fillValueCond   )
@@ -204,55 +219,58 @@
         CORRN = CORR
         CORRP = CORR
         CORRS = CORR
+        
         !Check on positive CORR and on internal quotas
-        Factor_GT1 = (CORR.gt.1.)
-        COND5      = (CHL_C.lt.LIM_THETA) .AND. Factor_GT1
-        COND6      = (N_C.gt.OPT_N_C) .AND. Factor_GT1
-        COND7      = (P_C.gt.OPT_P_C) .AND. Factor_GT1
-        if (CTYPE.eq.'1')then
-        COND8      = (S_C.gt.OPT_S_C) .AND. Factor_GT1
+        if(ApplyConditions) then
+          Factor_GT1 = (CORR.gt.1.)
+          COND5      = (CHL_C.lt.LIM_THETA) .AND. Factor_GT1
+          COND6      = (N_C.gt.OPT_N_C) .AND. Factor_GT1
+          COND7      = (P_C.gt.OPT_P_C) .AND. Factor_GT1
+          if (CTYPE.eq.'1')then
+          COND8      = (S_C.gt.OPT_S_C) .AND. Factor_GT1
+          endif
+
+          ICOND5      = 0
+          ICOND6      = 0
+          ICOND7      = 0
+          if (CTYPE.eq.'1')then
+          ICOND8      = 0
+          endif
+
+          do k=1,jpk_200
+          do j=1,jpjglo
+          do i=1,jpiglo
+            if (COND5     (i,j,k))    ICOND5  (i,j,k)=1
+            if (COND6     (i,j,k))    ICOND6  (i,j,k)=1
+            if (COND7     (i,j,k))    ICOND7  (i,j,k)=1
+            if (CTYPE.eq.'1')then
+                if (COND8     (i,j,k))    ICOND8  (i,j,k)=1
+            endif
+          enddo
+          enddo
+          enddo
+        
+          do k=1,jpk_200
+          do j=1,jpjglo
+          do i=1,jpiglo
+            if (COND5(i,j,k)) then
+              CORRC(i,j,k) = max(ONE , (CORR(i,j,k)*CHL_C(i,j,k)/LIM_THETA) )
+            endif
+            if (COND6(i,j,k)) then
+              CORRN(i,j,k) = max(ONE,CORRC(i,j,k)/N_C(i,j,k)*OPT_N_C)
+            endif
+            if (COND7(i,j,k)) then
+              CORRP(i,j,k) = max(ONE,CORRC(i,j,k)/P_C(i,j,k)*OPT_P_C)
+            endif
+            if (CTYPE.eq.'1')then
+            if (COND8(i,j,k)) then
+              CORRS(i,j,k) = max(ONE,CORRC(i,j,k)/S_C(i,j,k)*OPT_S_C)
+            endif
+            endif
+          enddo
+          enddo
+          enddo
         endif
-
-        ICOND5      = 0
-        ICOND6      = 0
-        ICOND7      = 0
-        if (CTYPE.eq.'1')then
-        ICOND8      = 0
-        endif
-
-        do k=1,jpk_200
-        do j=1,jpjglo
-        do i=1,jpiglo
-           if (COND5     (i,j,k))    ICOND5  (i,j,k)=1
-           if (COND6     (i,j,k))    ICOND6  (i,j,k)=1
-           if (COND7     (i,j,k))    ICOND7  (i,j,k)=1
-           if (CTYPE.eq.'1')then
-              if (COND8     (i,j,k))    ICOND8  (i,j,k)=1
-           endif
-        enddo
-        enddo
-        enddo
-
-        do k=1,jpk_200
-        do j=1,jpjglo
-        do i=1,jpiglo
-           if (COND5(i,j,k)) then
-             CORRC(i,j,k) = max(ONE , (CORR(i,j,k)*CHL_C(i,j,k)/LIM_THETA) )
-           endif
-           if (COND6(i,j,k)) then
-             CORRN(i,j,k) = max(ONE,CORRC(i,j,k)/N_C(i,j,k)*OPT_N_C)
-           endif
-           if (COND7(i,j,k)) then
-             CORRP(i,j,k) = max(ONE,CORRC(i,j,k)/P_C(i,j,k)*OPT_P_C)
-           endif
-           if (CTYPE.eq.'1')then
-           if (COND8(i,j,k)) then
-             CORRS(i,j,k) = max(ONE,CORRC(i,j,k)/S_C(i,j,k)*OPT_S_C)
-           endif
-           endif
-        enddo
-        enddo
-        enddo
 
         write(*,*) 'In', SOMMA , 'points Correction factor forced to avoid numerical side effects '
 

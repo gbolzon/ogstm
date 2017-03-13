@@ -14,9 +14,12 @@
       character(LEN=2) MONTH
       character (LEN=8) DAY
       character MISFIT_OPT
-      logical ISLOG
+      logical ISLOG, ApplyConditions
       integer :: ierr, color, DA_Nprocs
+      integer :: biol, bphy, nchl, sat, argo
+      real*8  :: chl_dep
 
+      NAMELIST /biolst/ biol, bphy, nchl, chl_dep, sat, argo
 
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
@@ -24,6 +27,13 @@
 
       MISFIT_OPT ='2'
       ISLOG = .false.
+      ApplyConditions = .false. ! .true.
+
+      if(rank .eq. 0) then
+        open(11,file='var_3d_nml',form='formatted')
+        read(11,biolst)
+        close(11)
+      endif
 
       ! SATDIR li vuole pronti all'uso, già tagliati e interpolati
 
@@ -36,6 +46,7 @@
       RCORR_FILE = 'DA_static_data/3D_VAR/gradsal.nc'
 
       MISFIT_FILE='DA__FREQ_1/'// DAY // '.chl_mis.nc'
+      ARGO_FILE='DA__FREQ_1/'// DAY // '.argo_mis.dat'
       CORR_FILE = 'DA__FREQ_1/'// DAY // '_corr.nc'
       EIV_FILE  = 'DA__FREQ_1/'// DAY // '_eiv.nc'
       OBS_FILE = 'obs_1.dat' ! 'obs_'//fgrd//'.dat'
@@ -49,7 +60,7 @@
 
       DA_Nprocs = 20
       if (rank .lt. DA_Nprocs ) then
-          if(rank .eq. 0) then
+          if(rank .eq. 0 .and. sat .eq. 1) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
             write(*,*) 'eof = ',   trim(EOF_FILE)
             write(*,*) 'grid = ',  trim(GRID_FILE)
@@ -59,7 +70,7 @@
 
 
           call OCEANVAR
-          if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG)
+          if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG, ApplyConditions)
       endif
 
       call mppsync()
