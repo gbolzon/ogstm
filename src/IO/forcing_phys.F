@@ -449,7 +449,8 @@
           DO jk=1,jpk, ntids
 !$omp parallel default(none) private(mytid,jj,ji,uk)
 !$omp&                       shared(jpi,jpj,jpk,jk,ub,un,udta, vb,vn,vdta,wn,wdta,avt,avtdta,tn,tdta,sn,sdta,
-!$omp&                       zweigh,Umzweigh,tmask,umask,vmask,e3u,e3udta,e3v,e3vdta,e3t,e3tdta,e3w,e3wdta,e3t_back)
+!$omp&                       zweigh,Umzweigh,tmask,umask,vmask,e3u,e3udta,e3v,e3vdta,e3t,e3tdta,e3w,e3wdta,e3t_back,
+!$omp&                       forcing_phys_initialized)
 #ifdef __OPENMP
          mytid = omp_get_thread_num()  ! take the thread ID
 #endif
