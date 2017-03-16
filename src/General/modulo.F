@@ -59,7 +59,7 @@ CC        neos         : flag of the type of equation of state used
 CC      rau0             : reference volumic mass of the ocean (kg/m3)
 CC      ralpha, rbeta    : thermique and haline expension coef. used
 CC               for linear equation of state (neos=1 or 2)
-
+      LOGICAL forcing_phys_initialized 
       INTEGER neos
       REAL(8) rau0, ralpha, rbeta
       REAL(8)  rdt     ! dynamics time step
@@ -582,7 +582,7 @@ C     no mpp
 
 CC    photoperiod
         allocate(DAY_LENGTH(jpi,jpj))   ; DAY_LENGTH = huge(DAY_LENGTH(1,1))
-
+        forcing_phys_initialized = .false.
 #ifdef Mem_Monitor
       mem_all=get_mem(err) - aux_mem
 #endif
