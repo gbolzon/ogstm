@@ -62,13 +62,14 @@ C
       DA_Nprocs = 20
       if(rank .lt. DA_Nprocs) then
         call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, rank, Var3DCommunicator, ierr)
+        
+        PETSC_COMM_WORLD = Var3DCommunicator
+        call PetscInitialize(PETSC_NULL_CHARACTER,stat)
+        CHKERRQ(stat)
       else
         call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, Var3DCommunicator, ierr)
       endif
 
-      PETSC_COMM_WORLD = Var3DCommunicator
-      call PetscInitialize(PETSC_NULL_CHARACTER,stat)
-      CHKERRQ(stat)
 
       RETURN
 #  else
