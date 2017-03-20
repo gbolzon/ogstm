@@ -98,7 +98,7 @@ CC   Input :
 CC   -----
 CC      argument
 CC              ptab            : variable array
-CC              ktype           : define the nature of the grid-point
+CC              ktye           : define the nature of the grid-point
 CC                  at which ptab is defined for 0
 CC                                initialization
 CC                  = 1 ,  T- and W-points
@@ -1066,14 +1066,17 @@ CC
 CC local declarations
 CC ==================
       INTEGER info
+      INTEGER DA_Nprocs
       PetscErrorCode stat
 #ifdef key_mpp_mpi
 
       CALL mppsync
 
-      call PetscFinalize(stat)
-      
-      call MPI_Comm_free(Var3DCommunicator, info)
+      DA_Nprocs = 20
+      if(rank .lt. DA_Nprocs) then
+        call PetscFinalize(stat)
+        call MPI_Comm_free(Var3DCommunicator, info)
+      endif
 
       CALL mpi_finalize(info)
 

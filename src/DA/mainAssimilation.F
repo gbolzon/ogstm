@@ -1,4 +1,3 @@
-
       SUBROUTINE mainASSIMILATION(datestr,datefrom)
 
       use filenames
