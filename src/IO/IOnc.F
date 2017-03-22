@@ -266,7 +266,7 @@
         character fileNetCDF*(*) ,varname*(*)
         integer ncid, stat, VARid
         integer im,counter
-        real(4) ARRAY(im)
+        real(8) ARRAY(im) ! 
 
         counter=0
 
