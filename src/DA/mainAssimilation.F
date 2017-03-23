@@ -45,7 +45,7 @@
       RCORR_FILE = 'DA_static_data/3D_VAR/gradsal.nc'
 
       MISFIT_FILE='DA__FREQ_1/'// DAY // '.chl_mis.nc'
-      ARGO_FILE='DA__FREQ_1/'// DAY // '.P_i_arg_mis.dat'
+      ARGO_FILE='DA__FREQ_1/'// DAY // '.P_l_arg_mis.dat'
       CORR_FILE = 'DA__FREQ_1/'// DAY // '_corr.nc'
       EIV_FILE  = 'DA__FREQ_1/'// DAY // '_eiv.nc'
       OBS_FILE = 'obs_1.dat' ! 'obs_'//fgrd//'.dat'
