@@ -60,7 +60,7 @@ CC----------------------------------------------------------------------
        allocate(ztu    (jpi,jpj,jpk,ntids)) ; ztu          = huge(ztu(1,1,1,1))
        allocate(ztv    (jpi,jpj,jpk,ntids)) ; ztv          = huge(ztv(1,1,1,1))
 
-
+       zlt = 0.
        ztu = 0.
        ztv = 0.
 
