@@ -65,6 +65,8 @@
 
       DO jn=1,jptra ! DO LABEL 5
 
+      tottrnIO = 0.0
+
       if (.not.is_time_to_save(jn,FREQ_GROUP)) CYCLE
       if (FREQ_GROUP.eq.1) jn_high = jn_high+1
 
