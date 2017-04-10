@@ -15,7 +15,7 @@
       character MISFIT_OPT
       logical ISLOG, ApplyConditions
       integer :: ierr, color, DA_Nprocs
-      integer :: biol, bphy, nchl, sat, argo
+      integer :: biol, bphy, nchl, sat, argo, SysErr, system
       real*8  :: chl_dep
 
       character(len=256) ScriptName
@@ -68,7 +68,11 @@
             write(*,*) 'grid = ',  trim(GRID_FILE)
           endif
 
-          if(rank .eq. 0) call system(ScriptName//" -t "//DAY)
+          ! if(rank .eq. 0) call system(ScriptName) !//" -t "//DAY)
+          if(rank .eq. 0) then
+            SysErr = system(ScriptName //" -t "//DAY)
+            if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
+          endif
   
           call MPI_Barrier(Var3DCommunicator, ierr)
 
