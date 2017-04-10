@@ -18,14 +18,12 @@
       integer :: biol, bphy, nchl, sat, argo
       real*8  :: chl_dep
 
-      character(len=256) ScriptName
 
       NAMELIST /biolst/ biol, bphy, nchl, chl_dep, sat, argo
 
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
       DAY  =datestr(1:8)
-      ScriptName = './Float_misfit_gen.sh'
 
       MISFIT_OPT ='2'
       ISLOG = .false.
@@ -68,7 +66,7 @@
             write(*,*) 'grid = ',  trim(GRID_FILE)
           endif
 
-          if(rank .eq. 0) call system(ScriptName//" -t "//DAY)
+          if(rank .eq. 0) call system("../float_preproc/Float_misfit_gen.sh -d ../float_preproc -t "//DAY)
   
           call MPI_Barrier(Var3DCommunicator, ierr)
 
