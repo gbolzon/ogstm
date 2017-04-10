@@ -1,7 +1,7 @@
 #! /bin/bash
 
 usage() {
-echo "Generates"
+echo "Generates misfit files for argo floats "
 echo "SYNOPSYS"
 echo "Float_misfit_gen.sh [ -t date] "
 echo "EXAMPLE"
@@ -45,7 +45,14 @@ export MASKFILE=/pico/home/usera07ogs/a07ogs00/OPA/V2C/etc/static-data/MED1672_c
 
 
 python var_aggregator.py -l ave.${DATE}*N1p.nc -i $MODEL_AVEDIR -d VarDescriptor.xml -t $TMP_DIR  -c $CHLSUP_DIR -m $MASKFILE
+if [ $? -ne 0 ] ; then exit 1 ; fi
+
 python float_extractor.py -t ${DATE}  -i $TMP_DIR -b $BASEDIR
+if [ $? -ne 0 ] ; then exit 1 ; fi
+
 python preproc.py         -t ${DATE}  -i $TMP_DIR -b $BASEDIR
+if [ $? -ne 0 ] ; then exit 1 ; fi
+
 cp ${DATE}.P_l_arg_mis.dat $DEST_DIR
+if [ $? -ne 0 ] ; then exit 1 ; fi
 
