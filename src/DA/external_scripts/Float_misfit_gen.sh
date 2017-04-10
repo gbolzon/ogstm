@@ -3,9 +3,9 @@
 usage() {
 echo "Generates misfit files for argo floats "
 echo "SYNOPSYS"
-echo "Float_misfit_gen.sh [ -t date] "
+echo "Float_misfit_gen.sh [ -t date]  [ -d dir]"
 echo "EXAMPLE"
-echo 'Float_misfit_gen.sh -t 20150106'
+echo 'Float_misfit_gen.sh -t 20150106 -d .'
 echo ""
 }
 
@@ -15,9 +15,10 @@ if [ $# -lt 2 ] ; then
   exit 1
 fi
 
-for I in 1 ; do
+for I in 1 2; do
    case $1 in
       "-t" ) DATE=$2;;
+      "-d" ) DIR=$2;;
         *  ) echo "Unrecognized option $1." ; usage;  exit 1;;
    esac
    shift 2
@@ -43,7 +44,7 @@ MODEL_AVEDIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/MODEL/AVE_FREQ_1/
      
 export MASKFILE=/pico/home/usera07ogs/a07ogs00/OPA/V2C/etc/static-data/MED1672_cut/MASK/meshmask.nc
 
-
+cd $DIR
 python var_aggregator.py -l ave.${DATE}*N1p.nc -i $MODEL_AVEDIR -d VarDescriptor.xml -t $TMP_DIR  -c $CHLSUP_DIR -m $MASKFILE
 if [ $? -ne 0 ] ; then exit 1 ; fi
 

@@ -18,14 +18,12 @@
       integer :: biol, bphy, nchl, sat, argo, SysErr, system
       real*8  :: chl_dep
 
-      character(len=256) ScriptName
 
       NAMELIST /biolst/ biol, bphy, nchl, chl_dep, sat, argo
 
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
       DAY  =datestr(1:8)
-      ScriptName = './Float_misfit_gen.sh'
 
       MISFIT_OPT ='2'
       ISLOG = .false.
@@ -70,7 +68,7 @@
 
           ! if(rank .eq. 0) call system(ScriptName) !//" -t "//DAY)
           if(rank .eq. 0) then
-            SysErr = system(ScriptName //" -t "//DAY)
+            SysErr = system("../float_preproc/Float_misfit_gen.sh -d ../float_preproc -t "//DAY)
             if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
           endif
   
