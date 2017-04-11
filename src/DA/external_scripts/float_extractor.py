@@ -58,7 +58,7 @@ TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist,TL,BASEDIR)
 
 profilerscript = BASEDIR + 'jobProfiler.sh'
-descriptor="/pico/scratch/userexternal/lmariott/FLOAT_DA_01/wrkdir/float_preproc/VarDescriptor_chl.xml"
+descriptor="/pico/scratch/userexternal/lmariott/FLOAT_DA_01/wrkdir/float_preproc/VarDescriptor.xml"
 M.writefiles_for_profiling(descriptor, profilerscript, aggregatedir=INPUTDIR) # preparation of data for aveScan
 M.dumpModelProfiles(profilerscript) # sequential launch of aveScan
 
