@@ -10,7 +10,7 @@ echo ""
 }
 
 
-if [ $# -lt 2 ] ; then
+if [ $# -lt 4 ] ; then
   usage
   exit 1
 fi
