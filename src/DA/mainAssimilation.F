@@ -43,7 +43,8 @@
       VARFILE   = 'DA_static_data/MISFIT/VAR2D/var2D.' // MONTH // '.nc'
       EOF_FILE  = 'DA_static_data/3D_VAR/EOF/eof.'  // MONTH // '.nc'
       GRID_FILE = 'DA_static_data/3D_VAR/GRID/BFM_grid.nc'
-      RCORR_FILE = 'DA_static_data/3D_VAR/gradsal.nc'
+      RCORR_FILE = 'DA_static_data/3D_VAR/chl_rad_corr.nc'
+      ANIS_FILE = 'DA_static_data/3D_VAR/gradsal.nc'
 
       MISFIT_FILE='DA__FREQ_1/'// DAY // '.chl_mis.nc'
       ARGO_FILE='DA__FREQ_1/'// DAY // '.P_l_arg_mis.dat'
@@ -54,7 +55,7 @@
 
       CHLSUP_FOR_DA = 'DA__FREQ_1/chl.' // datestr // '.nc'
 
-      CALL trcditDA(DATEstr, datefrom, DATEstr)! average of 12 h
+      !CALL trcditDA(DATEstr, datefrom, DATEstr)! average of 12 h
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 

@@ -53,7 +53,7 @@ TI_day  = timerequestors.Daily_req( meantime.year, meantime.month, meantime.day)
 
 
 Profilelist=bio_float.FloatSelector(None,TI_week, OGS.med)
-TL = TimeList.fromfilenames(TI_day, INPUTDIR,"ave*.nc",filtervar="P_l")
+TL = TimeList.fromfilenames(TI_day, INPUTDIR,"RST*.nc",filtervar="P_l",prefix="RST.")
 TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist,TL,BASEDIR)
 

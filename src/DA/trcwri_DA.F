@@ -1,6 +1,6 @@
       SUBROUTINE trcwriDA(datestring)
 
-
+      USE netcdf
       USE myalloc
       USE IO_mem
       USE calendar
@@ -20,6 +20,8 @@
 ! ==================
       REAL(8) ::  Miss_val =1.e20
       INTEGER ji,jj,jk,jn
+      integer s, nc, counter
+      integer timid, depid, yid, xid, idvar
       REAL(8) julian
 
 
@@ -44,7 +46,7 @@
        trcwriparttime = MPI_WTIME() ! F79 cronometer-start
 
       call mppsync()
-
+      if (lwp)  CHLtot = 0.0
       buf     = Miss_val
       bufftrb = Miss_val
       bufftrn = Miss_val
@@ -170,10 +172,34 @@
             BeforeName = 'DA__FREQ_1/RST.'//datestring//'.'//varname//'.nc'
             d2f3d = REAL(tottrn,4)
             CALL write_BeforeAss(BeforeName, varname)
+            if (isaCHLVAR(varname)) CHLtot = CHLtot + d2f3d ! remains in RAM, used by snutell
             write(*,*) 'writing ', Beforename
 
         endif ! if rank = 0
       END DO ! DO jn=1,jptra
+
+      if (rank==0) then
+
+        s = nf90_create(CHLSUP_FOR_DA, NF90_CLOBBER, nc)
+        s= nf90_def_dim(nc,'lon'           , jpiglo,  xid)
+        s= nf90_def_dim(nc,'lat'           , jpjglo,  yid)
+        s= nf90_def_dim(nc,'depth'         , 1   ,depid)
+        s= nf90_def_dim(nc,'time'  , NF90_UNLIMITED,timid)
+        s = nf90_def_var(nc, 'lchlm', nf90_float, (/xid,yid,depid,timid/),  idVAR)
+
+        s = nf90_put_att(nc,idVAR, 'missing_value',4.e+20)
+
+        s =nf90_enddef(nc)
+
+        CHL_SUP = CHLtot(:,:,1)
+        s = nf90_put_var(nc, idVAR  ,CHL_SUP ); call handle_err1(s,counter,CHLSUP_FOR_DA)
+        s=nf90_close(nc)
+
+
+      endif
+
+
+
 
        trcwriparttime = MPI_WTIME() - trcwriparttime
        trcwritottime = trcwritottime + trcwriparttime

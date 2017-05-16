@@ -61,7 +61,6 @@ idate2=timerequestors.Daily_req(year,month,day)
 print idate2
 
 
-
 # Variable name
 VARLIST = ['P_l']      #'N3n','O2o']
 read_adjusted = [True] #,False,False]
@@ -83,7 +82,7 @@ f.writelines(iniz)
 # LIST of profiles for the selected variable in VARLIST
 # in the interval idate1.time_interval in the mediterranean area 
 Profilelist_1=bio_float.FloatSelector(LOVFLOATVARS[VARLIST[0]],idate1.time_interval,OGS.med)
-TL = TimeList.fromfilenames(idate2.time_interval, INPUTDIR,"ave.*.nc",filtervar="P_l")
+TL = TimeList.fromfilenames(idate2.time_interval, INPUTDIR,"RST.*.nc",filtervar="P_l",prefix="RST.")
 TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist_1, TL ,BASEDIR)
 
@@ -111,12 +110,14 @@ for wmo in WMOlist :
 #  AllProfiles matrix: 0 Model, 1 Ref, 2 Misfit,3 Lat,4 Lon,5 ID FLOAT
 #  NOTE: the number of profile per float is len(Goodlist)
         print "number of Goodlist Profiles:",  len(Goodlist)
-        #AllProfiles = np.zeros((len(Goodlist),dimnewpress,6),np.float64)   
-        OneProfile = np.zeros((1,dimnewpress,6),np.float64)   
+        if (Goodlist!=[]):
+          #AllProfiles = np.zeros((len(Goodlist),dimnewpress,6),np.float64)   
+          OneProfile = np.zeros((1,dimnewpress,6),np.float64)   
 
-        # PROFILES FOR FLOAT AND MODEL
-        for ip, pp in enumerate(Goodlist):    
-              #print ip,pp.time
+          # PROFILES FOR FLOAT AND MODEL
+          AllProfiles = OneProfile
+          for ip, pp in enumerate(Goodlist):    
+              print ip,pp.time
               singlefloatmatchup = M.getMatchups([pp], nav_lev, VARLIST[0])
               s200 = singlefloatmatchup.subset(layer)               #values NOT interpolated
               #vertical interpolation at the grid defined in NewPress (1meter)
@@ -129,7 +130,6 @@ for wmo in WMOlist :
                  ind=0
                  count=1
                  ix0,jy0=TheMask.convert_lon_lat_to_indices(pp.lon,pp.lat)
-                 AllProfiles = OneProfile
                  AllProfiles[ind,:,0] = s200intmodel                     #ONLY MODEL
                  AllProfiles[ind,:,1] = s200intobs                       #ONLY ARGO
                  AllProfiles[ind,:,2] = s200intobs-s200intmodel        #ONLY MISFIT ARGO-MODELLO
@@ -159,19 +159,25 @@ for wmo in WMOlist :
                     AllProfiles[ind,:,4] = pp.lon
                     AllProfiles[ind,:,5] = wmo                              #ID float
 
-        if (count>1):
-            AllProfiles[ind,:,1]=AllProfiles[ind,:,1]/count                         #ONLY ARGO
-            AllProfiles[ind,:,2]=AllProfiles[ind,:,1]-AllProfiles[ind,:,0]
+          if (count>1):
+              AllProfiles[ind,:,1]=AllProfiles[ind,:,1]/count                         #ONLY ARGO
+              AllProfiles[ind,:,2]=AllProfiles[ind,:,1]-AllProfiles[ind,:,0]
       
-        totallines+=(AllProfiles.shape[0]*200/5)  
-        for jp in  np.arange(0,AllProfiles.shape[0]):
-               for lev in range(0,200,5):
+          if (AllProfiles.shape[0]>0):
+             totallines+=(AllProfiles.shape[0]*200/5)  
+             for jp in  np.arange(0,AllProfiles.shape[0]):
+                for lev in range(0,200,5):
                    testo ="\t%i\t%i\t%10.5f\t%10.5f\t%10.5f" %(1,1,AllProfiles[jp,lev,4],AllProfiles[jp,lev,3],lev)
                    testo +="\t%10.5f\t%10.5f" %(0.2, AllProfiles[jp,lev,2] )
-                   testo +="\t%10.5f\t%i\n"  %(np.std(AllProfiles[jp,:,2],0),AllProfiles[jp,lev,5])
+                   testo +="\t%10.5f\t%i\n"  %(0.01,AllProfiles[jp,lev,5])
+                   #testo +="\t%10.5f\t%i\n"  %(np.std(AllProfiles[jp,:,2],0),AllProfiles[jp,lev,5])
                    f.writelines(testo)
+#          makeplots.plot_floatvsmodel(VARLIST[0],idate0,AllProfiles, NewPres,Goodlist,wmo)
+          del AllProfiles
+          del OneProfile
 
-        #makeplots.plot_floatvsmodel(VARLIST[0],idate0,AllProfiles, NewPres,Goodlist,wmo)
+        del Goodlist
+        
 f.close
 
 f = open(idate0+"."+VARLIST[0]+"_arg_mis.dat","w")        # OUTPUT x il 3DVAR
