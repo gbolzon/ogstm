@@ -21,6 +21,10 @@
       REAL(4), allocatable,dimension(:,:,:) :: N_CHL, P_CHL, N_C, P_C ! rapporti  3D
       REAL(4), allocatable,dimension(:,:,:) :: CHL_C, S_C             ! rapporti  3D
 
+      INTEGER DA_Nprocs
+      LOGICAL ApplyConditions
+      character(LEN=200) satfile_suffix
+      character(LEN=40 ) satvarname
 
       CONTAINS
 

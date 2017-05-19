@@ -38,7 +38,7 @@ C-----------------------------------------------------------------------
        USE myalloc_mpp
        use mpi_str, only: Var3DCommunicator
        use petscvec, only: PETSC_COMM_WORLD, PETSC_NULL_CHARACTER
-
+       use DA_mem, only: DA_Nprocs
 C-----------------------------------------------------------------------
 
         IMPLICIT NONE
@@ -47,7 +47,7 @@ C
 C
 C MPI VERSION
 C
-      INTEGER mynode,ierr, DA_Nprocs
+      INTEGER mynode,ierr
       PetscErrorCode :: stat
 C         -------------
 C         Enroll in MPI
@@ -59,7 +59,8 @@ C
 
       mynode=rank
 
-      DA_Nprocs = 20
+      call parlec
+
       if(rank .lt. DA_Nprocs) then
         call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, rank, Var3DCommunicator, ierr)
         
