@@ -57,7 +57,6 @@
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
-      DA_Nprocs = 20
       if (rank .lt. DA_Nprocs ) then
           if(rank .eq. 0) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
