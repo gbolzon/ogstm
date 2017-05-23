@@ -11,7 +11,7 @@
 #endif
 
       IMPLICIT NONE
-      CHARACTER(LEN=17), INTENT(IN) :: datestring
+      CHARACTER(LEN=15), INTENT(IN) :: datestring
 
 
 
@@ -39,7 +39,7 @@
 
        filename = 'RST.20111231-15:30:00.N1p.nc'
 
-       julian=datestring2sec(datestring)
+       julian=datestring2secDA(datestring)
 
        if(lwp)write(*,*) 'trcwri DA --------  rank =',rank,' datestring = ',  datestring
 

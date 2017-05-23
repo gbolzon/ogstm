@@ -63,7 +63,7 @@
      &   ioconf_calendar, ioget_calendar, itau2date, ioget_timestamp,
      & ioconf_startdate, itau2ymds, time_add, time_diff,
      & write_date_string, read_date_string, datestring2sec,photoperiod,
-     & tau2julianday
+     & tau2julianday,datestring2secDA, read_date_stringDA
         !
         INTERFACE ioget_calendar
           MODULE PROCEDURE ioget_calendar_real1
@@ -1027,6 +1027,25 @@
       seconds = hr*3600.0 + minutes*60. + sec;
       END SUBROUTINE read_date_string
 
+
+       !=======================================================================
+
+      SUBROUTINE read_date_stringDA(datestring,year, month, day, seconds)
+      IMPLICIT NONE
+
+      CHARACTER(LEN=15), INTENT(IN ) :: datestring
+      integer,      INTENT(OUT) :: year, month, day
+      real(8),      INTENT(OUT) ::  seconds
+      integer hr, minutes,sec
+
+      read(datestring,'(I4,I2,I2)') year, month, day
+      read(datestring(10:11),'(I2)') hr
+      read(datestring(12:13),'(I2)') minutes
+      read(datestring(14:15),'(I2)') sec
+
+      seconds = hr*3600.0 + minutes*60. + sec;
+      END SUBROUTINE read_date_stringDA
+
        !=======================================================================
 
       SUBROUTINE write_date_string(datestring,year,month,day, seconds)
@@ -1073,6 +1092,23 @@
        datestring2sec = julian*86400.0
 
        END FUNCTION datestring2sec
+
+       !=======================================================================
+
+       REAL(8) FUNCTION datestring2secDA(datestring)
+       IMPLICIT NONE
+       CHARACTER(LEN=15), INTENT(IN) :: datestring
+       !REAL(8)          , INTENT(OUT):: seconds
+
+       ! LOCAL
+       INTEGER  :: year, month, day
+       real(8)  :: sec, julian
+
+       call read_date_stringDA(datestring, year, month, day, sec)
+       CALL ymds2ju(year,month,day,sec,julian)
+       datestring2secDA = julian*86400.0
+
+       END FUNCTION datestring2secDA
 
 !==============================================================================
       SUBROUTINE tau2julianday(TAU, deltaT,julian)

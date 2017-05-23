@@ -18,25 +18,17 @@
       real*8  :: chl_dep
 
 
-!      NAMELIST /biolst/ biol, bphy, nchl, chl_dep, sat, argo
-
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
       DAY  =datestr(1:8)
 
+      DA_Date = ConvertDate(datestr)
+
       MISFIT_OPT ='2'
       ISLOG = .false.
 
-!      if(rank .eq. 0) then
-!        open(11,file='var_3d_nml',form='formatted')
-!        read(11,biolst)
-!        close(11)
-!      endif
-
       ! SATDIR li vuole pronti all'uso, già tagliati e interpolati
 
-
-      ! SUFFIX   = '_d-OC_CNR-L4-CHL-MedOC4_SAM_7KM-MED-REP-v02.nc'
       SATFILE   = 'SATELLITE/' // DAY // trim(satfile_suffix)
       VARFILE   = 'DA_static_data/MISFIT/VAR2D/var2D.' // MONTH // '.nc'
       EOF_FILE  = 'DA_static_data/3D_VAR/EOF/eof.'  // MONTH // '.nc'
@@ -50,12 +42,11 @@
       EIV_FILE  = 'DA__FREQ_1/'// DAY // '_eiv.nc'
       OBS_FILE = 'obs_1.dat' ! 'obs_'//fgrd//'.dat'
 
-
       CHLSUP_FOR_DA = 'DA__FREQ_1/chl.' // datestr // '.nc'
 
       !CALL trcditDA(DATEstr, datefrom, DATEstr)! average of 12 h
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
-      CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
+      CALL trcwriDA(DA_Date)  ! Dumps Before Assimilation real*4
 
       if (rank .lt. DA_Nprocs ) then
           if(rank .eq. 0) then
@@ -74,11 +65,11 @@
 
 
           call OCEANVAR
-          if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG, ApplyConditions)
+          ! if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG, ApplyConditions)
       endif
 
       call mppsync()
-      CALL trcrstDA(datestr)
+      CALL trcrstDA(DA_Date)
 
       DAparttime  = MPI_WTIME() - DAparttime
       DAtottime   = DAtottime + DAparttime

@@ -18,7 +18,7 @@
        USE DA_mem
 
        IMPLICIT NONE
-      CHARACTER(LEN=17), INTENT(IN) :: datestring
+      CHARACTER(LEN=15), INTENT(IN) :: datestring
 !----------------------------------------------------------------------
 ! local declarations
 ! ==================

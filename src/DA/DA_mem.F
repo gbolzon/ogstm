@@ -200,5 +200,15 @@
       END FUNCTION IsaCHLvar
 
 
+      FUNCTION ConvertDate(OgstmDate) RESULT(MyDate)
+
+        implicit none
+        CHARACTER(LEN=17), INTENT(IN)  :: OgstmDate
+        CHARACTER(LEN=15) :: MyDate
+
+        MyDate = OgstmDate(1:11)//OgstmDate(13:14)//OgstmDate(16:17)
+
+      END FUNCTION
+
 
       END MODULE
