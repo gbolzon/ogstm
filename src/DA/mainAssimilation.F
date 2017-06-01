@@ -2,7 +2,9 @@
 
       use filenames
       use DA_mem
+      use DA_Params
       use mpi_str, only: Var3DCommunicator
+      use calendar, only: datestring2secDA
 
       IMPLICIT NONE
 
@@ -13,16 +15,19 @@
       character (LEN=8) DAY
       character MISFIT_OPT
       logical ISLOG
-      integer :: ierr, color
+      integer :: ierr, color, ii
       integer :: biol, bphy, nchl, sat, argo, SysErr, system
       real*8  :: chl_dep
-
 
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
       DAY  =datestr(1:8)
 
+      ! DA_Params init
       DA_Date = ConvertDate(datestr)
+      jpk_200 = AssimilationLevels
+      NBioVar = 17
+      DA_JulianDate = datestring2secDA(DA_Date)
 
       MISFIT_OPT ='2'
       ISLOG = .false.
@@ -49,6 +54,14 @@
       CALL trcwriDA(DA_Date)  ! Dumps Before Assimilation real*4
 
       if (rank .lt. DA_Nprocs ) then
+
+          ! array that specifies the variables 
+          ! to assimilate in the 3DVar
+          allocate(DA_VarList(NBioVar))
+          do ii=1,NBioVar
+            DA_VarList(ii) = varlistDA(ii)
+          enddo
+
           if(rank .eq. 0) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
             write(*,*) 'eof = ',   trim(EOF_FILE)
@@ -66,7 +79,13 @@
 
           call OCEANVAR
           ! if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG, ApplyConditions)
+          
+          ! deallocation of DA_VarList array
+          call clean_da_params
+
       endif
+
+
 
       call mppsync()
       CALL trcrstDA(DA_Date)
