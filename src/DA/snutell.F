@@ -5,7 +5,7 @@
 
       IMPLICIT NONE
       character*17 datestr
-      logical ISLOG
+      logical ISLOG, ApplyConditions
 
 
       ! LOCAL
@@ -83,7 +83,7 @@
         character*3 PVar, NVar, CVar, IVAR
         character*3 SVar
         CHARACTER(LEN=39) RST_before  ! DA/ave.20091231-12:00:00.P1n.nc
-        logical B
+        logical B, ApplyConditions
         real(4) MAX_N_CHL, MAX_P_CHL, MAX_P_C, MAX_N_C
         real(4) OPT_N_C, OPT_P_C, OPT_S_C, LIM_THETA
         real(4) ONE

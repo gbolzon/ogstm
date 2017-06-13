@@ -25,7 +25,7 @@
 
        USE myalloc
        USE myalloc_mpp
-       USE DA_mem, ONLY : DA_Nprocs, satfile_suffix, satvarname, ApplyConditions, AssimilationLevels
+       USE DA_mem, ONLY : DA_Nprocs, satfile_suffix, satvarname, AssimilationLevels
        IMPLICIT NONE
 
 ! local declarations
@@ -41,7 +41,7 @@
       NAMELIST/MPI_config/ mpi_pack_size
       NAMELIST/Domain_Characteristic/  jperio
       NAMELIST/Number_Fluxes/ jpflx, jpwind, jpemp,jpkef, jpice, jpqsr
-      NAMELIST/DA_setup/ DA_Nprocs, satfile_suffix, satvarname, ApplyConditions, AssimilationLevels
+      NAMELIST/DA_setup/ DA_Nprocs, satfile_suffix, satvarname, AssimilationLevels
 
 
 
@@ -249,7 +249,6 @@ C ..  Namelist :  Number of fluxes
       WRITE(numout,*) ' DA_Nprocs      : 3D_var cores', DA_nprocs
       WRITE(numout,*) ' satfile suffix : ', satfile_suffix
       WRITE(numout,*) ' satvarname     : ', satvarname
-      WRITE(numout,*) ' ApplyConditions: snutell flag ', ApplyConditions
       WRITE(numout,*) ' Assimiliation Levels: ', AssimilationLevels
       ENDIF
 
