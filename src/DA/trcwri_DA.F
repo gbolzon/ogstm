@@ -6,12 +6,13 @@
       USE calendar
       USE TIME_MANAGER
       USE DA_mem
+      USE DA_Params, only : ShortDate
 #ifdef key_mpp
       USE myalloc_mpp
 #endif
 
       IMPLICIT NONE
-      CHARACTER(LEN=15), INTENT(IN) :: datestring
+      CHARACTER(LEN=17), INTENT(IN) :: datestring
 
 
 
@@ -27,6 +28,7 @@
 
       CHARACTER(LEN=37) filename
       CHARACTER(LEN=41) BeforeName
+      CHARACTER(LEN=39) BeforeNameShort
 
       CHARACTER(LEN=3) varname
 
@@ -35,11 +37,11 @@
       INTEGER totistart, totiend, relistart, reliend
       INTEGER totjstart, totjend, reljstart, reljend
       INTEGER ind1, ind2
-
+      INTEGER SysErr, system
 
        filename = 'RST.20111231-15:30:00.N1p.nc'
 
-       julian=datestring2secDA(datestring)
+       julian=datestring2sec(datestring)
 
        if(lwp)write(*,*) 'trcwri DA --------  rank =',rank,' datestring = ',  datestring
 
@@ -170,8 +172,13 @@
 
             varname=ctrcnm(jn)
             BeforeName = 'DA__FREQ_1/RST.'//datestring//'.'//varname//'.nc'
+            BeforeNameShort = 'DA__FREQ_1/RST.'//ShortDate//'.'//varname//'.nc'
             d2f3d = REAL(tottrn,4)
             CALL write_BeforeAss(BeforeName, varname)
+
+            SysErr = system("ln -sf $PWD/"//BeforeName//" "//BeforeNameShort)
+            if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
+            
             if (isaCHLVAR(varname)) CHLtot = CHLtot + d2f3d ! remains in RAM, used by snutell
             write(*,*) 'writing ', Beforename
 

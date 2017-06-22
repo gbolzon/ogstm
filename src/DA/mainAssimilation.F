@@ -4,7 +4,7 @@
       use DA_mem
       use DA_Params
       use mpi_str, only: Var3DCommunicator
-      use calendar, only: datestring2secDA
+      use calendar, only: datestring2sec
 
       IMPLICIT NONE
 
@@ -24,10 +24,11 @@
       DAY  =datestr(1:8)
 
       ! DA_Params init
-      DA_Date = ConvertDate(datestr)
+      DA_Date = datestr
+      ShortDate = ConvertDate(datestr)
       jpk_200 = AssimilationLevels
       NBioVar = 17
-      DA_JulianDate = datestring2secDA(DA_Date)
+      DA_JulianDate = datestring2sec(DA_Date)
 
       MISFIT_OPT ='2'
       ISLOG = .false.
@@ -49,9 +50,8 @@
 
       CHLSUP_FOR_DA = 'DA__FREQ_1/chl.' // datestr // '.nc'
 
-      !CALL trcditDA(DATEstr, datefrom, DATEstr)! average of 12 h
       ! Sviluppo : se non serve avere il file ave delle DA, la snutell puo' fare il collecting
-      CALL trcwriDA(DA_Date)  ! Dumps Before Assimilation real*4
+      CALL trcwriDA(datestr)  ! Dumps Before Assimilation real*4
 
       if (rank .lt. DA_Nprocs ) then
 
@@ -78,7 +78,6 @@
 
 
           call OCEANVAR
-          ! if(rank .eq. 0) CALL SNUTELL(datestr, ISLOG, ApplyConditions)
           
           ! deallocation of DA_VarList array
           call clean_da_params
@@ -88,7 +87,7 @@
 
 
       call mppsync()
-      CALL trcrstDA(DA_Date)
+      CALL trcrstDA(datestr)
 
       DAparttime  = MPI_WTIME() - DAparttime
       DAtottime   = DAtottime + DAparttime
