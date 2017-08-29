@@ -2,7 +2,10 @@
 
       use filenames
       use DA_mem
+! ---- modules from 3Dvar
       use DA_Params
+      use drv_str
+! -----------------------
       use mpi_str, only: Var3DCommunicator
       use calendar, only: datestring2sec
 
@@ -16,7 +19,7 @@
       character MISFIT_OPT
       logical ISLOG
       integer :: ierr, color, ii
-      integer :: biol, bphy, nchl, sat, argo, SysErr, system
+      integer :: SysErr, system
       real*8  :: chl_dep
 
       DAparttime  = MPI_WTIME()
@@ -62,18 +65,20 @@
             DA_VarList(ii) = varlistDA(ii)
           enddo
 
-          if(rank .eq. 0) then
+      IF(rank .eq. 0) then
+         call def_nml
+         if (drv%sat_obs.eq.1) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
             write(*,*) 'eof = ',   trim(EOF_FILE)
             write(*,*) 'grid = ',  trim(GRID_FILE)
-          endif
+         endif
 
-          ! if(rank .eq. 0) call system(ScriptName) !//" -t "//DAY)
-!          if(rank .eq. 0) then
-!            SysErr = system("../float_preproc/Float_misfit_gen.sh -d ../float_preproc -t "//DAY)
-!            if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
-!          endif
-  
+         if (drv%argo_obs.eq.1) then
+            SysErr = system("../float_preproc/Float_misfit_gen.sh -d ../float_preproc -t "//DAY)
+            if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
+         endif
+      ENDIF
+
           call MPI_Barrier(Var3DCommunicator, ierr)
 
 
