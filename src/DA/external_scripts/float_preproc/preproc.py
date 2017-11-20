@@ -54,9 +54,11 @@ INPUTDIR=addsep(args.inputdir)
 year=int(idate0[0:4])
 month=int(idate0[4:6])
 day=int(idate0[6:8])
-idate1=timerequestors.Weekly_req(year,month,day)
-print idate1
+#idate1 data del float, cambio per DA ogni 3days
+idate1=timerequestors.Interval_req(year,month,day, days=3)
+print idate1.string
 
+#idate2 data del modello
 idate2=timerequestors.Daily_req(year,month,day)
 print idate2
 
@@ -105,7 +107,8 @@ for wmo in WMOlist :
         SubProfilelist_1 = bio_float.filter_by_wmo(Profilelist_1,wmo)
         for i in SubProfilelist_1:
 	    Pres, Profile, Qc=i.read('CHLA',read_adjusted[0])   #Profile.shape,Profile.size, np.mean(Profile)
-            if(Profile.size!=0) : Goodlist.append(i)     
+            #if(Profile.size!=0) : Goodlist.append(i)     
+            if((Pres<200).sum() > 5) :    Goodlist.append(i)
 
 #  AllProfiles matrix: 0 Model, 1 Ref, 2 Misfit,3 Lat,4 Lon,5 ID FLOAT
 #  NOTE: the number of profile per float is len(Goodlist)
@@ -163,19 +166,31 @@ for wmo in WMOlist :
               AllProfiles[ind,:,1]=AllProfiles[ind,:,1]/count                         #ONLY ARGO
               AllProfiles[ind,:,2]=AllProfiles[ind,:,1]-AllProfiles[ind,:,0]
       
+#           errore1=0.072/0.07542  # 0.07542 valor medio delle std del misfit per Jan
+#           errore2=0.0146/0.05956 # 0.05956 valor medio delle std del misfit per Aug
+
+          errore1=0.072/0.125     # 0.125 valor medio delle std dei float per Jan
+          errore2=0.0146/0.102    # 0.102 valor medio delle std dei float per Aug
+
           if (AllProfiles.shape[0]>0):
              totallines+=(AllProfiles.shape[0]*200/5)  
              for jp in  np.arange(0,AllProfiles.shape[0]):
                 for lev in range(0,200,5):
                    testo ="\t%i\t%i\t%10.5f\t%10.5f\t%10.5f" %(1,1,AllProfiles[jp,lev,4],AllProfiles[jp,lev,3],lev)
                    testo +="\t%10.5f\t%10.5f" %(0.2, AllProfiles[jp,lev,2] )
-                   testo +="\t%10.5f\t%i\n"  %(0.01,AllProfiles[jp,lev,5])
-                   #testo +="\t%10.5f\t%i\n"  %(np.std(AllProfiles[jp,:,2],0),AllProfiles[jp,lev,5])
+# errore fisso 0.01, da commentare se si vuole usare i valori delle std di seguito
+	           testo +="\t%10.5f\t%i\n"  %(0.01, AllProfiles[jp,lev,5])
+# da scommentare le 4 righe di seguito, se si vuole usare come errori le std dei float:
+#                   if (month<5):
+#                       testo +="\t%10.5f\t%i\n"  %(errore1*np.std(AllProfiles[jp,:,1],0),AllProfiles[jp,lev,5])
+#                   else:
+#                       testo +="\t%10.5f\t%i\n"  %(errore2*np.std(AllProfiles[jp,:,1],0),AllProfiles[jp,lev,5])
                    f.writelines(testo)
 #          makeplots.plot_floatvsmodel(VARLIST[0],idate0,AllProfiles, NewPres,Goodlist,wmo)
           del AllProfiles
           del OneProfile
-
+	else:
+ 	  print "Goodlist vuota"
         del Goodlist
         
 f.close

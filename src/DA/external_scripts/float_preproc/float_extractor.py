@@ -22,6 +22,11 @@ def argument():
                                 required = True,
                                 help = '''output directory, where aveScan.py will run.
                                            Usually called PROFILATORE''')
+    parser.add_argument(   '--opadir', '-d',
+                                type = str,
+                                default = None,
+                                required = True,
+                                help = '''where I'm working now''')
 
 
     return parser.parse_args()
@@ -40,25 +45,25 @@ from datetime import timedelta
 from datetime import datetime
 from commons import timerequestors
 
-
 meantime=datetime.strptime(args.time,'%Y%m%d')
-
 
 INPUTDIR=addsep(args.inputdir)
 BASEDIR=addsep(args.basedir)
+OPADIR =addsep(args.opadir)
 
-TI_week = timerequestors.Weekly_req(meantime.year, meantime.month, meantime.day).time_interval
+#TI_week = timerequestors.Weekly_req(meantime.year, meantime.month, meantime.day).time_interval
+# cambio per DA every 3 days
+TI_3    = timerequestors.Interval_req(meantime.year, meantime.month, meantime.day, days=3).time_interval
 TI_day  = timerequestors.Daily_req( meantime.year, meantime.month, meantime.day).time_interval
 
 
-
-Profilelist=bio_float.FloatSelector(None,TI_week, OGS.med)
+Profilelist=bio_float.FloatSelector(None,TI_3, OGS.med)
 TL = TimeList.fromfilenames(TI_day, INPUTDIR,"RST*.nc",filtervar="P_l",prefix="RST.")
 TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist,TL,BASEDIR)
 
 profilerscript = BASEDIR + 'jobProfiler.sh'
-descriptor="/pico/scratch/userexternal/lmariott/FLOAT_DA_01/wrkdir/float_preproc/VarDescriptor.xml"
+descriptor=OPADIR+"VarDescriptor_chl.xml"
 M.writefiles_for_profiling(descriptor, profilerscript, aggregatedir=INPUTDIR) # preparation of data for aveScan
 M.dumpModelProfiles(profilerscript) # sequential launch of aveScan
 
