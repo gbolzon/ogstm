@@ -70,9 +70,28 @@ def create_variance_for_misfit(test):
         ncvar[:]= 0.0002 * (np.random.rand(jpj,jpi).astype(np.float32) -0.5) + 0.0005
                 
         NCout.close()
+def create_covariances(test):
+    jpi=test['jpi'];
+    jpj=test['jpj'];
+    jpk=test['jpk'];
+    
+    COV =  0.1 * (np.random.rand(jpk,jpj,jpi).astype(np.float32)  ) -0.01
+        
+    OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/COVARIANCES/"
+    os.system("mkdir -p " + OUTDIR)
+    for month in range(12):
+        filename = OUTDIR +  "cov_N3nN1p.%02d.nc"  %(month+1)
+        NCout = NC.netcdf_file(filename,"w")
+        NCout.createDimension("longitude", jpi)
+        NCout.createDimension("latitude", jpj)
+        NCout.createDimension("depth", jpk)
+        
+        ncvar = NCout.createVariable("covN3nN1p", 'f', ('depth','latitude','longitude'))
+        ncvar[:] = COV              
+        NCout.close()
 
 
-def create_eofs_for_3dvar(test):
+def create_chl_eofs_for_3dvar(test):
     nreg = 14
     neof = 4
     nlev = 26 #test['jpk']
@@ -80,7 +99,7 @@ def create_eofs_for_3dvar(test):
     EVA = 0.08 * (np.random.rand(neof,nreg).astype(np.float32) - 0.5 ) + 0.15
     EVC = 12 * np.random.rand(neof,nlev,nreg).astype(np.float32) -6
         
-    OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/EOF/"
+    OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/EOF/CHL/"
     os.system("mkdir -p " + OUTDIR)
     for month in range(12):
         filename = OUTDIR +  "eof.%02d.nc"  %(month+1)
@@ -95,7 +114,32 @@ def create_eofs_for_3dvar(test):
         ncvar[:] = EVC                
         NCout.close()
     OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/GRID/"
-    os.system("mkdir -p " + OUTDIR)    
+    os.system("mkdir -p " + OUTDIR)
+
+def create_N3n_eofs_for_3dvar(test):
+    nreg = 14
+    neof = 4
+    nlev = 26 #test['jpk']
+    
+    EVA = 2.8 * (np.random.rand(neof,nreg).astype(np.float32)  )
+    EVC = 0.12 * np.random.rand(neof,nlev,nreg).astype(np.float32) -0.1
+        
+    OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/EOF/N3n/"
+    os.system("mkdir -p " + OUTDIR)
+    for month in range(12):
+        filename = OUTDIR +  "eof.%02d.nc"  %(month+1)
+        NCout = NC.netcdf_file(filename,"w")
+        NCout.createDimension("nreg", nreg)
+        NCout.createDimension("nlev", nlev)
+        NCout.createDimension("neof", neof)
+        
+        ncvar = NCout.createVariable("eva", 'f', ('neof','nreg'))
+        ncvar[:] = EVA
+        ncvar = NCout.createVariable("evc", 'f', ('neof','nlev','nreg'))
+        ncvar[:] = EVC                
+        NCout.close()
+    OUTDIR=test['Dir'] + "/DA_static_data/3D_VAR/GRID/"
+    os.system("mkdir -p " + OUTDIR)
 
 def create_misfit_for_3dvar(test): 
     jpi=test['jpi']
@@ -181,8 +225,10 @@ def create_sat_files(test):
 
 def create_dataset(test):
     create_sat_files(test)
+    create_covariances(test)
     create_variance_for_misfit(test)
-    create_eofs_for_3dvar(test)
+    create_chl_eofs_for_3dvar(test)
+    create_N3n_eofs_for_3dvar(test)
     create_misfit_for_3dvar(test)
     print "For the mesh lauch this command:"
     print "./createGridDA meshmask.nc submask.nc ESO -5.7 BFM_grid.nc"

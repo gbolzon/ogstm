@@ -39,8 +39,11 @@
       ! SATDIR li vuole pronti all'uso, già tagliati e interpolati
 
       SATFILE   = 'SATELLITE/' // DAY // trim(satfile_suffix)
-      VARFILE   = 'DA_static_data/MISFIT/VAR2D/var2D.' // MONTH // '.nc'
-      EOF_FILE  = 'DA_static_data/3D_VAR/EOF/eof.'  // MONTH // '.nc'
+      VARFILE   = 'DA_static_data/VAR_SAT/var2D.' // MONTH // '.nc'
+      EOF_FILE_CHL  = 'DA_static_data/3D_VAR/EOF/CHL/eof.'  // MONTH // '.nc'
+      EOF_FILE_N3N  = 'DA_static_data/3D_VAR/EOF/N3n/eof.'  // MONTH // '.nc'
+      EOF_FILE_O2O  = 'DA_static_data/3D_VAR/EOF/O2o/eof.'  // MONTH // '.nc'
+      NUTCOV_FILE   = 'DA_static_data/3D_VAR/COVARIANCES/cov_N3nN1p.' // MONTH // '.nc'
       GRID_FILE = 'DA_static_data/3D_VAR/GRID/BFM_grid.nc'
       RCORR_FILE = 'DA_static_data/3D_VAR/chl_rad_corr.nc'
       ANIS_FILE = 'DA_static_data/3D_VAR/gradsal.nc'
@@ -60,16 +63,16 @@
 
           ! array that specifies the variables 
           ! to assimilate in the 3DVar
-          allocate(DA_VarList(NBioVar))
-          do ii=1,NBioVar
-            DA_VarList(ii) = varlistDA(ii)
-          enddo
+!          allocate(DA_VarList(NBioVar))
+!          do ii=1,NBioVar
+!            DA_VarList(ii) = varlistDA(ii)
+!          enddo
 
       IF(rank .eq. 0) then
          call def_nml
          if (drv%sat_obs.eq.1) then
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
-            write(*,*) 'eof = ',   trim(EOF_FILE)
+            write(*,*) 'eof = ',   trim(EOF_FILE_CHL)
             write(*,*) 'grid = ',  trim(GRID_FILE)
          endif
 
@@ -85,7 +88,7 @@
           call OCEANVAR
           
           ! deallocation of DA_VarList array
-          call clean_da_params
+          !call clean_da_params
 
       endif
 
