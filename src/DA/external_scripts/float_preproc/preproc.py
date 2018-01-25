@@ -16,7 +16,9 @@ def argument():
                                 type = str,
                                 required = True,
                                 help = 'input dir validation tmp')
-
+    parser.add_argument(   '--maskfile','-m',
+                                type = str,
+                                required = True)
     parser.add_argument(   '--basedir', '-b',
                                 type = str,
                                 default = None,
@@ -64,11 +66,11 @@ print idate2
 
 
 # Variable name
-VARLIST = ['P_l']      #'N3n','O2o']
+VARLIST = ['N3n']      #'N3n','O2o']
 read_adjusted = [True] #,False,False]
 
 # MASK of the domain
-TheMask=Mask("/pico/home/usera07ogs/a07ogs00/OPA/V2C/etc/static-data/MED1672_cut/MASK/meshmask.nc")
+TheMask=Mask(args.maskfile)
 nav_lev = TheMask.zlevels
 
 layer=Layer(0,200)     #layer of the Float profile???? 
@@ -84,12 +86,11 @@ f.writelines(iniz)
 # LIST of profiles for the selected variable in VARLIST
 # in the interval idate1.time_interval in the mediterranean area 
 Profilelist_1=bio_float.FloatSelector(LOVFLOATVARS[VARLIST[0]],idate1.time_interval,OGS.med)
-TL = TimeList.fromfilenames(idate2.time_interval, INPUTDIR,"RST.*.nc",filtervar="P_l",prefix="RST.")
+TL = TimeList.fromfilenames(idate2.time_interval, INPUTDIR,"RST.*00:00*.nc",filtervar="N1p",prefix="RST.")
 TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist_1, TL ,BASEDIR)
 
-#import sys
-#sys.exit()
+
 
 # LIST of FLOATS (WMO) that are in Profilelist_1
 WMOlist=bio_float.get_wmo_list(Profilelist_1)
@@ -106,7 +107,7 @@ for wmo in WMOlist :
 	SubProfilelist_1 = []
         SubProfilelist_1 = bio_float.filter_by_wmo(Profilelist_1,wmo)
         for i in SubProfilelist_1:
-	    Pres, Profile, Qc=i.read('CHLA',read_adjusted[0])   #Profile.shape,Profile.size, np.mean(Profile)
+	    Pres, Profile, Qc=i.read(LOVFLOATVARS[VARLIST[0]], read_adjusted[0])   #Profile.shape,Profile.size, np.mean(Profile)
             #if(Profile.size!=0) : Goodlist.append(i)     
             if((Pres<200).sum() > 5) :    Goodlist.append(i)
 

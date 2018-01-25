@@ -58,12 +58,12 @@ TI_day  = timerequestors.Daily_req( meantime.year, meantime.month, meantime.day)
 
 
 Profilelist=bio_float.FloatSelector(None,TI_3, OGS.med)
-TL = TimeList.fromfilenames(TI_day, INPUTDIR,"RST*.nc",filtervar="P_l",prefix="RST.")
+TL = TimeList.fromfilenames(TI_day, INPUTDIR,"RST*00:00*.nc",filtervar="N1p",prefix="RST.")
 TL.inputFrequency = 'weekly'
 M = Matchup_Manager(Profilelist,TL,BASEDIR)
 
 profilerscript = BASEDIR + 'jobProfiler.sh'
-descriptor=OPADIR+"VarDescriptor_chl.xml"
+descriptor=OPADIR+"VarDescriptor.xml"
 M.writefiles_for_profiling(descriptor, profilerscript, aggregatedir=INPUTDIR) # preparation of data for aveScan
 M.dumpModelProfiles(profilerscript) # sequential launch of aveScan
 

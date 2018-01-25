@@ -27,36 +27,43 @@ done
 
 module purge
 module load profile/advanced
-module load autoload intelmpi/5.0.1--binary netcdf/4.1.3--intel--cs-xe-2015--binary
-module load autoload python/2.7.9 numpy/1.9.2--python--2.7.9 matplotlib/1.4.3--python--2.7.9 scipy/0.15.1--python--2.7.9
-source /gpfs/work/OGS16_PRACE_P/COPERNICUS/py_env_2.7.9/bin/activate
-#PYTHONPATH=$PYTHONPATH:/gpfs/work/OGS16_PRACE_P/COPERNICUS/bit.sea
-PYTHONPATH=$PYTHONPATH:/pico/scratch/userexternal/lmariott/bit.sea
-#PYTHONPATH=$PYTHONPATH:/pico/scratch/userexternal/gbolzon0/bit.sea
+module load autoload
+module load intel/pe-xe-2017--binary
+module load netcdf/4.4.1--intel--pe-xe-2017--binary
+module load python/2.7.12 scipy/0.18.1--python--2.7.12
 
-export OPA_HOME=FDA_all2015_newstd_3days
+source /marconi_work/OGS_dev_0/COPERNICUS/py_env_2.7.12/bin/activate
+PYTHONPATH=$PYTHONPATH:/marconi_work/OGS_dev_0/COPERNICUS/bit.sea
 
-##MODEL_AVEDIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/MODEL/AVE_FREQ_1/
-MODEL_AVEDIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/MODEL/DA__FREQ_1/
-     TMP_DIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/POSTPROC/output/AVE_FREQ_1/TMP
-  CHLSUP_DIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/POSTPROC/output/AVE_FREQ_1/CHL_SUP
-     BASEDIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/float_preproc/PROFILATORE_WEEKLY_LOV_OGSTM/
-      OPADIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/float_preproc/
-    DEST_DIR=$CINECA_SCRATCH/$OPA_HOME/wrkdir/MODEL/DA__FREQ_1/
+export OPA_HOME=/marconi_work/OGS_dev_0/MULTIVARIATE/CODE/ogstm/testcase/TEST01
+
+
+MODEL_AVEDIR=$OPA_HOME/wrkdir/MODEL/DA__FREQ_1/
+     TMP_DIR=$OPA_HOME/wrkdir/POSTPROC/output/AVE_FREQ_1/TMP
+  CHLSUP_DIR=$OPA_HOME/wrkdir/POSTPROC/output/AVE_FREQ_1/CHL_SUP
+     BASEDIR=$OPA_HOME/wrkdir/float_preproc/PROFILATORE_WEEKLY_LOV_OGSTM/
+      OPADIR=$OPA_HOME/wrkdir/float_preproc/
+    DEST_DIR=$OPA_HOME/wrkdir/MODEL/DA__FREQ_1/
 
      
-export MASKFILE=/pico/home/usera07ogs/a07ogs00/OPA/V2C/etc/static-data/MED1672_cut/MASK/meshmask.nc
+export MASKFILE=$OPA_HOME/wrkdir/MODEL/meshmask.nc
+mkdir -p $BASEDIR
+mkdir -p $MODEL_AVEDIR/links
+mv $MODEL_AVEDIR/RST*00000* $MODEL_AVEDIR/links
+
 
 cd $DIR
-python var_aggregator.py -l RST.${DATE}*P1l.nc -i $MODEL_AVEDIR -d VarDescriptor.xml -t $TMP_DIR  -c $CHLSUP_DIR -m $MASKFILE
+#python var_aggregator.py -l RST.${DATE}*P1l.nc -i $MODEL_AVEDIR -d VarDescriptor.xml -t $TMP_DIR  -c $CHLSUP_DIR -m $MASKFILE
+#if [ $? -ne 0 ] ; then exit 1 ; fi
+
+
+python float_extractor.py -t ${DATE}  -i $MODEL_AVEDIR -b $BASEDIR  -d $OPADIR
 if [ $? -ne 0 ] ; then exit 1 ; fi
 
-python float_extractor.py -t ${DATE}  -i $TMP_DIR -b $BASEDIR  -d $OPADIR
+python preproc.py              -t ${DATE}  -i $MODEL_AVEDIR -b $BASEDIR -m $MASKFILE
 if [ $? -ne 0 ] ; then exit 1 ; fi
 
-python preproc.py              -t ${DATE}  -i $TMP_DIR -b $BASEDIR
-if [ $? -ne 0 ] ; then exit 1 ; fi
-
-cp ${DATE}.P_l_arg_mis.dat $DEST_DIR
+mv $MODEL_AVEDIR/links/* $MODEL_AVEDIR
+cp ${DATE}.N3n_arg_mis.dat $DEST_DIR
 if [ $? -ne 0 ] ; then exit 1 ; fi
 
