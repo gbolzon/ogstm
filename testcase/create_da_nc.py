@@ -86,7 +86,7 @@ def create_covariances(test):
         NCout.createDimension("latitude", jpj)
         NCout.createDimension("depth", jpk)
         
-        ncvar = NCout.createVariable("covN3nN1p", 'f', ('depth','latitude','longitude'))
+        ncvar = NCout.createVariable("covn3n_n1p", 'f', ('depth','latitude','longitude'))
         ncvar[:] = COV              
         NCout.close()
 
