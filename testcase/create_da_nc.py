@@ -234,5 +234,5 @@ def create_dataset(test):
     print "./createGridDA meshmask.nc submask.nc ESO -5.7 BFM_grid.nc"
     print "ncks -d km,1,26 BFM_grid.nc -O DA_static_data/3D_VAR/GRID/BFM_grid.nc"
     print "make sure to have nreg=14 and neof =4 in var_3d_nml"
-    
-        
+    print("If you work on marconi, you can link this /marconi_work/OGS_dev_0/MULTIVARIATE/DA/src/Statics/createGridDA")
+
