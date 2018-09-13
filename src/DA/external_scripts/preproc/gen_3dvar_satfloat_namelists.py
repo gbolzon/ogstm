@@ -6,22 +6,23 @@ def dump_template(ORIG, outfile,SAT_OBS,ARGO):
         newline=line
         if (line.find("@@SAT_OBS@@") != -1):  newline=line.replace("@@SAT_OBS@@",SAT_OBS)
         if (line.find("@@ARGO@@")   != -1):   newline=line.replace("@@ARGO@@"   ,  ARGO)
-        LINES.append(newline + "\n")    
-
+        LINES.append(newline + "\n")
     fid=open(filename,"w")
     fid.writelines(LINES)
     fid.close()
 
-
-
-
-
 ORIG=file2stringlist('satfloat.template')
-SAT_OBS="1"
-ARGO   ="1"
-filename="satfloat.20150102.nml"
+dateDAfloat = file2stringlist("daFloat")
+dateDAsat   = file2stringlist("daSat")
+dateDA      = file2stringlist("daTimes")
 
-dump_template(ORIG, filename, SAT_OBS, ARGO)
+OUTDIR="OUT/"
+for d in dateDA:
+    filename=OUTDIR + "satfloat." + d[:8] + ".nml"
+    #print filename
+    ARGO    = str(int(d in dateDAfloat)) # "1" if True, "0" if False
+    SAT_OBS = str(int(d in dateDAsat))
+    dump_template(ORIG, filename, SAT_OBS, ARGO)
 
 
 
