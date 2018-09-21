@@ -23,7 +23,7 @@
 ! local declarations
 ! ==================
       INTEGER jn, jDA
-      CHARACTER(LEN=37) filename
+      CHARACTER(LEN=43) filename
       CHARACTER(LEN=6)  varname
       CHARACTER(LEN=43) bkpname
 
@@ -37,7 +37,7 @@
 
 
          varname  = 'TRN'//ctrcnm(jn)
-         filename = 'RESTARTS/RST.'//datestring//'.'//trim(ctrcnm(jn))//'.nc'
+         filename = 'RESTARTS/RST.after.'//datestring//'.'//trim(ctrcnm(jn))//'.nc'
          if (lwp) write(*,*) 'reading ', filename
          CALL readnc_slice_floatDA(filename,varname, trn(:,:,1:AssimilationLevels,jn) )
 
