@@ -264,6 +264,7 @@
       ENDIF
 
 #ifdef ExecDA
+      reduced_dimension_seik=2
       REWIND( numnam )
       READ  ( numnam,DA_setup )
       IF(lwp) THEN

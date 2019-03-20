@@ -3,6 +3,10 @@
        USE modul_param
        USE timers
 
+#ifdef ExecDA
+       USE memory_seik
+#endif
+
 #ifdef Mem_Monitor
        USE check_mem
        USE iso_c_binding

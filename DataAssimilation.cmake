@@ -64,7 +64,7 @@ include_directories(${DA_INCLUDES})
 include_directories(${PETSC_INCLUDES})
 
 # Search Fortran module to compile
-set( FOLDERS BIO  DA  General  IO  MPI  namelists  PHYS BC)
+set( FOLDERS BIO  DA  General  IO  MPI  namelists  PHYS BC SEIK)
   foreach(FOLDER ${FOLDERS})
   file(GLOB TMP src/${FOLDER}/*)
   list (APPEND FORTRAN_SOURCES ${TMP})
