@@ -1,0 +1,5 @@
+3 ! number_of_boundaries
+! name, type, namelist, files_namelist, is_periodic, has_nudging
+"riv, RIV, riv.nml, files_namelist_riv.dat, T, F"
+"gib, SPO, gib.nml, files_namelist_gib.dat, T, T"
+"dar, OPE, dar.nml, files_namelist_dar.dat, T, F"

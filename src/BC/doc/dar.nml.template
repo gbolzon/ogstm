@@ -1,0 +1,25 @@
+&VARS_DIMENSION
+
+    n_vars = 5 ! number of variables in the data files which are considered
+
+/
+
+&CORE
+
+    vars(1) = "N1p" ! variable names, as in the data files
+    vars(2) = "N3n"
+    vars(3) = "N5s"
+    vars(4) = "O3c"
+    vars(5) = "O3h"
+
+    var_names_idx(1) = 2 ! ogstm variable indexes
+    var_names_idx(2) = 3
+    var_names_idx(3) = 6
+    var_names_idx(4) = 49
+    var_names_idx(5) = 50
+
+    geometry = 1 ! type of open boundary (0 = northern, 1 = eastern, 2 = southern, 3 = western)
+    damping_coeff = 600.0d0 ! damping coefficient used to impose the data on the 2-D open boundary wall
+                            ! (should be comparable with the integration timestep)
+
+/
