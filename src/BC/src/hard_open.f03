@@ -296,6 +296,12 @@ contains
     !> Default constructor
 
     !> Calls bc default constructor and target constructor.
+    !! Four types of boundary are currently supported,
+    !! depending on the geometry parameter read from the namelist:
+    !! 0: northern boundary, 2-D orthogonal;
+    !! 1: eastern boundary, 2-D orthogonal;
+    !! 2: southern boundary, 2-D orthogonal;
+    !! 3: western boundary, 2-D orthogonal.
     type(hard_open) function hard_open_default(bc_name, namelist_file, filenames_list, n_tracers)
 
         character(len=3), intent(in) :: bc_name
@@ -575,7 +581,10 @@ contains
 
     !> It is supposed to assign values to the two diagnostic variables matrixes
     !> in the open boundary cells, where by default bfm is not executed.
-    !> Values are set to be equal to the values of the neighbor cells.
+    !> Values are set to be equal to the values of the neighbor cells,
+    !> but this is done again through a hard-nudging term,
+    !> in a similar way to what is done in the apply method
+    !> (the same dumping factor is used).
     subroutine fix_diagnostic_vars(self, n_vars_dia, tra_dia, n_vars_dia_2d, tra_dia_2d)
 
         use modul_param, only: jpk, jpj, jpi
