@@ -106,17 +106,17 @@
           endif
 
 
-           do idrank = 1,mpi_glcomm_size-1
+           do idrank = 1,CommSize-1
 ! **************  myrank 0 is receiving from the others their buffer  ****
-           call MPI_RECV(jpi_rec    , 1,                 mpi_integer, idrank, 1,mpi_comm_world, status, ierr) !* first info to know where idrank is working
-           call MPI_RECV(jpj_rec    , 1,                 mpi_integer, idrank, 2,mpi_comm_world, status, ierr)
-           call MPI_RECV(istart     , 1,                 mpi_integer, idrank, 3,mpi_comm_world, status, ierr)
-           call MPI_RECV(jstart     , 1,                 mpi_integer, idrank, 4,mpi_comm_world, status, ierr)
-           call MPI_RECV(iPe        , 1,                 mpi_integer, idrank, 5,mpi_comm_world, status, ierr)
-           call MPI_RECV(jPe        , 1,                 mpi_integer, idrank, 6,mpi_comm_world, status, ierr)
-           call MPI_RECV(iPd        , 1,                 mpi_integer, idrank, 7,mpi_comm_world, status, ierr)
-           call MPI_RECV(jPd        , 1                 ,mpi_integer, idrank, 8,mpi_comm_world, status, ierr)
-           call MPI_RECV(bufftrn    ,jpi_rec*jpj_rec*jpk,  mpi_real8, idrank, 9,mpi_comm_world, status, ierr) ! ** then tracer buffer
+           call MPI_RECV(jpi_rec    , 1,                 mpi_integer, idrank, 1,LocalComm, status, ierr) !* first info to know where idrank is working
+           call MPI_RECV(jpj_rec    , 1,                 mpi_integer, idrank, 2,LocalComm, status, ierr)
+           call MPI_RECV(istart     , 1,                 mpi_integer, idrank, 3,LocalComm, status, ierr)
+           call MPI_RECV(jstart     , 1,                 mpi_integer, idrank, 4,LocalComm, status, ierr)
+           call MPI_RECV(iPe        , 1,                 mpi_integer, idrank, 5,LocalComm, status, ierr)
+           call MPI_RECV(jPe        , 1,                 mpi_integer, idrank, 6,LocalComm, status, ierr)
+           call MPI_RECV(iPd        , 1,                 mpi_integer, idrank, 7,LocalComm, status, ierr)
+           call MPI_RECV(jPd        , 1                 ,mpi_integer, idrank, 8,LocalComm, status, ierr)
+           call MPI_RECV(bufftrn    ,jpi_rec*jpj_rec*jpk,  mpi_real8, idrank, 9,LocalComm, status, ierr) ! ** then tracer buffer
 ! ******* myrank 0 sets indexes of tot matrix where to place buffers of idrank
            irange    = iPe - iPd + 1
            jrange    = jPe - jPd + 1
@@ -176,15 +176,15 @@
        enddo
      endif
 ! ******  2.send buffer to myrank 0
-       call MPI_SEND(jpi  , 1,mpi_integer, 0, 1, mpi_comm_world,ierr)
-       call MPI_SEND(jpj  , 1,mpi_integer, 0, 2, mpi_comm_world,ierr)
-       call MPI_SEND(nimpp, 1,mpi_integer, 0, 3, mpi_comm_world,ierr)
-       call MPI_SEND(njmpp, 1,mpi_integer, 0, 4, mpi_comm_world,ierr)
-       call MPI_SEND(nlei , 1,mpi_integer, 0, 5, mpi_comm_world,ierr)
-       call MPI_SEND(nlej , 1,mpi_integer, 0, 6, mpi_comm_world,ierr)
-       call MPI_SEND(nldi , 1,mpi_integer, 0, 7, mpi_comm_world,ierr)
-       call MPI_SEND(nldj , 1,mpi_integer, 0, 8, mpi_comm_world,ierr)
-       call MPI_SEND(bufftrn, jpi * jpj * jpk,MPI_DOUBLE_PRECISION, 0, 9, mpi_comm_world,ierr)
+       call MPI_SEND(jpi  , 1,mpi_integer, 0, 1, LocalComm,ierr)
+       call MPI_SEND(jpj  , 1,mpi_integer, 0, 2, LocalComm,ierr)
+       call MPI_SEND(nimpp, 1,mpi_integer, 0, 3, LocalComm,ierr)
+       call MPI_SEND(njmpp, 1,mpi_integer, 0, 4, LocalComm,ierr)
+       call MPI_SEND(nlei , 1,mpi_integer, 0, 5, LocalComm,ierr)
+       call MPI_SEND(nlej , 1,mpi_integer, 0, 6, LocalComm,ierr)
+       call MPI_SEND(nldi , 1,mpi_integer, 0, 7, LocalComm,ierr)
+       call MPI_SEND(nldj , 1,mpi_integer, 0, 8, LocalComm,ierr)
+       call MPI_SEND(bufftrn, jpi * jpj * jpk,MPI_DOUBLE_PRECISION, 0, 9, LocalComm,ierr)
    endif ! IF LABEL 1, if(myrank == 0)
 
 !************* END COLLECTING DATA  *****************

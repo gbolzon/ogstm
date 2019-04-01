@@ -64,25 +64,57 @@ SUBROUTINE mynode
 #endif
 
 #ifdef key_mpp_mpi
-
-      CALL mpi_comm_rank(mpi_comm_world,myrank,ierr)
-      CALL mpi_comm_size(mpi_comm_world,mpi_glcomm_size,ierr)
-      call parlec ! in order to read DA_Nprocs
-
+      CALL mpi_comm_rank(MPI_COMM_WORLD,GlobalRank,ierr)
+      CALL mpi_comm_size(MPI_COMM_WORLD,GlobalSize,ierr)
+      
+      
 #ifdef ExecDA
-      if(myrank .lt. DA_Nprocs) then
-        call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, myrank, Var3DCommunicator, ierr)
+      call parlec ! in order to read DA_Nprocs and SeikDim
+
+! 3DVar Code
+
+      if(GlobalRank .lt. DA_Nprocs) then
+        call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, GlobalRank, Var3DCommunicator, ierr)
         
         PETSC_COMM_WORLD = Var3DCommunicator
         call PetscInitialize(PETSC_NULL_CHARACTER,stat)
         CHKERRQ(stat)
       else
-        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, myrank, Var3DCommunicator, ierr)
+        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, GlobalRank, Var3DCommunicator, ierr)
       endif
+      
+!SEIK Code
+
+      if(GlobalRank .lt. GlobalSize-mod(GlobalSize,SeikDim+1)) then
+        call MPI_Comm_split(MPI_COMM_WORLD, mod(GlobalRank,SeikDim+1), GlobalRank, LocalComm, ierr)
+        CALL mpi_comm_rank(LocalComm,myrank,ierr)
+        CALL mpi_comm_size(LocalComm,CommSize,ierr)
+        if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1))) then
+          write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'. CommSize = ',CommSize,', expeted = ',GlobalSize/(SeikDim+1)),'.'
+          write(*,*)'This code is under development, I am unable to manage this exception at this moment and I will stop.'
+          call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
+          error stop
+        endif
+      else
+        if(GlobalRank == GlobalSize-mod(GlobalSize,SeikDim+1)) then
+          write(*,*)'The total number of processes (Global size = ',GlobalSize,') is not a multiple of the number of ensemble members (SeikDim + 1 = ',SeikDim+1,').'
+          write(*,*)'This code is under development, I am unable to manage this exception at this moment and I will stop.'
+          call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
+          error stop
+        endif
+      endif
+        
+
+#else
+      LocalComm = MPI_COMM_WORLD
+      myrank = GlobalRank
+      CommSize = GlobalSize
 #endif
 
 #else
-      mpi_glcomm_size = 1
+      GlobalRank = 0
+      GlobalSize = 1
+      CommSize = 1
       myrank = 0
 #endif
 
@@ -322,7 +354,7 @@ SUBROUTINE mppsend(ktyp,pmess,kbytes,kdest,kid,ireqsend)
 
       INTEGER iflag
       CALL mpi_isend(pmess,kbytes,mpi_real8,kdest,ktyp, &
-     &    mpi_comm_world,ireqsend,iflag)
+     &    LocalComm,ireqsend,iflag)
 
 
 #endif
@@ -365,7 +397,7 @@ END SUBROUTINE
 
       INTEGER iflag
 
-      CALL mpi_irecv(pmess,kbytes,mpi_real8,mpi_any_source,ktyp,mpi_comm_world,ireqrecv,iflag)
+      CALL mpi_irecv(pmess,kbytes,mpi_real8,mpi_any_source,ktyp,LocalComm,ireqrecv,iflag)
 #endif
 
       RETURN
@@ -421,7 +453,7 @@ SUBROUTINE mppsync()
 
       INTEGER ierror
 
-      CALL mpi_barrier(mpi_comm_world,ierror)
+      CALL mpi_barrier(mpi_comm_world,ierror) ! per il momento lascio mpi_comm_world, da riverificare se si puo'/conviene sostituire con LocalComm
 
 #endif
       RETURN
@@ -439,10 +471,12 @@ SUBROUTINE mppstop
 !!
 
 
-      INTEGER info
+      INTEGER :: info
+      INTEGER :: ierr
 
 #ifdef key_mpp_mpi
       CALL mppsync
+      call mpi_comm_free(LocalComm, ierr)
 #endif
 
       RETURN

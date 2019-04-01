@@ -38,7 +38,9 @@
 !!      mindi, mindj() : indexes array of the subdomain
 
       INTEGER, PARAMETER :: nizoom=1,  njzoom=1
-      INTEGER :: mpi_glcomm_size,myrank
+      INTEGER :: LocalComm ! Mpi Communicator
+      INTEGER :: GlobalSize, GlobalRank ! Mpi global communicator size and process ID
+      INTEGER :: CommSize,myrank ! mpi communicator size and process ID
       INTEGER nimpp,njmpp
       INTEGER nperio, narea, nlci, nlcj
       INTEGER nbondi, nbondj, nproc, noea, nowe, noso, nono

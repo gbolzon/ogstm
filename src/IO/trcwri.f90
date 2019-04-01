@@ -81,16 +81,16 @@
 
 
 
-      do idrank = 1,mpi_glcomm_size-1
-         call MPI_RECV(jpi_rec , 1,                  mpi_integer, idrank,  1,mpi_comm_world, status, ierr)
-         call MPI_RECV(jpj_rec , 1,                  mpi_integer, idrank,  2,mpi_comm_world, status, ierr)
-         call MPI_RECV(istart  , 1,                  mpi_integer, idrank,  3,mpi_comm_world, status, ierr)
-         call MPI_RECV(jstart  , 1,                  mpi_integer, idrank,  4,mpi_comm_world, status, ierr)
-         call MPI_RECV(iPe     , 1,                  mpi_integer, idrank,  5,mpi_comm_world, status, ierr)
-         call MPI_RECV(jPe     , 1,                  mpi_integer, idrank,  6,mpi_comm_world, status, ierr)
-         call MPI_RECV(iPd     , 1,                  mpi_integer, idrank,  7,mpi_comm_world, status, ierr)
-         call MPI_RECV(jPd     , 1,                  mpi_integer, idrank,  8,mpi_comm_world, status, ierr)
-         call MPI_RECV(bufftrn,   jpi_rec*jpj_rec*jpk, mpi_real8, idrank, 11,mpi_comm_world, status, ierr)
+      do idrank = 1,CommSize-1
+         call MPI_RECV(jpi_rec , 1,                  mpi_integer, idrank,  1,LocalComm, status, ierr)
+         call MPI_RECV(jpj_rec , 1,                  mpi_integer, idrank,  2,LocalComm, status, ierr)
+         call MPI_RECV(istart  , 1,                  mpi_integer, idrank,  3,LocalComm, status, ierr)
+         call MPI_RECV(jstart  , 1,                  mpi_integer, idrank,  4,LocalComm, status, ierr)
+         call MPI_RECV(iPe     , 1,                  mpi_integer, idrank,  5,LocalComm, status, ierr)
+         call MPI_RECV(jPe     , 1,                  mpi_integer, idrank,  6,LocalComm, status, ierr)
+         call MPI_RECV(iPd     , 1,                  mpi_integer, idrank,  7,LocalComm, status, ierr)
+         call MPI_RECV(jPd     , 1,                  mpi_integer, idrank,  8,LocalComm, status, ierr)
+         call MPI_RECV(bufftrn,   jpi_rec*jpj_rec*jpk, mpi_real8, idrank, 11,LocalComm, status, ierr)
 
 
 
@@ -130,15 +130,15 @@
              enddo
             enddo
            enddo
-           call MPI_SEND(jpi      , 1         ,mpi_integer, 0,  1, mpi_comm_world,ierr)
-           call MPI_SEND(jpj      , 1         ,mpi_integer, 0,  2, mpi_comm_world,ierr)
-           call MPI_SEND(nimpp    , 1         ,mpi_integer, 0,  3, mpi_comm_world,ierr)
-           call MPI_SEND(njmpp    , 1         ,mpi_integer, 0,  4, mpi_comm_world,ierr)
-           call MPI_SEND(nlei     , 1         ,mpi_integer, 0,  5, mpi_comm_world,ierr)
-           call MPI_SEND(nlej     , 1         ,mpi_integer, 0,  6, mpi_comm_world,ierr)
-           call MPI_SEND(nldi     , 1         ,mpi_integer, 0,  7, mpi_comm_world,ierr)
-           call MPI_SEND(nldj     , 1         ,mpi_integer, 0,  8, mpi_comm_world,ierr)
-           call MPI_SEND(bufftrn  ,jpk*jpj*jpi,  mpi_real8, 0, 11, mpi_comm_world,ierr)
+           call MPI_SEND(jpi      , 1         ,mpi_integer, 0,  1, LocalComm,ierr)
+           call MPI_SEND(jpj      , 1         ,mpi_integer, 0,  2, LocalComm,ierr)
+           call MPI_SEND(nimpp    , 1         ,mpi_integer, 0,  3, LocalComm,ierr)
+           call MPI_SEND(njmpp    , 1         ,mpi_integer, 0,  4, LocalComm,ierr)
+           call MPI_SEND(nlei     , 1         ,mpi_integer, 0,  5, LocalComm,ierr)
+           call MPI_SEND(nlej     , 1         ,mpi_integer, 0,  6, LocalComm,ierr)
+           call MPI_SEND(nldi     , 1         ,mpi_integer, 0,  7, LocalComm,ierr)
+           call MPI_SEND(nldj     , 1         ,mpi_integer, 0,  8, LocalComm,ierr)
+           call MPI_SEND(bufftrn  ,jpk*jpj*jpi,  mpi_real8, 0, 11, LocalComm,ierr)
        endif ! if myrank = 0
 
 

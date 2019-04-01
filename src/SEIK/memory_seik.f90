@@ -4,7 +4,7 @@
 
        public
 
-       INTEGER :: reduced_dimension_seik
+       INTEGER :: SeikDim ! Reduced Dimension of the error subspace.
 
        END MODULE memory_seik
 

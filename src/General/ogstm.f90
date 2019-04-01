@@ -201,7 +201,7 @@ SUBROUTINE ALLOC_ALL
        mem_all_tot=mem_all_tot+mem_all
       !call myalloc_HDF() 
       ! write(*,*)'My_Rank:',myrank,'alloc_HDF  (MB):', mem_all 
-       mem_all_tot=mem_all_tot+mem_all
+       mem_all_tot=mem_all_tot+mem_all !!!!--------------------------------------CARE! this should be commented as well...
       call myalloc_ZDF() 
        !write(*,*)'My_Rank:',myrank,'alloc_ZDF  (MB):', mem_all
        mem_all_tot=mem_all_tot+mem_all
@@ -229,8 +229,8 @@ SUBROUTINE ALLOC_ALL
        mem_all_tot=mem_all_tot+mem_all
       
       
-      call MPI_ALLREDUCE(jpi, jpi_max, 1, MPI_INTEGER, MPI_MAX,MPI_COMM_WORLD, ierr)
-      call MPI_ALLREDUCE(jpj, jpj_max, 1, MPI_INTEGER, MPI_MAX,MPI_COMM_WORLD, ierr)
+      call MPI_ALLREDUCE(jpi, jpi_max, 1, MPI_INTEGER, MPI_MAX,LocalComm, ierr)
+      call MPI_ALLREDUCE(jpj, jpj_max, 1, MPI_INTEGER, MPI_MAX,LocalComm, ierr)
 
       call myalloc_IO()  
       write(*,*)'My_Rank:',myrank,'alloc_IO   (MB):', mem_all 

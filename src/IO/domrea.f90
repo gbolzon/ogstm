@@ -288,7 +288,7 @@
          Fsize=0
       endif
 
-      call MPI_ALLREDUCE(Fsize, FsizeMax, 1, MPI_INTEGER, MPI_MAX,MPI_COMM_WORLD, ierr)
+      call MPI_ALLREDUCE(Fsize, FsizeMax, 1, MPI_INTEGER, MPI_MAX,LocalComm, ierr)
 
       write(*,*) 'myrank=', myrank, ' Fsize = ' , Fsize,' FsizeMax = ' , FsizeMax
 
