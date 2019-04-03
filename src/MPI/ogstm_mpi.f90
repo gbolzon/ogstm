@@ -90,7 +90,7 @@ SUBROUTINE mynode
         CALL mpi_comm_rank(LocalComm,myrank,ierr)
         CALL mpi_comm_size(LocalComm,CommSize,ierr)
         if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1))) then
-          write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'. CommSize = ',CommSize,', expeted = ',GlobalSize/(SeikDim+1)),'.'
+          write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'. CommSize = ',CommSize,', expected = ',GlobalSize/(SeikDim+1),'.'
           write(*,*)'This code is under development, I am unable to manage this exception at this moment and I will stop.'
           call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
           error stop
