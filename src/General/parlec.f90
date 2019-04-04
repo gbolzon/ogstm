@@ -45,7 +45,7 @@
       NAMELIST/Domain_Characteristic/  jperio
       NAMELIST/Number_Fluxes/ jpflx, jpwind, jpemp,jpkef, jpice, jpqsr
 #ifdef ExecDA
-      NAMELIST/DA_setup/ DA_Nprocs, satfile_suffix, satvarname, AssimilationLevels
+      NAMELIST/DA_setup/ SeikDim,DA_Nprocs, satfile_suffix, satvarname, AssimilationLevels
 #endif
 
 

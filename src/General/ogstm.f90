@@ -119,7 +119,7 @@ SUBROUTINE ogstm_initialize()
           WRITE(numout,*) ' '
           WRITE(numout,*) ' '
       ENDIF
-
+      
       call parini
 
       call parlec      ! read namelist.init
