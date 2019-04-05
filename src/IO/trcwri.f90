@@ -45,7 +45,7 @@
 
       buf     = Miss_val
       bufftrn = Miss_val
-      if (lwp) tottrn = Miss_val
+      if (myrank == 0) tottrn = Miss_val !previously it was lwp, but probably incorrect
 
        DO jn=1,jptra
         if(myrank == 0) then

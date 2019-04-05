@@ -97,7 +97,7 @@ SUBROUTINE ogstm_initialize()
       CALL mynode() !  Nodes selection
 
       narea = myrank+1
-      lwp = narea.EQ.1
+      lwp = GlobalRank.EQ.0
 
       IF(lwp) THEN
           OPEN(UNIT=numout,FILE='ogstm.out',FORM='FORMATTED')

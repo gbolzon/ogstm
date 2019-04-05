@@ -690,7 +690,7 @@ subroutine alloc_tot()
 
 
 
-      if(lwp) then
+      if(myrank==0) then !previously it was lwp
        allocate(tottrn(jpk, jpjglo, jpiglo))      
        tottrn = huge(tottrn(1,1,1)) 
        allocate(tottrb(jpk, jpjglo, jpiglo))      
@@ -907,7 +907,7 @@ subroutine alloc_tot()
             deallocate(tra_DIA_2d_IO)
             deallocate(tra_DIA_2d_IO_HIGH)
             
-            if(lwp) then
+            if(myrank==0) then !previously it was lwp
                 deallocate(tottrn)
                 deallocate(tottrb)
                 deallocate(tottrnIO)

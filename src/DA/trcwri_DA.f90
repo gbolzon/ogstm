@@ -47,10 +47,10 @@
        trcwriparttime = MPI_WTIME() ! cronometer-start
 
       call mppsync()
-      if (lwp)  CHLtot = 0.0
+      if (myrank==0)  CHLtot = 0.0 !previously lwp
       buf     = Miss_val
       bufftrn = Miss_val
-      if (lwp) tottrn = Miss_val
+      if (myrank==0) tottrn = Miss_val !previously lwp
 
        DO jn=1,jptra
         if(.not.isaDAvar(ctrcnm(jn))) CYCLE

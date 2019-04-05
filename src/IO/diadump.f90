@@ -56,7 +56,7 @@
        DIR='AVE_FREQ_2/'
       END SELECT
 
-      if (lwp) then
+      if (myrank == 0) then !previously it was if lwp, but probably is wrong
           totsnIO   = Miss_val
           tottnIO   = Miss_val
           totunIO   = Miss_val
@@ -230,7 +230,7 @@
 
 
       jn_high = 0
-      if (lwp ) tottrnIO2d = Miss_val
+      if (myrank == 0 ) tottrnIO2d = Miss_val !previously it was if lwp, but probably is wrong
 ! ******************  DIAGNOSTIC OUTPUT   2D *******************
       DO jn = 1, JPTRA_DIA_2D
 

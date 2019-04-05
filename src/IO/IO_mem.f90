@@ -88,7 +88,7 @@
        allocate(buffDIA2d (jpi_max* jpj_max     )) 
         buffDIA2d = huge(buffDIA2d(1))
 
-       if (lwp) then
+       if (myrank==0) then !previously was lwp
        allocate(d2f2d     (jpjglo,jpiglo))         
         d2f2d     = huge(d2f2d(1,1))
        endif
@@ -122,7 +122,7 @@
           deallocate(buffDIA)
           deallocate(buffDIA2d)
           
-          if (lwp) then
+          if (myrank==0) then !previously was lwp
               deallocate(d2f2d)
           endif
 

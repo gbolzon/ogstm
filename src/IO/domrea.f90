@@ -78,7 +78,7 @@
 
 ! 1. Horzontal grid-point position
 ! --------------------------------
-      if(lwp) then
+      if(myrank==0) then !previously it was if(lwp), but probably incorrect
       call readnc_global_double_2d(maskfile,'glamt', totglamt)
       call readnc_global_double_2d(maskfile,'gphit', totgphit)
       endif 
