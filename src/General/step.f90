@@ -193,6 +193,15 @@ MODULE module_step
 
 ! Call Passive tracer model between synchronization for small parallelisation
         CALL trcstp    ! se commento questo non fa calcoli
+        
+#ifdef ExecDA
+        if (SeikDim.gt.0) then
+          trnEnsemble=trn
+          call MPI_Reduce(trnEnsemble*WeightSeik, trn, size(trnEnsemble), mpi_real8, MPI_SUM, 0, EnsembleComm,ierr)
+          !ricorda poi che trb(:,:,:,jn) = trn(:,:,:,jn) uno dei due moltiplicato per tmask
+          !ricorda di mettere un if su step in modo che al di fuori di trcstp lavori solo il primo ensemble member...oppure usa allreduce
+        endif
+#endif        
         call trcave
         ave_counter_1 = ave_counter_1 +1  ! incrementing our counters
         ave_counter_2 = ave_counter_2 +1

@@ -86,12 +86,22 @@ SUBROUTINE mynode
 !SEIK Code
 
       if(GlobalRank .lt. GlobalSize-mod(GlobalSize,SeikDim+1)) then
+      
         call MPI_Comm_split(MPI_COMM_WORLD, mod(GlobalRank,SeikDim+1), GlobalRank, LocalComm, ierr)
         CALL mpi_comm_rank(LocalComm,myrank,ierr)
         CALL mpi_comm_size(LocalComm,CommSize,ierr)
-        if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1))) then
-          write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'. CommSize = ',CommSize,', expected = ',GlobalSize/(SeikDim+1),'.'
-          write(*,*)'This code is under development, I am unable to manage this exception at this moment and I will stop.'
+        
+        call MPI_Comm_split(MPI_COMM_WORLD, myrank, GlobalRank, EnsembleComm, ierr)
+        CALL mpi_comm_rank(EnsembleComm,EnsembleRank,ierr)
+        CALL mpi_comm_size(EnsembleComm,EnsembleSize,ierr)
+        
+        ! error check
+        if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1)) .or. (EnsembleRank .ne. mod(GlobalRank,SeikDim+1)) .or. (EnsembleSize .ne. SeikDim+1)) then
+          write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'.'
+          write(*,*)'CommSize = ',CommSize,', expected = ',GlobalSize/(SeikDim+1),'.'
+          write(*,*)'EnsembleRank = ',EnsembleRank,', expected = ',mod(GlobalRank,SeikDim+1),'.'
+          write(*,*)'EnsembleSize = ',EnsembleSize,', expected = ',SeikDim+1,'.'
+          write(*,*)'Something wrong in ogstm_mpi.f90, I will stop.'
           call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
           error stop
         endif
@@ -476,7 +486,11 @@ SUBROUTINE mppstop
 
 #ifdef key_mpp_mpi
       CALL mppsync
+#ifdef ExecDA
+! seik deallocation
       call mpi_comm_free(LocalComm, ierr)
+      call mpi_comm_free(EnsembleComm, ierr)
+#endif      
 #endif
 
       RETURN
