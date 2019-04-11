@@ -756,6 +756,10 @@ subroutine alloc_tot()
 #ifdef Mem_Monitor
       mem_all=get_mem(err) - aux_mem
 #endif
+
+#ifdef ExecDA
+       call myalloc_seik()
+#endif
   
         END subroutine alloc_tot
 
@@ -946,6 +950,10 @@ subroutine alloc_tot()
             deallocate(highfreq_table)
             deallocate(highfreq_table_dia)
             deallocate(highfreq_table_dia2d)
+#ifdef ExecDA
+        call clean_seik()
+
+#endif
 
         end subroutine clean_memory
 

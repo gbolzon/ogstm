@@ -197,7 +197,10 @@ MODULE module_step
 #ifdef ExecDA
         if (SeikDim.gt.0) then
           trnEnsemble=trn
-          call MPI_Reduce(trnEnsemble*WeightSeik, trn, size(trnEnsemble), mpi_real8, MPI_SUM, 0, EnsembleComm,ierr)
+          call MPI_AllReduce(trnEnsemble*WeightSeik, trn, size(trnEnsemble), mpi_real8, MPI_SUM, EnsembleComm,ierr)
+		!devi fare la covarianza
+	  call MPI_Reduce((trnEnsemble-trn)**2(*WeightSeik), trn, size(trnEnsemble), mpi_real8, MPI_SUM, 0, EnsembleComm,ierr)
+	  trb=trn
           !ricorda poi che trb(:,:,:,jn) = trn(:,:,:,jn) uno dei due moltiplicato per tmask
           !ricorda di mettere un if su step in modo che al di fuori di trcstp lavori solo il primo ensemble member...oppure usa allreduce
         endif
