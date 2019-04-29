@@ -102,7 +102,7 @@ MODULE module_step
          if(lwp) write(*,'(A,I8,A,A)')      "step ------------ Starting timestep = ",TAU,' time ',DATEstring
          !write(*,*) is_night(DATEstring)
 
-        if (IsaRestart(DATEstring)) then
+        if (IsaRestart(DATEstring).and.(EnsembleRank==0))  then
             CALL trcwri(DATEstring) ! writes the restart files
 
          
@@ -156,7 +156,7 @@ MODULE module_step
 
 
 
-      if (IsAnAveDump(DATEstring,1)) then
+      if (IsAnAveDump(DATEstring,1).and.(EnsembleRank==0)) then
          call MIDDLEDATE(TauAVEfrom_1, TAU, datemean)
 
          call tau2datestring(TauAVEfrom_1, datefrom_1)
@@ -168,7 +168,8 @@ MODULE module_step
         if (lwp)  B = writeTemporization("trcdia____", trcdiatottime)
       endif
 
-      if (IsAnAveDump(DATEstring,2)) then
+
+      if (IsAnAveDump(DATEstring,2).and.(EnsembleRank==0)) then
          call MIDDLEDATE(TauAVEfrom_2, TAU, datemean)
 
          call tau2datestring(TauAVEfrom_2, datefrom_2)
@@ -179,6 +180,7 @@ MODULE module_step
          IsStartBackup_2 = .false.
          if (lwp) B = writeTemporization("trcdia____", trcdiatottime)
       endif
+
 
 
 #ifdef ExecDA
@@ -199,8 +201,10 @@ MODULE module_step
           call SeikForecast()
           !ricorda di mettere un if su step in modo che al di fuori di trcstp lavori solo il primo ensemble member...oppure usa allreduce
         endif
-#endif        
-        call trcave
+#endif
+
+
+        if (EnsembleRank==0) call trcave
         ave_counter_1 = ave_counter_1 +1  ! incrementing our counters
         ave_counter_2 = ave_counter_2 +1
 

@@ -463,7 +463,7 @@ SUBROUTINE mppsync()
 
       INTEGER ierror
 
-      CALL mpi_barrier(mpi_comm_world,ierror) ! per il momento lascio mpi_comm_world, da riverificare se si puo'/conviene sostituire con LocalComm
+      CALL mpi_barrier(LocalComm,ierror) !sostituito. Il commento precedente era, per il momento lascio mpi_comm_world, da riverificare se si puo'/conviene sostituire con LocalComm
 
 #endif
       RETURN
