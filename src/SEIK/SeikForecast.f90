@@ -7,8 +7,9 @@ subroutine SeikForecast()
 	INTEGER :: ierr
 
 	trnEnsemble=trn
+        trnEnsembleWeighted=trnEnsemble*WeightSeik
 
-  	call MPI_AllReduce(trnEnsemble*WeightSeik, trn, size(trnEnsemble), mpi_real8, MPI_SUM, EnsembleComm,ierr)
+  	call MPI_AllReduce(trnEnsembleWeighted, trn, size(trnEnsemble), mpi_real8, MPI_SUM, EnsembleComm,ierr)
 		!devi fare la covarianza
 	  !call MPI_Reduce((trnEnsemble-trn)**2(*WeightSeik), trn, size(trnEnsemble), mpi_real8, MPI_SUM, 0, EnsembleComm,ierr)
 

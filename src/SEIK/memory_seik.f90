@@ -8,7 +8,7 @@
 
       INTEGER :: SeikDim ! Reduced Dimension of the error subspace.
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize
-      double precision, allocatable, dimension (:,:,:,:) :: WeightSeik, trnEnsemble
+      double precision, allocatable, dimension (:,:,:,:) :: WeightSeik, trnEnsemble, trnEnsembleWeighted
        
       CONTAINS
        
@@ -19,12 +19,16 @@
             allocate(WeightSeik(jpk,jpj,jpi,jptra))                    
             WeightSeik = huge(WeightSeik(1,1,1,1))
             WeightSeik = 1.0d0/(SeikDim+1)
+
+            allocate(trnEnsembleWeighted(jpk,jpj,jpi,jptra))
+            trnEnsembleWeighted = huge(trnEnsembleWeighted(1,1,1,1))
             
       end subroutine
 
       subroutine clean_seik()
             deallocate(trnEnsemble)
             deallocate(WeightSeik)
+            deallocate(trnEnsembleWeighted)
        
       end subroutine
 
