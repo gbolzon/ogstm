@@ -95,6 +95,12 @@ SUBROUTINE mynode
         CALL mpi_comm_rank(EnsembleComm,EnsembleRank,ierr)
         CALL mpi_comm_size(EnsembleComm,EnsembleSize,ierr)
         
+        !if (EnsembleRank==NotWorkingMember) then
+        !    call MPI_Comm_split(EnsembleComm, MPI_UNDEFINED, EnsembleRank, BaseComm, ierr)
+        !else
+        !    call MPI_Comm_split(EnsembleComm, 0, EnsembleRank, BaseComm, ierr)
+        !end if
+        
         ! error check
         if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1)) .or. (EnsembleRank .ne. mod(GlobalRank,SeikDim+1)) .or. (EnsembleSize .ne. SeikDim+1)) then
           write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'.'
