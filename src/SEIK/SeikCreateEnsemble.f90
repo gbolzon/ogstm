@@ -7,9 +7,10 @@ subroutine SeikCreateEnsemble()
     
     if (MyRank==0) then
         if (EnsembleRank==NotWorkingMember) call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
-        MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+        call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
     end if
-    MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
-    trn=matmul(Lseik,ChangeCoefSeik)
+    call MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
+    TempVecSeik=matmul(Lseik,ChangeCoefSeik)
+    trn=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
     trb=trn
 end subroutine

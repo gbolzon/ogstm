@@ -41,7 +41,7 @@ SUBROUTINE ReadBaseSeik
                 call mpi_abort(mpi_comm_world,1,ierr)
             end if
             do jn=1,SeikDim
-                read(CovIOUnit,*,iostat=ierr) SeikCov1(:,jn)
+                read(CovIOUnit,*,iostat=ierr) CovSeik1(:,jn)
                 if (ierr/=0) then
                     write(*,*) 'Error initializing covariance matrix from file, while reading line', jn, 'error:', ierr
                     write(*,*) 'I will stop'

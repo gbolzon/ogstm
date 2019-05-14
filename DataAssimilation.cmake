@@ -15,6 +15,8 @@ find_package(BFM REQUIRED)
 find_package(3DVAR REQUIRED)
 find_package(PETSc REQUIRED)
 find_package(PnetCDF REQUIRED)
+set(BLA_VENDOR Intel10_64lp_seq)
+find_package(LAPACK REQUIRED)
 
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
@@ -73,4 +75,5 @@ endforeach()
 #building
 add_library( ogstm_lib ${FORTRAN_SOURCES})
 add_executable (ogstm.xx application/ogstm_main_caller.f90)
-target_link_libraries( ogstm.xx ogstm_lib ${NETCDFF_LIBRARIES_F90} ${BFM_LIBRARIES} ${DA_LIBRARIES} ${PETSC_LIBRARIES} ${PNETCDF_LIBRARIES})
+target_link_libraries( ogstm.xx ogstm_lib ${NETCDFF_LIBRARIES_F90} ${BFM_LIBRARIES} ${DA_LIBRARIES} ${PETSC_LIBRARIES} ${PNETCDF_LIBRARIES} ${LAPACK_LIBRARIES})
+

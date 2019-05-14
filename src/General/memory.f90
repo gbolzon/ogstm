@@ -758,7 +758,7 @@ subroutine alloc_tot()
 #endif
 
 #ifdef ExecDA
-       call myalloc_seik()
+       call myalloc_seik(myrank)
 #endif
   
         END subroutine alloc_tot
@@ -951,7 +951,7 @@ subroutine alloc_tot()
             deallocate(highfreq_table_dia)
             deallocate(highfreq_table_dia2d)
 #ifdef ExecDA
-        call clean_seik()
+        call clean_seik(myrank)
 
 #endif
 

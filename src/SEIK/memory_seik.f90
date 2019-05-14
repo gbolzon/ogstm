@@ -30,7 +30,12 @@
        
       CONTAINS
        
-      subroutine myalloc_seik()
+      subroutine myalloc_seik(LocalRank)
+            implicit none
+
+            integer, intent(in) :: LocalRank        
+            integer :: indexi
+
             Weight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             SpaceDim=jpk*jpj*jpi*jptra
             
@@ -58,8 +63,8 @@
             allocate(MpiDisplacement(0:SeikDim))
             MpiDisplacement = huge(MpiDisplacement(1))
             MpiDisplacement(0)=0
-            do i=1, SeikDim
-                MpiDisplacement(i)=MpiDisplacement(i-1)+MpiCount(i-1)
+            do indexi=1, SeikDim
+                MpiDisplacement(indexi)=MpiDisplacement(indexi-1)+MpiCount(indexi-1)
             end do
             
             allocate(TempVecSeik(SpaceDim))
@@ -75,7 +80,7 @@
             ChangeCoefSeik = huge(ChangeCoefSeik(1))
             
             
-            if(MyRank==0) then
+            if(LocalRank==0) then
                 
                 allocate(TempSliceSeik2(SeikDim))
                 TempSliceSeik2 = huge(TempSliceSeik2(1))
@@ -88,8 +93,8 @@
                 allocate(MpiDisplacementCov(0:SeikDim))
                 MpiDisplacementCov = huge(MpiDisplacementCov(1))
                 MpiDisplacementCov(0)=0
-                do i=1, SeikDim
-                    MpiDisplacementCov(i)=MpiDisplacementCov(i-1)+MpiCountCov(i-1)
+                do indexi=1, SeikDim
+                    MpiDisplacementCov(indexi)=MpiDisplacementCov(indexi-1)+MpiCountCov(indexi-1)
                 end do
             
             end if
@@ -106,7 +111,7 @@
                 call TTTSeik_builder()
                 
                 
-                if(MyRank==0) then
+                if(LocalRank==0) then
                 
                     allocate(AllWeightsSqrt(0:SeikDim))                    
                     AllWeightsSqrt = huge(AllWeightsSqrt(0))
@@ -153,11 +158,15 @@
             
       end subroutine
 
-      subroutine clean_seik()
+      subroutine clean_seik(LocalRank)
+            implicit none
+
+            integer, intent(in) :: LocalRank
+
             deallocate(trnEnsemble)
             deallocate(trnEnsembleWeighted)
             deallocate(BaseMember)
-            deallocate(ModelErrorDiag)
+            deallocate(ModelErrorDiag1)
             deallocate(LSeik)
             deallocate(MpiCount)
             deallocate(MpiDisplacement)
@@ -166,7 +175,7 @@
             deallocate(TempMatrixSeik)
             deallocate(ChangeCoefSeik)
             
-            if (MyRank==0) then
+            if (LocalRank==0) then
                 deallocate(TempSliceSeik2)
                 deallocate(MpiCountCov)
                 deallocate(MpiDisplacementCov)
@@ -176,7 +185,7 @@
                 deallocate(AllWeights)
                 deallocate(TTTSeik)
                 
-                if (MyRank==0) then
+                if (LocalRank==0) then
                     deallocate(AllWeightsSqrt)
                     deallocate(AllWeightsSqrt1)
                     deallocate(CovSeik1)
