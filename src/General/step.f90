@@ -191,7 +191,11 @@ MODULE module_step
       endif
 #endif
 
-
+#ifdef ExecDA
+        if (SeikDim.gt.0) then
+          call SeikCreateEnsemble()
+        endif
+#endif
 
 ! Call Passive tracer model between synchronization for small parallelisation
         CALL trcstp    ! se commento questo non fa calcoli
@@ -199,7 +203,6 @@ MODULE module_step
 #ifdef ExecDA
         if (SeikDim.gt.0) then
           call SeikForecast()
-          !ricorda di mettere un if su step in modo che al di fuori di trcstp lavori solo il primo ensemble member...oppure usa allreduce
         endif
 #endif
 

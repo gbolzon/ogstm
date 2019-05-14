@@ -156,6 +156,12 @@ SUBROUTINE ogstm_initialize()
       call DA_Init
 #endif
 
+#ifdef ExecDA
+    if (SeikDim.gt.0) then
+        call ReadBaseSeik
+    endif
+#endif
+
       call init_phys
 
 #ifdef BFMv2
