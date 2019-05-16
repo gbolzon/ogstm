@@ -9,8 +9,8 @@
       INTEGER :: SeikDim ! Reduced dimension of the error subspace.
       integer :: SpaceDim ! Full dimension of the space
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
-      integer, parameter :: NotWorkingMember=0, CovIOUnit=1001
-      logical :: UseInflation=.false.
+      integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
+      logical :: UseInflation=.false., PCANeeded=.true.
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
       double precision, allocatable, dimension (:,:) :: LSeik
@@ -27,6 +27,10 @@
       double precision, allocatable, dimension(:,:) :: CovSeik1, TTTSeik, CovSmoother1part, LTQ1L
       double precision, allocatable, dimension (:) :: AllWeights, AllWeightsSqrt, AllWeightsSqrt1
       double precision :: ForgettingFactor=0.9
+      
+      !for PCANeeded
+      integer :: DimForPCA, nHistoryForVar, nHistoryForSVD, nHistoryForSVDpart, CounterForVar, CounterForSVD, CounterForSVDpart, SVDpartID
+      double precision, allocatable, dimension(:,:,:,:,:) :: HistoryForVar, HistoryForSVD
        
       CONTAINS
        
@@ -140,6 +144,28 @@
                 
             end if
             
+            if (PCANeeded) then
+            
+                DimForPCA=100
+                nHistoryForVar=365
+                nHistoryForSVD=310
+                nHistoryForSVDpart=31
+                CounterForVar=0
+                CounterForSVD=0 
+                CounterForSVDpart=0 
+                SVDpartID=0
+            
+                allocate(HistoryForVar(jpk,jpj,jpi,jptra,nHistoryForVar))
+                HistoryForVar = huge(HistoryForVar(1,1,1,1,1))
+                
+                allocate(HistoryForSVD(jpk,jpj,jpi,jptra,nHistoryForSVD))
+                HistoryForSVD = huge(HistoryForSVD(1,1,1,1,1))
+                
+                allocate(HistoryForSVDpart(jpk,jpj,jpi,jptra,nHistoryForSVDpart))
+                HistoryForSVDpart = huge(HistoryForSVDpart(1,1,1,1,1))
+                
+            end if
+            
       end subroutine 
       
       subroutine TTTSeik_builder()
@@ -194,10 +220,13 @@
                     deallocate(OrtMatrixSampling)
                     deallocate(ChangeBaseSeik)
                 end if
-                
             end if
             
-            
+            if (PCANeeded) then
+                deallocate(HistoryForVar)
+                deallocate(HistoryForSVD)
+                deallocate(HistoryForSVDpart)
+            end if
        
       end subroutine
 

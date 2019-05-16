@@ -68,9 +68,7 @@
             DO jk = 1,jpk
 
                      if (tmask(jk,jj,ji).ne.0.0) then
-                     if( tra(jk,jj,ji,jn) .GT. 0.  ) then
-
-                     else
+                     if( tra(jk,jj,ji,jn) .LT. SMALL ) then ! previously it was grater then 0.0 else
                         tra_FN(jk,jj,ji,jn) =  - tra(jk,jj,ji,jn) + SMALL
                         tra(   jk,jj,ji,jn) =  SMALL
                      end if

@@ -83,6 +83,7 @@ MODULE module_step
        if (IsStartBackup_1) TauAVEfrom_1 = datestringToTAU(BKPdatefrom_1)
       TauAVEfrom_2 = TimeStepStart 
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
+       
 
       DO TAU = TimeStepStart, TimeStep__End
 
@@ -101,6 +102,10 @@ MODULE module_step
          if(lwp) write(numout,'(A,I8,A,A)') "step ------------ Starting timestep = ",TAU,' time ',DATEstring
          if(lwp) write(*,'(A,I8,A,A)')      "step ------------ Starting timestep = ",TAU,' time ',DATEstring
          !write(*,*) is_night(DATEstring)
+         
+#ifdef ExecDA
+        if ((PCANeeded).and.(EnsembleRank==0)) call PCACreateMatrices(DATEstring)
+#endif
 
         if (IsaRestart(DATEstring).and.(EnsembleRank==0))  then
             CALL trcwri(DATEstring) ! writes the restart files
