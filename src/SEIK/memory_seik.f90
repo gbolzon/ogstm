@@ -30,7 +30,7 @@
       
       !for PCANeeded
       integer :: DimForPCA, nHistoryForVar, nHistoryForSVD, nHistoryForSVDpart, CounterForVar, CounterForSVD, CounterForSVDpart, SVDpartID
-      double precision, allocatable, dimension(:,:,:,:,:) :: HistoryForVar, HistoryForSVD
+      double precision, allocatable, dimension(:,:,:,:,:) :: HistoryForVar, HistoryForSVD, HistoryForSVDpart
        
       CONTAINS
        

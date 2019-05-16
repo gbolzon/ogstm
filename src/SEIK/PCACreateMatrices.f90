@@ -1,13 +1,12 @@
 subroutine PCACreateMatrices(DateString)
     use myalloc
-    
+    use StringSEIK
+
     implicit none
     
     character(len=17), intent(in) :: DateString
     integer :: year, monthday
-    
-    write(FileNameBase,'(A31,I3.3,A25)') DirName//'/BASE', BaseIndex, '.'//DateStart//'.'//trim(ctrcnm(jn))//'.nc'
-    
+        
     if ((DATEstring(1:4).eq."2000").and.(DATEstring(10:17).eq."00:00:00")) then
         CounterForVar=CounterForVar+1
         HistoryForVar(:,:,:,:,CounterForVar)=trn
@@ -35,38 +34,15 @@ subroutine PCACreateMatrices(DateString)
             if (CounterForSVD==nHistoryForSVD) then
                 call SaveMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/HistSVD-"//int2str(MyRank,4)//".dat")
             end if
+        end if
     end if
-    
 end subroutine    
-
-function str2int(str)
-    implicit none
-    
-    character(len=*), intent(in) :: str
-    integer :: str2int, ierr
-    
-    read(str,*,iostat=ierr) str2int
-    if (ierr/=0) error stop "not a valid string in str2int"
-end function
-
-function int2str(number, ndigits)
-    implicit none
-    
-    integer, intent(in), number, ndigits
-    character(len=digits) :: int2str
-    integer :: ierr
-    character(len=10) :: str
-    
-    write(str,"(I0)") ndigits
-    write(int2str,"(I0."//trim(str)//")",iostat=ierr) number
-    if (ierr/=0) error stop "not a valid number in int2str"
-end function
 
 subroutine SaveMatrix(SavingMatrix, nColumns, FileName)
     use myalloc
     !use mpi
 
-    implict none
+    implicit none
 
     integer, intent(in) :: nColumns
     double precision, dimension(jpk,jpj,jpi,jptra,nColumns), intent(in) :: SavingMatrix
@@ -97,7 +73,6 @@ subroutine SaveMatrix(SavingMatrix, nColumns, FileName)
         !write(*,*) 'I will stop'
         !call mpi_abort(mpi_comm_world,1,ierr)
     end if
-
 end subroutine
         
 
