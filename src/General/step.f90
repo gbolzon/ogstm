@@ -104,7 +104,7 @@ MODULE module_step
          !write(*,*) is_night(DATEstring)
          
 #ifdef ExecDA
-        if ((PCANeeded).and.(EnsembleRank==0)) call PCACreateMatrices(DATEstring)
+        if ((PCANeeded.eq."write").and.(EnsembleRank==0)) call PCACreateMatrices(DATEstring)
 #endif
 
         if (IsaRestart(DATEstring).and.(EnsembleRank==0))  then
@@ -264,6 +264,12 @@ MODULE module_step
 !+++++++++++++++++++++++++++++c
 
       END DO  
+      
+! PCA if needed
+#ifdef ExecDA
+        if ((PCANeeded.eq."read").and.(EnsembleRank==0)) call PCAReadMatrices
+        if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) call PCASeik
+#endif
 
       CONTAINS
 

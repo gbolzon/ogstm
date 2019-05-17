@@ -9,8 +9,11 @@
       INTEGER :: SeikDim ! Reduced dimension of the error subspace.
       integer :: SpaceDim ! Full dimension of the space
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
+      
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical :: UseInflation=.false., PCANeeded=.true.
+      logical, parameter :: UseInflation=.false.
+      character(len=*), parameter :: PCANeeded="read"
+      
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
       double precision, allocatable, dimension (:,:) :: LSeik
@@ -54,7 +57,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.1d0)**2)
+            ModelErrorDiag1 = 1/(log(1.01d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -144,7 +147,7 @@
                 
             end if
             
-            if (PCANeeded) then
+            if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
             
                 DimForPCA=100
                 nHistoryForVar=365
@@ -222,7 +225,7 @@
                 end if
             end if
             
-            if (PCANeeded) then
+            if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
                 deallocate(HistoryForVar)
                 deallocate(HistoryForSVD)
                 deallocate(HistoryForSVDpart)
