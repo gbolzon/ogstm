@@ -1,5 +1,5 @@
 subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
-    use mpi
+    !use mpi
     use myalloc
     
     implicit none

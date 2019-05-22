@@ -6,7 +6,7 @@ subroutine SeikForecast()
 
     INTEGER :: ierr
 
-    trnEnsemble=trn
+    trnEnsemble=log(trn)
     trnEnsembleWeighted=trnEnsemble*Weight
 
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
@@ -37,7 +37,8 @@ subroutine SeikForecast()
         end if
         
     end if
-
+    
+    trn=exp(trn)
     trb=trn
 
 end subroutine

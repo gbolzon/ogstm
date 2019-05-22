@@ -11,6 +11,8 @@ subroutine SeikCreateEnsemble()
     end if
     call MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
-    trn=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
+    BaseMemeber=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
+    BaseMemeber=exp(BaseMemeber)
+    trn=trn*BaseMemeber
     trb=trn
 end subroutine

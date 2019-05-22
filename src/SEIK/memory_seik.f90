@@ -34,6 +34,8 @@
       !for PCANeeded
       integer :: DimForPCA, nHistoryForVar, nHistoryForSVD, nHistoryForSVDpart, CounterForVar, CounterForSVD, CounterForSVDpart, SVDpartID
       double precision, allocatable, dimension(:,:,:,:,:) :: HistoryForVar, HistoryForSVD, HistoryForSVDpart
+      
+      double precision,allocatable,dimension(:,:,:) :: copy_inSeik
        
       CONTAINS
        
@@ -103,7 +105,10 @@
                 do indexi=1, SeikDim
                     MpiDisplacementCov(indexi)=MpiDisplacementCov(indexi-1)+MpiCountCov(indexi-1)
                 end do
-            
+                
+                allocate(copy_inSeik(jpiglo, jpjglo, jpk))
+                copy_inSeik = huge(copy_inSeik(1,1,1))
+                    
             end if
             
             
@@ -142,7 +147,7 @@
                     
                     allocate(ChangeBaseSeik(SeikDim,0:SeikDim))
                     ChangeBaseSeik = huge(ChangeBaseSeik(1,1))
-                
+                    
                 end if
                 
             end if
@@ -208,6 +213,7 @@
                 deallocate(TempSliceSeik2)
                 deallocate(MpiCountCov)
                 deallocate(MpiDisplacementCov)
+                deallocate(copy_inSeik)
             end if
             
             if (EnsembleRank==0) then

@@ -66,6 +66,7 @@ SUBROUTINE ReadBaseSeik
         DO jn=1, jptra  ! global loop on tracers to read restart
             write(FileNameBase,'(A31,I3.3,A25)') DirName//'/BASE', BaseIndex, '.'//DateStart//'.'//trim(ctrcnm(jn))//'.nc'
             CALL readnc_slice_double(FileNameBase, 'TRN'//trim(ctrcnm(jn)), BaseMember(:,:,:,jn) )
+            BaseMember(:,:,:,jn) = BaseMember(:,:,:,jn) * tmask
         end do
         
         call mpi_allgatherv(BaseMember,SpaceDim,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)

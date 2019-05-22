@@ -7,19 +7,19 @@ subroutine PCAReadMatrices
     integer :: indexi
     logical :: ExistSVD
         
-    call LoadMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/HistVar-"//int2str(MyRank,4)//".dat")
+    call LoadMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/SAVES/HistVar-"//int2str(MyRank,4)//".dat")
     
-    INQUIRE(FILE="REDUCED_BASE/PCA/HistSVD-"//int2str(MyRank,4)//".dat", EXIST=ExistSVD)
+    INQUIRE(FILE="REDUCED_BASE/PCA/SAVES/HistSVD-"//int2str(MyRank,4)//".dat", EXIST=ExistSVD)
     
     if (ExistSVD) then
-        call LoadMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/HistSVD-"//int2str(MyRank,4)//".dat")
+        call LoadMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/SAVES/HistSVD-"//int2str(MyRank,4)//".dat")
     else
         do indexi=0, nHistoryForSVD/nHistoryForSVDpart-1
             call LoadMatrix(HistoryForSVD(:,:,:,:,(indexi*nHistoryForSVDpart+1):((indexi+1)*nHistoryForSVDpart)), & 
-                nHistoryForSVDpart,"REDUCED_BASE/PCA/HistSVDpart"//int2str(indexi,2)//"-"//int2str(MyRank,4)//".dat")
+                nHistoryForSVDpart,"REDUCED_BASE/PCA/SAVES/HistSVDpart"//int2str(indexi,2)//"-"//int2str(MyRank,4)//".dat")
         end do
         
-        call SaveMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/HistSVD-"//int2str(MyRank,4)//".dat")
+        call SaveMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/SAVES/HistSVD-"//int2str(MyRank,4)//".dat")
     end if
 end subroutine    
 

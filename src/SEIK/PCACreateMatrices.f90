@@ -11,7 +11,7 @@ subroutine PCACreateMatrices(DateString)
         CounterForVar=CounterForVar+1
         HistoryForVar(:,:,:,:,CounterForVar)=trn
         if (CounterForVar==nHistoryForVar) then
-            call SaveMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/HistVar-"//int2str(MyRank,4)//".dat")
+            call SaveMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/SAVES/HistVar-"//int2str(MyRank,4)//".dat")
         end if
     end if
     
@@ -25,14 +25,14 @@ subroutine PCACreateMatrices(DateString)
             HistoryForSVDpart(:,:,:,:,CounterForSVDpart)=trn
             if (CounterForSVDpart==nHistoryForSVDpart) then
                 CounterForSVDpart=0
-                call SaveMatrix(HistoryForSVDpart,nHistoryForSVDpart,"REDUCED_BASE/PCA/HistSVDpart"//int2str(SVDpartID,2)//"-"//int2str(MyRank,4)//".dat")
+                call SaveMatrix(HistoryForSVDpart,nHistoryForSVDpart,"REDUCED_BASE/PCA/SAVES/HistSVDpart"//int2str(SVDpartID,2)//"-"//int2str(MyRank,4)//".dat")
                 SVDpartID=SVDpartID+1
             end if
             
             CounterForSVD=CounterForSVD+1
             HistoryForSVD(:,:,:,:,CounterForSVD)=trn
             if (CounterForSVD==nHistoryForSVD) then
-                call SaveMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/HistSVD-"//int2str(MyRank,4)//".dat")
+                call SaveMatrix(HistoryForSVD,nHistoryForSVD,"REDUCED_BASE/PCA/SAVES/HistSVD-"//int2str(MyRank,4)//".dat")
             end if
         end if
     end if
