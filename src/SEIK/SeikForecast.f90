@@ -4,9 +4,13 @@ subroutine SeikForecast()
 
     implicit none
 
-    INTEGER :: ierr
+    INTEGER :: ierr, indexi
 
-    trnEnsemble=log(trn)
+    trnEnsemble=0
+    do indexi=1, jptra
+        where (tmask==1) trnEnsemble(:,:,:,indexi)=log(trn(:,:,:,indexi))
+    end do
+    !trnEnsemble=log(trn)
     trnEnsembleWeighted=trnEnsemble*Weight
 
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
@@ -39,6 +43,9 @@ subroutine SeikForecast()
     end if
     
     trn=exp(trn)
+    do indexi=1, jptra
+        trn(:,:,:,indexi)=trn(:,:,:,indexi)*tmask
+    end do
     trb=trn
 
 end subroutine

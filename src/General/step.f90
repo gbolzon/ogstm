@@ -105,6 +105,9 @@ MODULE module_step
          
 #ifdef ExecDA
         if ((PCANeeded.eq."write").and.(EnsembleRank==0)) call PCACreateMatrices(DATEstring)
+        if (IsaRestart(DATEstring).and.(SeikDim.gt.0))  then
+            call WriteBaseSeik(datestring)
+        endif
 #endif
 
         if (IsaRestart(DATEstring).and.(EnsembleRank==0))  then

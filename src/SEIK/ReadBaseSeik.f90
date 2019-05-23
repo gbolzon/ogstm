@@ -38,26 +38,26 @@ SUBROUTINE ReadBaseSeik
             INQUIRE(FILE=FileNameCov, EXIST=ExistCov)
             if (ExistCov) then
             
-            open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='read', access='sequential',status='old')
-            if (ierr/=0) then
-                write(*,*) 'Error initializing covariance matrix from file: ', ierr
-                write(*,*) 'I will stop'
-                call mpi_abort(mpi_comm_world,1,ierr)
-            end if
-            do jn=1,SeikDim
-                read(UnitSEIK,*,iostat=ierr) CovSeik1(:,jn)
+                open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='read', access='sequential',status='old')
                 if (ierr/=0) then
-                    write(*,*) 'Error initializing covariance matrix from file, while reading line', jn, 'error:', ierr
+                    write(*,*) 'Error initializing covariance matrix from file: ', ierr
                     write(*,*) 'I will stop'
                     call mpi_abort(mpi_comm_world,1,ierr)
                 end if
-            end do
-            close(unit=UnitSEIK, iostat=ierr)
-            if (ierr/=0) then
-                write(*,*) 'Error initializing covariance matrix from file, closing file: ', ierr
-                write(*,*) 'I will stop'
-                call mpi_abort(mpi_comm_world,1,ierr)
-            end if
+                do jn=1,SeikDim
+                    read(UnitSEIK,*,iostat=ierr) CovSeik1(:,jn)
+                    if (ierr/=0) then
+                        write(*,*) 'Error initializing covariance matrix from file, while reading line', jn, 'error:', ierr
+                        write(*,*) 'I will stop'
+                        call mpi_abort(mpi_comm_world,1,ierr)
+                    end if
+                end do
+                close(unit=UnitSEIK, iostat=ierr)
+                if (ierr/=0) then
+                    write(*,*) 'Error initializing covariance matrix from file, closing file: ', ierr
+                    write(*,*) 'I will stop'
+                    call mpi_abort(mpi_comm_world,1,ierr)
+                end if
             
             else
 
