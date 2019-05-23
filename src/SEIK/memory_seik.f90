@@ -34,7 +34,9 @@
       !for PCANeeded
       integer :: DimForPCA, nHistoryForVar, nHistoryForSVD, nHistoryForSVDpart, CounterForVar, CounterForSVD, CounterForSVDpart, SVDpartID
       double precision, allocatable, dimension(:,:,:,:,:) :: HistoryForVar, HistoryForSVD, HistoryForSVDpart
-      
+      double precision, allocatable, dimension(:,:) :: PCAMatrix
+      double precision, allocatable, dimension(:,:) :: PCAMatrixT
+
       double precision,allocatable,dimension(:,:,:) :: copy_inSeik
        
       CONTAINS
@@ -163,15 +165,21 @@
                 CounterForSVDpart=0 
                 SVDpartID=0
             
-                allocate(HistoryForVar(jpk,jpj,jpi,jptra,nHistoryForVar))
-                HistoryForVar = huge(HistoryForVar(1,1,1,1,1))
+                !allocate(HistoryForVar(jpk,jpj,jpi,jptra,nHistoryForVar))
+                !HistoryForVar = huge(HistoryForVar(1,1,1,1,1))
                 
                 allocate(HistoryForSVD(jpk,jpj,jpi,jptra,nHistoryForSVD))
                 HistoryForSVD = huge(HistoryForSVD(1,1,1,1,1))
                 
                 allocate(HistoryForSVDpart(jpk,jpj,jpi,jptra,nHistoryForSVDpart))
                 HistoryForSVDpart = huge(HistoryForSVDpart(1,1,1,1,1))
-                
+
+                allocate(PCAMatrix(nHistoryForSVD,SpaceDim))
+                PCAMatrix = huge(PCAMatrix(1,1))
+
+                allocate(PCAMatrixT(SpaceDim,nHistoryForSVD))
+                PCAMatrixT = huge(PCAMatrixT(1,1))
+
             end if
             
       end subroutine 
@@ -232,9 +240,11 @@
             end if
             
             if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
-                deallocate(HistoryForVar)
+                !deallocate(HistoryForVar)
                 deallocate(HistoryForSVD)
                 deallocate(HistoryForSVDpart)
+                deallocate(PCAMatrix)
+                deallocate(PCAMatrixT)
             end if
        
       end subroutine

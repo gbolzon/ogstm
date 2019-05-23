@@ -14,7 +14,7 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
     if (ierr.ne.0) error stop 'Choleky failed'
     
     OrtMatrixSampling(:,1)=AllWeightsSqrt
-    call OrtMatrix(OrtMatrixSampling, SeikDim+1, 1, SeikDim)
+    call OrtMatrix(OrtMatrixSampling, SeikDim+1,SeikDim+1, 1, SeikDim)
     do indexi=2, SeikDim+1
         OrtMatrixSampling(:,indexi)=OrtMatrixSampling(:,indexi)*AllWeightsSqrt1
     end do

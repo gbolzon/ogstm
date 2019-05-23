@@ -14,10 +14,10 @@ subroutine InvMatMul(A,B,nside,ierr)
     if (ierr.ne.0) error stop 'Matrix inversion failed!'
 end subroutine InvMatMul
 
-subroutine OrtMatrix(CurrentMatrix, ColumnSize, RowSize, nRows)
+subroutine OrtMatrix(CurrentMatrix, ColumnSize,TotalRows, RowSize, nRows)
     implicit none
-    integer, intent(in) :: ColumnSize, RowSize, nRows
-    double precision, dimension (:, :), intent(inout) :: CurrentMatrix
+    integer, intent(in) :: ColumnSize, RowSize, nRows, TotalRows
+    double precision, dimension (ColumnSize,TotalRows), intent(inout) :: CurrentMatrix
     integer :: indexi, indexj
     
     do indexi=1, nRows

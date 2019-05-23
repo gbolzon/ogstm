@@ -74,7 +74,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
                   do jj =1 , jpj
                         do jk =1 , jpk
                               if (tmask(jk,jj,ji).eq.1) then
-                                    buf(jk,jj,ji) = BaseMemeber(jk,jj,ji, jn)
+                                    buf(jk,jj,ji) = BaseMember(jk,jj,ji, jn)
                               endif
                         enddo
                   enddo
@@ -128,7 +128,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
              do jk =1 , jpk
               ind1 = jk + j_contribution + i_contribution
               if (tmask(jk,jj,ji).eq.1) then
-                 bufftrn(ind1)= BaseMemeber(jk,jj,ji, jn)
+                 bufftrn(ind1)= BaseMember(jk,jj,ji, jn)
               endif
              enddo
             enddo
@@ -170,7 +170,7 @@ SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
        IMPLICIT NONE
        CHARACTER*(*),intent(in) :: fileNetCDF
        CHARACTER(*),intent(in) ::  VAR
-       CHARACTER(len=17) intent(in) :: TimeString
+       CHARACTER(len=17), intent(in) :: TimeString
        integer, intent(in) :: deflate, deflate_level
 
        ! local

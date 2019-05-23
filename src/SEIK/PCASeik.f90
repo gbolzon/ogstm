@@ -1,3 +1,35 @@
+module StatSEIK
+implicit none
+
+contains
+function CalcVar(array, nside, meanval, tempvec)
+    implicit none
+    
+    integer, intent(in) :: nside
+    double precision, dimension(nside), intent(in) :: array
+    double precision, intent(in) :: meanval
+    double precision :: CalcVar
+    double precision, dimension(nside), intent(inout) :: tempvec
+    
+    tempvec=array-meanval
+    tempvec=tempvec*tempvec
+    CalcVar=sum(tempvec)/nside
+
+end function
+
+function CalcMean(array, nside)
+    implicit none
+    
+    integer, intent(in) :: nside
+    double precision, dimension(nside), intent(in) :: array
+    double precision:: CalcMean
+    
+    CalcMean=sum(array)/nside
+end function
+
+end module
+
+
 subroutine PCASeik
     use mpi
     use myalloc
@@ -6,18 +38,19 @@ subroutine PCASeik
     implicit none
     
     double precision, parameter :: Threshold=1.0d-8
-    integer, parameter :: maxNeigenvectors
+    integer, parameter :: maxNeigenvectors=100
     
-    double precision, dimension(nHistoryForSVD,SpaceDim) :: PCAMatrix
+    !double precision, dimension(nHistoryForSVD,SpaceDim) :: PCAMatrix
+    !double precision, dimension(SpaceDim,nHistoryForSVD) :: PCAMatrixT
     double precision, dimension(nHistoryForSVD) :: tempvec, workvec
-    double precision, dimension(nHistoryForSVD,SpaceDim) :: LogMatrix, NormalizedLogMatrix
+    !double precision, dimension(nHistoryForSVD,SpaceDim) :: LogMatrix, NormalizedLogMatrix
     double precision , dimension(SpaceDim) :: PCAVar
     !double precision , dimension(SpaceDim) :: PCASTD
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
     integer :: indexi, ierr
     
     double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: work, iwork
-    integer dimension(200) :: isuppz
+    integer, dimension(2*maxNeigenvectors) :: isuppz
     double precision dlamch
     
     double precision, dimension(nHistoryForSVD) :: eigenvalues
@@ -25,11 +58,17 @@ subroutine PCASeik
     integer :: neigenvalues
     
     double precision, dimension(:,:), allocatable :: Transformation
+    double precision :: temptime
+
+    if(myrank==0) write(*,*) "Starting PCA"
+    temptime=mpi_wtime()
+    if(myrank==0) write(*,*) "building matrix"
     
-    PCAMatrix=transpose(reshape(HistoryForSVD,(/SpaceDim,nHistoryForSVD/)))
+    PCAMatrixT=reshape(HistoryForSVD,(/SpaceDim,nHistoryForSVD/))
+    PCAMatrix=transpose(PCAMatrixT)
     !PCAVar=CalcVar(PCAMatrix, nHistoryForSVD, SpaceDim, CalcMean(PCAMatrix, nHistoryForSVD, SpaceDim))
     
-    LogMatrix=0.0d0
+    !LogMatrix=0.0d0
     !PCASTD=0.0d0
     do indexi=1, SpaceDim
         PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
@@ -39,16 +78,28 @@ subroutine PCASeik
             PCAVar(indexi)=CalcVar(tempvec, nHistoryForSVD,0.0d0,workvec)
             if (PCAVar(indexi)>1.0d0/ModelErrorDiag1(indexi)) then
                 !PCASTD(indexi)=sqrt(PCAVar(indexi))
-                LogMatrix(:,indexi)=tempvec
+                PCAVar(indexi)=sqrt(PCAVar(indexi))
+                !LogMatrix(:,indexi)=tempvec
                 !NormalizedLogMatrix(:,indexi)=tempvec/PCASTD(indexi)
-                NormalizedLogMatrix(:,indexi)=tempvec/sqrt(PCAVar(indexi))
+                !NormalizedLogMatrix(:,indexi)=tempvec/sqrt(PCAVar(indexi))
+                PCAMatrix(:,indexi)=tempvec/PCAVar(indexi)
+            else
+                PCAMatrix(:,indexi)=0.0d0
             end if
+        else
+            PCAMatrix(:,indexi)=0.0d0
         end if
     end do
-    
-    NormalizedLogMatrix2part=matmul(NormalizedLogMatrix,transpose(NormalizedLogMatrix))
+
+    if(myrank==0) write(*,*) "reducing matrix"    
+
+    !NormalizedLogMatrix2part=matmul(NormalizedLogMatrix,transpose(NormalizedLogMatrix))
+    PCAMatrixT=transpose(PCAMatrix)
+    NormalizedLogMatrix2part=matmul(PCAMatrix,PCAMatrixT)
     call mpi_reduce(NormalizedLogMatrix2part,NormalizedLogMatrix2, nHistoryForSVD*nHistoryForSVD, mpi_real8, mpi_sum, 0, LocalComm, ierr)
     
+    if(myrank==0) write(*,*) "svd"
+
     if (MyRank==0) then
         call dsyevr("V", "I", "U", nHistoryForSVD, NormalizedLogMatrix2, nHistoryForSVD, 0.0d0, 0.0d0, nHistoryForSVD-maxNeigenvectors+1, nHistoryForSVD, & 
             dlamch('S'), neigenvalues, eigenvalues, eigenvectors, nHistoryForSVD, &
@@ -107,47 +158,23 @@ subroutine PCASeik
     
     end if
     
+    if(myrank==0) write(*,*) "preparing and writing base"
+
+    do indexi=1, SpaceDim
+        PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
+    end do
+
     do indexi=1, neigenvalues
     
         !reusing pcavar instead of defining a new temp array
-        PCAVar=matmul(Transformation(:,indexi),LogMatrix)
+        PCAVar=matmul(Transformation(:,indexi),PCAMatrix)
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
         
         call trcwriSeik('19990101-00:00:00', indexi, 'REDUCED_BASE/PCA/')
         
     end do
 
+    if(myrank==0) write(*,*) "End of PCA in ", mpi_wtime()-temptime, " seconds"
+
 end subroutine
-
-
-module StatSEIK
-implicit none
-
-conteins
-function CalcVar(array, nside, meanval, tempvec)
-    implicit none
-    
-    integer, intent(in) :: nside
-    double precision, dimension(nside), intent(in) :: array
-    double precision, intent(in) :: meanval
-    double precision :: CalcVar
-    double precision, dimension(nside), intent(inout) :: tempvec
-    
-    tempvec=array-meanval
-    tempvec=tempvec*tempvec
-    CalcVar=sum(tempvec)/nside
-
-end function
-
-function CalcMean(array, nside)
-    implicit none
-    
-    integer, intent(in) :: nside
-    double precision, dimension(nside), intent(in) :: array
-    double precision:: CalcMean
-    
-    CalcMean=sum(array)/nside
-end function
-
-end module
 

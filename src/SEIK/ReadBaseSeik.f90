@@ -25,6 +25,7 @@ SUBROUTINE ReadBaseSeik
     CHARACTER(LEN=26) :: DirName
     CHARACTER(LEN=59) :: FileNameBase
     CHARACTER(LEN=53) :: FileNameCov
+    logical :: ExistCov
 
     DirName='REDUCED_BASE/DIMENSION_010'
     FileNameBase='REDUCED_BASE/DIMENSION_010/BASE001.20111231-15:30:00.N1p.nc'
@@ -34,6 +35,9 @@ SUBROUTINE ReadBaseSeik
     if (EnsembleRank==NotWorkingMember) then
         if (myrank==0) then
             FileNameCov=DirName//'/COV1.'//DateStart//'.csv'
+            INQUIRE(FILE=FileNameCov, EXIST=ExistCov)
+            if (ExistCov) then
+            
             open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='read', access='sequential',status='old')
             if (ierr/=0) then
                 write(*,*) 'Error initializing covariance matrix from file: ', ierr
@@ -53,6 +57,15 @@ SUBROUTINE ReadBaseSeik
                 write(*,*) 'Error initializing covariance matrix from file, closing file: ', ierr
                 write(*,*) 'I will stop'
                 call mpi_abort(mpi_comm_world,1,ierr)
+            end if
+            
+            else
+
+                CovSeik1=0.0d0
+                do jn=1,SeikDim
+                    CovSeik1(jn,jn)=1.0d0
+                end do
+                
             end if
         end if
         call mpi_allgatherv(0,0,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
