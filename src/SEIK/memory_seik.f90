@@ -12,7 +12,7 @@
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false.
-      character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
+      character(len=*), parameter :: PCANeeded="read" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1

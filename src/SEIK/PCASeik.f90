@@ -70,6 +70,7 @@ subroutine PCASeik
     
     !LogMatrix=0.0d0
     !PCASTD=0.0d0
+    where (PCAMatrix<1.0d-5) PCAMatrix=1.0d-5
     do indexi=1, SpaceDim
         PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
         if (PCAVar(indexi)>Threshold) then

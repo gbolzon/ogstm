@@ -91,8 +91,11 @@ SUBROUTINE ogstm_initialize()
 
 ! local declarations
 ! ==================
+    double precision temporarytime1, temporarytime2
      
       ! *********************************************
+
+      temporarytime1=mpi_wtime()
 
       CALL mynode() !  Nodes selection
 
@@ -158,7 +161,15 @@ SUBROUTINE ogstm_initialize()
 
 #ifdef ExecDA
     if (SeikDim.gt.0) then
+        temporarytime2=MPI_Wtime()
+        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": First part of initialization in sec ", temporarytime2-temporarytime1
+        temporarytime1=temporarytime2
+        
         call ReadBaseSeik
+        
+        temporarytime2=MPI_Wtime()
+        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": SEIK initialization in sec ", temporarytime2-temporarytime1
+        temporarytime1=temporarytime2
     endif
 #endif
 
@@ -174,6 +185,14 @@ SUBROUTINE ogstm_initialize()
       call BFM0D_INIT_IO_CHANNELS()
 #endif
       call Initialize()
+
+#ifdef ExecDA
+    if (SeikDim.gt.0) then
+        temporarytime2=MPI_Wtime()
+        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": Second part of initialization in sec ", temporarytime2-temporarytime1
+        temporarytime1=temporarytime2
+    endif
+#endif
 
 END SUBROUTINE ogstm_initialize
 

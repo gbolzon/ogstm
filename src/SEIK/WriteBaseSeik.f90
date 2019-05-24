@@ -47,7 +47,7 @@ subroutine WriteBaseSeik(DateString)
             BaseIndex=EnsembleRank+1
         end if
         
-        trcwriSeik(DateString, BaseIndex, DirName//'/')
+        call trcwriSeik(DateString, BaseIndex, DirName//'/')
     end if
     
-end program
+end subroutine

@@ -70,6 +70,7 @@ MODULE module_step
       double precision sec
       LOGICAL B, isFIRST
       INTEGER :: jk,jj,ji,jn
+      integer ierr
 !++++++++++++++++++++++++++++++c
 !         Time  loop           c
 !++++++++++++++++++++++++++++++c
@@ -84,6 +85,7 @@ MODULE module_step
       TauAVEfrom_2 = TimeStepStart 
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
+      call mpi_barrier(mpi_comm_world,ierr)
 
       DO TAU = TimeStepStart, TimeStep__End
 
@@ -219,9 +221,10 @@ MODULE module_step
         ave_counter_1 = ave_counter_1 +1  ! incrementing our counters
         ave_counter_2 = ave_counter_2 +1
 
-
+        call mpi_barrier(mpi_comm_world, ierr)
        stpparttime = MPI_WTIME() - stpparttime
        stptottime  = stptottime  + stpparttime
+        if (lwp) write(*,*) "Step in sec ", stpparttime
 
 
 ! OGSTM TEMPORIZATION
