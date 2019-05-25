@@ -65,7 +65,7 @@ MODULE module_step
 ! ==================
       INTEGER TAU, indic
 
-      character(LEN=17)  datestring, datemean, datefrom_1, datefrom_2
+      character(LEN=17)  datestring, datemean, datefrom_1, datefrom_2, NextDateString
       character(LEN=17)  date_aveforDA
       double precision sec
       LOGICAL B, isFIRST
@@ -91,6 +91,7 @@ MODULE module_step
 
          stpparttime = MPI_WTIME()  ! stop cronomether
          call tau2datestring(TAU, DATEstring)
+         call tau2datestring(TAU+1,NextDateString)
          sec=datestring2sec(DATEstring)
 
          NOW_datestring = DATEstring ! update time manager module
@@ -202,10 +203,10 @@ MODULE module_step
 #endif
 
 #ifdef ExecDA
-        if (SeikDim.gt.0) then
+        if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
             call SeikCreateEnsemble()
 
-            if (.false.) then !.true. if u want to save the ensemble before the evolution
+            if (.true.) then !.true. if u want to save the ensemble before the evolution
                 BaseMember=trn 
                 call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/')
             endif
@@ -217,9 +218,9 @@ MODULE module_step
         CALL trcstp    ! se commento questo non fa calcoli
         
 #ifdef ExecDA
-        if (SeikDim.gt.0) then
+        if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
 
-            if (.false.) then !.true. if you want to save the ensamble after the evolution
+            if (.true.) then !.true. if you want to save the ensamble after the evolution
                 BaseMember=trn
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/')
             endif
