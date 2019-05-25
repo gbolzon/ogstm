@@ -47,7 +47,7 @@ subroutine PCASeik
     double precision , dimension(SpaceDim) :: PCAVar
     !double precision , dimension(SpaceDim) :: PCASTD
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
-    integer :: indexi, ierr
+    integer :: indexi, indexj, ierr
     
     double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: work, iwork
     integer, dimension(2*maxNeigenvectors) :: isuppz
@@ -64,13 +64,43 @@ subroutine PCASeik
     temptime=mpi_wtime()
     if(myrank==0) write(*,*) "building matrix"
     
+    do indexi=1, nHistoryForSVD
+        do indexj=1, jptra
+            where (bfmmask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0
+            !HistoryForSVD(:,:,:,indexj, indexi)=HistoryForSVD(:,:,:,indexj, indexi)*bfmmask
+        end do
+    end do
+    PCAVar=0.0d0
+    
     PCAMatrixT=reshape(HistoryForSVD,(/SpaceDim,nHistoryForSVD/))
     PCAMatrix=transpose(PCAMatrixT)
     !PCAVar=CalcVar(PCAMatrix, nHistoryForSVD, SpaceDim, CalcMean(PCAMatrix, nHistoryForSVD, SpaceDim))
     
     !LogMatrix=0.0d0
     !PCASTD=0.0d0
-    where (PCAMatrix<1.0d-5) PCAMatrix=1.0d-5
+    where (PCAMatrix<1.0d-6) PCAMatrix=1.0d-6
+
+    if (.false.) then
+        do indexi=1, SpaceDim
+            PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
+        end do
+        BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
+        where (BaseMember.le.Threshold) BaseMember=1.0d20
+        call trcwriSeik('PCVar678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+
+        do indexi=1, jptra
+            BaseMember(:,:,:,indexi)=bfmmask
+	end do
+        call trcwriSeik('bfmmask8901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+
+        BaseMember=reshape(HistoryForSVD(:,:,:,:, 10),(/jpk,jpj,jpi,jptra/))
+        call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+
+        call mpi_barrier(mpi_comm_World,ierr)
+        call mpi_abort(mpi_comm_world,1,ierr)
+
+
+    end if
     do indexi=1, SpaceDim
         PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
         if (PCAVar(indexi)>Threshold) then
@@ -86,9 +116,11 @@ subroutine PCASeik
                 PCAMatrix(:,indexi)=tempvec/PCAVar(indexi)
             else
                 PCAMatrix(:,indexi)=0.0d0
+                PCAVar(indexi)=0.0d0
             end if
         else
             PCAMatrix(:,indexi)=0.0d0
+            PCAVar(indexi)=0.0d0
         end if
     end do
 
@@ -170,11 +202,13 @@ subroutine PCASeik
         !reusing pcavar instead of defining a new temp array
         PCAVar=matmul(Transformation(:,indexi),PCAMatrix)
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
-        
+        BaseMember=BaseMember/sqrt(dble(nHistoryForSVD))
         call trcwriSeik('19990101-00:00:00', indexi, 'REDUCED_BASE/PCA/')
         
     end do
-
+    
+    deallocate(Transformation)
+    
     if(myrank==0) write(*,*) "End of PCA in ", mpi_wtime()-temptime, " seconds"
 
 end subroutine

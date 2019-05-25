@@ -6,9 +6,13 @@ subroutine SeikForecast()
 
     INTEGER :: ierr, indexi
 
-    trnEnsemble=0
+    where (trn<1.0d-11) trn=1.0d-11
     do indexi=1, jptra
-        where (tmask==1) trnEnsemble(:,:,:,indexi)=log(trn(:,:,:,indexi))
+        where (tmask==1) 
+           trnEnsemble(:,:,:,indexi)=log(trn(:,:,:,indexi))
+        elsewhere
+            trnEnsemble(:,:,:,indexi)=0.0d0
+        end where
     end do
     !trnEnsemble=log(trn)
     trnEnsembleWeighted=trnEnsemble*Weight
@@ -29,15 +33,20 @@ subroutine SeikForecast()
                 CovSeik1=LTQ1L
                 TempMatrixSeik=CovSmoother1part
                 call InvMatMul(TempMatrixSeik,CovSeik1,SeikDim,ierr)
-                CovSeik1=matmul(TTTSeik,CovSeik1)
+                TempMatrixSeik=matmul(TTTSeik,CovSeik1)
+                CovSeik1=TempMatrixSeik
             end if
         else
             call mpi_allgatherv(BaseMember,SpaceDim,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
             TempVecSeik=reshape(BaseMember,(/SpaceDim/))
             TempVecSeik=TempVecSeik*ModelErrorDiag1
             TempSliceSeik=matmul(TempVecSeik,LSeik)
-            call mpi_reduce(TempSliceSeik,TempSliceSeik2, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
-            if (MyRank==0) call mpi_gatherv(TempSliceSeik2,SeikDim,mpi_real8,CovSmoother1part,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
+            if (MyRank==0) then
+                call mpi_reduce(TempSliceSeik,TempSliceSeik2, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
+            else
+                call mpi_reduce(TempSliceSeik,0, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
+            end if
+            if (MyRank==0) call mpi_gatherv(TempSliceSeik2,SeikDim,mpi_real8,0,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
         end if
         
     end if

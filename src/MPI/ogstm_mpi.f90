@@ -86,8 +86,10 @@ SUBROUTINE mynode
 !SEIK Code
 
       if(GlobalRank .lt. GlobalSize-mod(GlobalSize,SeikDim+1)) then
-      
-        call MPI_Comm_split(MPI_COMM_WORLD, mod(GlobalRank,SeikDim+1), GlobalRank, LocalComm, ierr)
+
+        !call MPI_Comm_split(MPI_COMM_WORLD, mod(GlobalRank,SeikDim+1), GlobalRank, LocalComm, ierr)      
+        !changed order in the communcator for better parallelization in I/O
+        call MPI_Comm_split(MPI_COMM_WORLD, GlobalRank/(GlobalSize/(SeikDim+1)), GlobalRank, LocalComm, ierr)
         CALL mpi_comm_rank(LocalComm,myrank,ierr)
         CALL mpi_comm_size(LocalComm,CommSize,ierr)
         
@@ -102,6 +104,7 @@ SUBROUTINE mynode
         !end if
         
         ! error check
+        if (.false.) then !this error check was prepared before to change the construction of LocalComm and EnsembleComm
         if((myrank .ne. GlobalRank/(SeikDim+1)) .or. (CommSize .ne. GlobalSize/(SeikDim+1)) .or. (EnsembleRank .ne. mod(GlobalRank,SeikDim+1)) .or. (EnsembleSize .ne. SeikDim+1)) then
           write(*,*)'Unexpected value! myrank = ',myrank,', expected = ',GlobalRank/(SeikDim+1),'.'
           write(*,*)'CommSize = ',CommSize,', expected = ',GlobalSize/(SeikDim+1),'.'
@@ -110,7 +113,8 @@ SUBROUTINE mynode
           write(*,*)'Something wrong in ogstm_mpi.f90, I will stop.'
           call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
           error stop
-        endif
+        end if
+        end if
       else
         if(GlobalRank == GlobalSize-mod(GlobalSize,SeikDim+1)) then
           write(*,*)'The total number of processes (Global size = ',GlobalSize,') is not a multiple of the number of ensemble members (SeikDim + 1 = ',SeikDim+1,').'

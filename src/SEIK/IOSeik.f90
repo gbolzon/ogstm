@@ -40,7 +40,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
         !Directory='REDUCED_BASE/DIMENSION_010/'
         FileName = 'BASE001.20111231-15:30:00.N1p.nc'
 
-       if(lwp)write(*,*) 'trcwriSEIK ------------  myrank =',myrank, ' BaseIndex=' , BaseIndex
+       if (MyRank==0) write(*,*) 'trcwriSEIK ------------  myrank =',myrank, ' BaseIndex=' , BaseIndex
 
        trcwriparttime = MPI_WTIME() ! cronometer-start
 

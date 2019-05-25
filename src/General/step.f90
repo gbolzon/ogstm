@@ -203,7 +203,13 @@ MODULE module_step
 
 #ifdef ExecDA
         if (SeikDim.gt.0) then
-          call SeikCreateEnsemble()
+            call SeikCreateEnsemble()
+
+            if (.false.) then !.true. if u want to save the ensemble before the evolution
+                BaseMember=trn 
+                call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/')
+            endif
+
         endif
 #endif
 
@@ -212,7 +218,14 @@ MODULE module_step
         
 #ifdef ExecDA
         if (SeikDim.gt.0) then
-          call SeikForecast()
+
+            if (.false.) then !.true. if you want to save the ensamble after the evolution
+                BaseMember=trn
+                call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/')
+            endif
+
+            call SeikForecast()
+
         endif
 #endif
 
