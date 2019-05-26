@@ -6,7 +6,7 @@ subroutine SeikForecast()
 
     INTEGER :: ierr, indexi
 
-    where (trn<1.0d-11) trn=1.0d-11
+    where (trn<1.0d-11) trn=1.0d-11 !this should already be done with SMALL in another routine, but I don't have time to check now
     do indexi=1, jptra
         where (tmask==1) 
            trnEnsemble(:,:,:,indexi)=log(trn(:,:,:,indexi))
@@ -18,7 +18,12 @@ subroutine SeikForecast()
     trnEnsembleWeighted=trnEnsemble*Weight
 
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
-    BaseMember=trnEnsemble-trn
+    !BaseMember=trnEnsemble-trn
+    where (trn>log(1.0d-4)) 
+        BaseMember=trnEnsemble-trn
+    elsewhere
+        BaseMember=0.0d0
+    end where
 
     if (UseInflation==.true.) then
         write(*,*) 'Missing code using inflation: check if is it necessary to prepare L and other matrices for future use. I will stop!'
