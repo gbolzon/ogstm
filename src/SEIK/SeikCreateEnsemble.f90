@@ -16,6 +16,17 @@ subroutine SeikCreateEnsemble()
     call MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
     BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
+
+    trnEnsembleWeighted=BaseMember**2
+    trnEnsembleWeighted=trnEnsembleWeighted*Weight
+    call MPI_AllReduce(trnEnsembleWeighted, trnEnsemble, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
+    where (trnEnsemble>MaxVarSEIK)
+        trnEnsemble=sqrt(MaxVarSEIK/trnEnsemble)
+    elsewhere
+        trnEnsemble=1.0d0
+    end where
+    BaseMember=BaseMember*trnEnsemble
+
     BaseMember=exp(BaseMember)
     trn=trn*BaseMember
     trb=trn

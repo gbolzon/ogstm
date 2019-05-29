@@ -75,6 +75,9 @@ MODULE module_step
 !         Time  loop           c
 !++++++++++++++++++++++++++++++c
 
+#ifdef ExecDA
+!if (PCANeeded.ne."read") then
+#endif
 
       isFIRST=.true.
 
@@ -86,6 +89,17 @@ MODULE module_step
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
       call mpi_barrier(mpi_comm_world,ierr)
+
+if (.false.) then
+tmask=bfmmask*tmask
+if (sum(tmask)/=sum(bfmmask)) then
+write(*,*) "-------------------------------------eccolo!----------------------------------------"
+else
+write(*,*) "ok"
+end if
+call mpi_barrier(mpi_comm_world,ierr)
+stop
+end if
 
       DO TAU = TimeStepStart, TimeStep__End
 
@@ -108,6 +122,7 @@ MODULE module_step
          
 #ifdef ExecDA
         if ((PCANeeded.eq."write").and.(EnsembleRank==0)) call PCACreateMatrices(DATEstring)
+
         if (IsaRestart(DATEstring).and.(SeikDim.gt.0))  then
             call WriteBaseSeik(datestring)
         endif
@@ -142,9 +157,19 @@ MODULE module_step
 ! For offline simulation READ DATA or precalculalted dynamics fields
 ! ------------------------------------------------------------------
 
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "written"
 
       CALL forcings_PHYS(DATEstring)
+
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "forcings_PHYS"
+
       CALL forcings_KEXT(datestring)
+
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "forcings_KEXT"
+
       !CALL bc_gib       (DATEstring)     ! CALL dtatrc(istp,0)! Gibraltar strait BC
       !CALL bc_tin       (DATEstring)     ! CALL dtatrc(istp,1)
 
@@ -154,6 +179,10 @@ MODULE module_step
 
       !bc_tin_partTime = MPI_WTIME()
       call boundaries%update(datestring)
+
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "boundaries"
+
       !bc_tin_partTime = MPI_WTIME()    - bc_tin_partTime
       !bc_tin_TotTime  = bc_tin_TotTime + bc_tin_partTime
 
@@ -162,10 +191,19 @@ MODULE module_step
 !  ---------------------------------------------------------------------
 
       CALL bc_atm       (DATEstring)     ! CALL dtatrc(istp,2)
+
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "bc_atm"
+
       CALL bc_co2       (DATEstring)
+
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "bc_co2"
+
       CALL eos          ()               ! Water density
 
-
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "eos"
 
       if (IsAnAveDump(DATEstring,1).and.(EnsembleRank==0)) then
          call MIDDLEDATE(TauAVEfrom_1, TAU, datemean)
@@ -206,7 +244,7 @@ MODULE module_step
         if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
             call SeikCreateEnsemble()
 
-            if (.true.) then !.true. if u want to save the ensemble before the evolution
+            if (.false.) then !.true. if u want to save the ensemble before the evolution
                 BaseMember=trn 
                 call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/')
             endif
@@ -214,13 +252,50 @@ MODULE module_step
         endif
 #endif
 
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "ensemble"
+
+if (.false.) then
+trnEnsemble=trn
+if(lwp) write(*,*) ctrcnm
+do jk=1, jpk
+do jj=1,jpj
+do ji=1,jpi
+do jn=1,jptra
+    if ((trn(jk,jj,ji,jn)<1.0d-6).and.(bfmmask(jk,jj,ji)==1)) then
+        write(*,*) "Small: gl", GlobalRank, "en", EnsembleRank, "my" , MyRank, "name ", ctrcnm(jn)
+        write(*,*) trn(jk,jj,ji,:)
+        exit
+    end if
+end do
+end do
+end do
+end do
+end if
+
 ! Call Passive tracer model between synchronization for small parallelisation
         CALL trcstp    ! se commento questo non fa calcoli
         
+if (.false.) then
+do jk=1, jpk
+do jj=1,jpj
+do ji=1,jpi
+do jn=1,jptra
+    if ((trn(jk,jj,ji,jn)<trnEnsemble(jk,jj,ji,jn)*0.5).and.(bfmmask(jk,jj,ji)==1)) then
+        write(*,*) "Halved: gl", GlobalRank, "en", EnsembleRank, "my" , MyRank, "name ", ctrcnm(jn)
+        write(*,*) trn(jk,jj,ji,:)
+        exit
+    end if
+end do
+end do
+end do
+end do
+end if
+
 #ifdef ExecDA
         if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
 
-            if (.true.) then !.true. if you want to save the ensamble after the evolution
+            if (.false.) then !.true. if you want to save the ensamble after the evolution
                 BaseMember=trn
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/')
             endif
@@ -235,7 +310,7 @@ MODULE module_step
         ave_counter_1 = ave_counter_1 +1  ! incrementing our counters
         ave_counter_2 = ave_counter_2 +1
 
-        call mpi_barrier(mpi_comm_world, ierr)
+       ! call mpi_barrier(mpi_comm_world, ierr)
        stpparttime = MPI_WTIME() - stpparttime
        stptottime  = stptottime  + stpparttime
         if (lwp) write(*,*) "Step in sec ", stpparttime
@@ -287,6 +362,7 @@ MODULE module_step
       
 ! PCA if needed
 #ifdef ExecDA
+!end if
         if ((PCANeeded.eq."read").and.(EnsembleRank==0)) call PCAReadMatrices
         if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) call PCASeik
 #endif

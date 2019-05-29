@@ -20,4 +20,5 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
     end do
     ChangeBase=transpose(OrtMatrixSampling(:,2:SeikDim+1))
     call dtrtrs( 'U', 'N', 'N', SeikDim, SeikDim+1, CovMatrix1, SeikDim, ChangeBase, SeikDim, ierr)
+    if (ierr.ne.0) error stop 'Sampling inversion failed'
 end subroutine

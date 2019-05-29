@@ -63,7 +63,29 @@ subroutine PCASeik
     if(myrank==0) write(*,*) "Starting PCA"
     temptime=mpi_wtime()
     if(myrank==0) write(*,*) "building matrix"
-    
+
+if (.true.) then
+    where (HistoryForSVD>1.0d-8)
+        HistoryForSVD=log(HistoryForSVD)
+    elsewhere
+        HistoryForSVD=log(1.0d-8)
+    end where
+    call mpi_barrier(EnsembleComm, ierr)
+    if (myrank==0) write(*,*) "log"
+    trn=sum(HistoryForSVD,4)
+    call mpi_barrier(EnsembleComm, ierr)
+    if (myrank==0) write(*,*) "sum"
+    trn=trn/nHistoryForSVD
+    call mpi_barrier(EnsembleComm, ierr)
+    if (myrank==0) write(*,*) "mean"
+    BaseMember=exp(trn)    
+    call mpi_barrier(EnsembleComm, ierr)
+    if (myrank==0) write(*,*) "exp"
+    !call trcwri("20000101-00:00:00")
+    call trcwriSeik("20000101-00:00:00",101, 'REDUCED_BASE/PCA/')
+
+else    
+
     do indexi=1, nHistoryForSVD
         do indexj=1, jptra
             where (bfmmask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0
@@ -208,6 +230,8 @@ subroutine PCASeik
     end do
     
     deallocate(Transformation)
+
+end if
     
     if(myrank==0) write(*,*) "End of PCA in ", mpi_wtime()-temptime, " seconds"
 
