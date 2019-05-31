@@ -2,7 +2,7 @@ subroutine SeikAnalysis
     use mpi
     use myalloc
     
-    implict none
+    implicit none
     
     integer :: ierr
     
@@ -20,7 +20,7 @@ subroutine SeikAnalysis
             call mpi_gatherv(0,0,mpi_real8,HLTR1HL,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
             CovSeik1=CovSeik1+HLTR1HL
             TempMatrixSeik=CovSeik1
-            call dposv( 'U', nside, 1, TempMatrixSeik, nside, TempSliceSeik2, nside, ierr)
+            call dposv( 'U', SeikDim, 1, TempMatrixSeik, SeikDim, TempSliceSeik2, SeikDim, ierr)
             if (ierr.ne.0) error stop 'Analysis Matrix inversion failed!'            
         else
             call mpi_reduce(TempSliceSeik,0, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)

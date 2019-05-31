@@ -1,7 +1,8 @@
-      SUBROUTINE MainAssmimilationSeik(datestr)
+      SUBROUTINE MainAssimilationSeik(datestr)
       use myalloc
       use filenames
       use DA_mem
+      use mpi
       !use DA_Params
       !use ogstm_mpi_module
       !use mpi_str, only: Var3DCommunicator
@@ -16,7 +17,7 @@
       character (LEN=8) DAY
       character MISFIT_OPT
       logical ISLOG
-      !integer :: ierr, ii
+      integer :: ierr !, ii
       !integer :: SysErr, system
         
         INTEGER jk,jj,ji,jn
@@ -57,6 +58,9 @@
       if (EnsembleRank==0) then
         CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
+        !call mpi_barrier(LocalComm, ierr)
+        !call mpi_abort(mpi_comm_world, -1, ierr)
+
       !if (myrank .lt. DA_Nprocs ) then
 
           !allocate(DA_VarList(NBioVar))
@@ -86,7 +90,7 @@
           ! deallocation of DA_VarList array
           !call clean_da_params
       endif
-      
+      !call mpi_barrier(mpi_comm_world, ierr)
 !----------New Seik Part--------------------------------------------------------
       
         ComputedObsSeik=0.0d0
@@ -95,6 +99,7 @@
             if (isaCHLVAR(ctrcnm(jn))) then
                 ComputedObsSeik=ComputedObsSeik+trnEnsemble(1,:,:,jn)
                 MisfitSeik=MisfitSeik+trn(1,:,:,jn)
+            end if
         end do
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
@@ -107,7 +112,7 @@
 
         do ji=1,jpi
             do jj=1,jpj
-                if ( isnan2(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
+                if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
                     (ObsDataSeik(jj,ji).eq.fillvalue999).or.(bfmmask(1,jj,ji).eq.0)) then
                     ComputedObsSeik(jj,ji)=0.0d0
                     ObsDataSeik(jj,ji)=0.0d0
@@ -138,14 +143,14 @@
         call SeikAnalysis
         
         if (EnsembleRank==0) then
-            call trcwriSeik(DATEstring, -1, 'DA_SEIK/', trn)
-            if (myrank==0) call WriteCov1Seik('DA_SEIK/COV1.'//DateString//'.csv')
-            if (SeikDim==1) trcwriSeik(DATEstring, -1, 'DA_SEIK/RATIO/', Basemember) ! only if we dont' have a 3rd ensemble member for parallel writing
+            call trcwriSeik(DATEstr, -1, 'DA_SEIK/', trn)
+            if (myrank==0) call WriteCov1Seik('DA_SEIK/COV1.'//DateStr//'.csv')
+            if (SeikDim==1) call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', Basemember) ! only if we dont' have a 3rd ensemble member for parallel writing
         else if (EnsembleRank==1) then
             trb=trn-trb
-            call trcwriSeik(DATEstring, -1, 'DA_SEIK/DIFFERENCE/', trn)
+            call trcwriSeik(DATEstr, -1, 'DA_SEIK/DIFFERENCE/', trb)
         else if (EnsembleRank==2) then
-            call trcwriSeik(DATEstring, -1, 'DA_SEIK/RATIO/', Basemember)
+            call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', Basemember)
         end if
         
         trb=trn
@@ -164,10 +169,10 @@
         implicit none
         double precision, INTENT(IN) :: A
         if ( A.eq.A ) then
-          isnan2 = .FALSE.
+          isnanSeik = .FALSE.
           else
-          isnan2 = .TRUE.
+          isnanSeik = .TRUE.
         end if
         END FUNCTION isnanSeik
-      END SUBROUTINE MainAssmimilationSeik
+      END SUBROUTINE MainAssimilationSeik
  

@@ -2,7 +2,7 @@ subroutine WriteCov1Seik(FileNameCov)
     use myalloc
     use mpi
     
-    implict none
+    implicit none
     CHARACTER(LEN=53), intent (in) :: FileNameCov
     integer :: ierr, jn
     

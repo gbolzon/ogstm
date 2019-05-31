@@ -1,7 +1,8 @@
-!Sarebbe meglio riscrivere tutto qui...
+!Sarebbe meglio riscrivere tutto qui... Ora va un po meglio, ma c'e' ancora da fare...
 
 SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory, Tracer)
     use StringSEIK
+    use myalloc
     
     implicit none
     CHARACTER(LEN=17), INTENT(IN) :: TimeString
