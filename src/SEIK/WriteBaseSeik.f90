@@ -18,27 +18,7 @@ subroutine WriteBaseSeik(DateString)
     if (EnsembleRank==NotWorkingMember) then
         if (myrank==0) then
             FileNameCov=DirName//'/COV1.'//DateString//'.csv'
-            
-            open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
-            if (ierr/=0) then
-                write(*,*) 'Error opening file for writing covariance matrix: ', ierr
-                !write(*,*) 'I will stop'
-                !call mpi_abort(mpi_comm_world,1,ierr)
-            end if
-            do jn=1,SeikDim
-                write(UnitSEIK,*,iostat=ierr) CovSeik1(:,jn)
-                if (ierr/=0) then
-                    write(*,*) 'Error writing covariance matrix, while writing line', jn, 'error:', ierr
-                    !write(*,*) 'I will stop'
-                    !call mpi_abort(mpi_comm_world,1,ierr)
-                end if
-            end do
-            close(unit=UnitSEIK, iostat=ierr)
-            if (ierr/=0) then
-                write(*,*) 'Error closing file of covariance matrix: ', ierr
-                !write(*,*) 'I will stop'
-                !call mpi_abort(mpi_comm_world,1,ierr)
-            end if
+            call WriteCov1Seik(FileNameCov)
         end if
     else
         if (EnsembleRank>NotWorkingMember) then
@@ -47,7 +27,7 @@ subroutine WriteBaseSeik(DateString)
             BaseIndex=EnsembleRank+1
         end if
         
-        call trcwriSeik(DateString, BaseIndex, DirName//'/')
+        call trcwriSeik(DateString, BaseIndex, DirName//'/', BaseMember)
     end if
     
 end subroutine

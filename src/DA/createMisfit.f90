@@ -47,7 +47,7 @@
 
 
           call readNetCDF_2dvar(SATFILE,trim(satvarname)   ,jpiglo,jpjglo,  CHLsat  ) ! testcase value around 0.25
-          call readNetCDF_2dvar(VARFILE,'variance',jpiglo,jpjglo,  VAR2D   ) !                around 0.0005
+          if (OPTION.eq.'2') call readNetCDF_2dvar(VARFILE,'variance',jpiglo,jpjglo,  VAR2D   ) !                around 0.0005
 
 
           fillvalue999=-999.0

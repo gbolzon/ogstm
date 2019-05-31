@@ -1,7 +1,25 @@
 !Sarebbe meglio riscrivere tutto qui...
 
-SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
+SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory, Tracer)
+    use StringSEIK
+    
+    implicit none
+    CHARACTER(LEN=17), INTENT(IN) :: TimeString
+    integer, intent(in) :: BaseIndex
+    CHARACTER(len=*), intent(in) :: Directory
+    double precision, dimension(jpk,jpj,jpi,jptra), intent(in) :: Tracer
+    
+    !Directory='REDUCED_BASE/DIMENSION_010/'
+    !FileName = 'BASE001.20111231-15:30:00.N1p.nc'
+    
+    if (BaseIndex==-1) then
+        call trcwriSeikWrapped(Directory//'TRN', TimeString, Tracer)
+    else
+        call trcwriSeikWrapped(Directory//'BASE'//int2str(BaseIndex,3) , TimeString, Tracer)
+    end if
+end SUBROUTINE
 
+subroutine trcwriSeikWrapped(PathAndFile, TimeString, Tracer)
 
       USE myalloc
       USE IO_mem
@@ -12,10 +30,11 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
 
 
       IMPLICIT NONE
+      CHARACTER(len=*), intent(in) :: PathAndFile
       CHARACTER(LEN=17), INTENT(IN) :: TimeString
-      integer, intent(in) :: BaseIndex
-      CHARACTER(len=*), intent(in) :: Directory
-
+      double precision, dimension(jpk,jpj,jpi,jptra), intent(in) :: Tracer
+      
+      
 
 
 !----------------------------------------------------------------------
@@ -24,9 +43,6 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
       double precision ::  Miss_val =1.d20
       INTEGER jk,jj,ji,jn
       double precision julian
-
-
-      CHARACTER(LEN=32) FileName
 
       CHARACTER(LEN=3) varname
 
@@ -37,10 +53,8 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
       INTEGER ind1, i_contribution, j_contribution
 
         Miss_val =1.d20
-        !Directory='REDUCED_BASE/DIMENSION_010/'
-        FileName = 'BASE001.20111231-15:30:00.N1p.nc'
 
-       if (MyRank==0) write(*,*) 'trcwriSEIK ------------  myrank =',myrank, ' BaseIndex=' , BaseIndex
+       if (MyRank==0) write(*,*) 'trcwriSEIK ',PathAndFile
 
        trcwriparttime = MPI_WTIME() ! cronometer-start
 
@@ -74,7 +88,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
                   do jj =1 , jpj
                         do jk =1 , jpk
                               if (tmask(jk,jj,ji).eq.1) then
-                                    buf(jk,jj,ji) = BaseMember(jk,jj,ji, jn)
+                                    buf(jk,jj,ji) = Tracer(jk,jj,ji, jn)
                               endif
                         enddo
                   enddo
@@ -128,7 +142,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
              do jk =1 , jpk
               ind1 = jk + j_contribution + i_contribution
               if (tmask(jk,jj,ji).eq.1) then
-                 bufftrn(ind1)= BaseMember(jk,jj,ji, jn)
+                 bufftrn(ind1)= Tracer(jk,jj,ji, jn)
               endif
              enddo
             enddo
@@ -148,9 +162,8 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
         if(myrank == 0) then
 
             varname=trim(ctrcnm(jn))
-            write(FileName,'(A4,I3.3,A25)') 'BASE', BaseIndex, '.'//TimeString//'.'//varname//'.nc'
             
-            CALL write_restartSeik(Directory//FileName,varname,TimeString, deflate_rst, deflate_level_rst)
+            CALL write_restartSeik(PathAndFile//'.'//TimeString//'.'//varname//'.nc',varname,TimeString, deflate_rst, deflate_level_rst)
 
         endif ! if myrank = 0
       END DO ! DO jn=1,jptra
@@ -161,7 +174,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory)
 
 
 
-END SUBROUTINE trcwriSeik
+END SUBROUTINE 
 
 SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
        USE netcdf
@@ -179,6 +192,8 @@ SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
        integer :: timid, depid, yid, xid, xaid, yaid, zaid
        integer :: idB, idN, idLon, idLat, idLev, idTim
        integer shuffle
+       
+       integer indexi
        
        !TimeString =fileNetCDF(14:30)
        shuffle       = 0
@@ -218,10 +233,12 @@ SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
         s = nf90_put_var(nc, idLev,     gdept)
        call handle_err1(s,counter,fileNetCDF)
 
-       
+       do indexi=1, jpjglo
+            copy_inSeik(:,indexi,:)=tottrn(:,indexi,:)
+       end do
 
-       call switch_index_double(tottrn,copy_inSeik,jpiglo,jpjglo,jpk)
-       call handle_err1(s,counter,fileNetCDF)
+       !call switch_index_double(tottrn,copy_inSeik,jpiglo,jpjglo,jpk)
+       !call handle_err1(s,counter,fileNetCDF)
         s = nf90_put_var(nc, idN,      copy_inSeik)
        call handle_err1(s,counter,fileNetCDF)
        

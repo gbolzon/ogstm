@@ -39,7 +39,18 @@
       double precision, allocatable, dimension(:,:) :: PCAMatrixT
 
       double precision,allocatable,dimension(:,:,:) :: copy_inSeik
-       
+      
+      !for analisis
+      integer :: ObsSpaceDim
+      double precision, allocatable, dimension(:,:) :: ObsDataSeik, ComputedObsSeik, MisfitSeik
+      double precision, allocatable, dimension(:) :: ObsErrorDiag1
+      double precision, allocatable, dimension(:,:) :: ComputedObsMean, ObsBaseMember
+      double precision, allocatable, dimension(:,:) :: HLSeik 
+      integer, allocatable, dimension (:) :: MpiCountObs, MpiDisplacementObs
+      double precision, allocatable, dimension (:) :: TempObsSeik
+      double precision, allocatable, dimension(:,:) :: HLTR1HL
+      
+      
       CONTAINS
        
       subroutine myalloc_seik(LocalRank)
@@ -50,6 +61,7 @@
 
             Weight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             SpaceDim=jpk*jpj*jpi*jptra
+            ObsSpaceDim=jpj*jpi
             
             allocate(trnEnsemble(jpk,jpj,jpi,jptra))                    
             trnEnsemble = huge(trnEnsemble(1,1,1,1))
@@ -62,7 +74,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.01d0)**2)
+            ModelErrorDiag1 = 1/(log(1.1d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -90,6 +102,42 @@
             
             allocate(ChangeCoefSeik(SeikDim))
             ChangeCoefSeik = huge(ChangeCoefSeik(1))
+            
+            allocate(ObsDataSeik(jpj,jpi))                    
+            ObsDataSeik = huge(ObsDataSeik(1,1))
+            
+            allocate(ComputedObsSeik(jpj,jpi))                    
+            ComputedObsSeik = huge(ComputedObsSeik(1,1))
+            
+            allocate(MisfitSeik(jpj,jpi))                    
+            MisfitSeik = huge(MisfitSeik(1,1))
+            
+            allocate(ObsErrorDiag1(ObsSpaceDim))                    
+            ObsErrorDiag1 = huge(ObsErrorDiag1(1))
+            
+            allocate(ComputedObsMean(jpj,jpi))                    
+            ComputedObsMean = huge(ComputedObsMean(1,1))
+            
+            allocate(ObsBaseMember(jpj,jpi))                    
+            ObsBaseMember = huge(ObsBaseMember(1,1))
+            
+            allocate(HLSeik(ObsSpaceDim,SeikDim))                    
+            HLSeik = huge(HLSeik(1,1))
+            
+            allocate(MpiCountObs(0:ObsSpaceDim))
+            MpiCountObs = huge(MpiCountObs(1))
+            MpiCountObs=SpaceDim
+            MpiCountObs(NotWorkingMember)=0
+            
+            allocate(MpiDisplacementObs(0:ObsSpaceDim))
+            MpiDisplacementObs = huge(MpiDisplacementObs(1))
+            MpiDisplacementObs(0)=0
+            do indexi=1, ObsSpaceDim
+                MpiDisplacementObs(indexi)=MpiDisplacementObs(indexi-1)+MpiCountObs(indexi-1)
+            end do
+            
+            allocate(TempObsSeik(ObsSpaceDim))                    
+            TempObsSeik = huge(TempObsSeik(1))
             
             
             if(LocalRank==0) then
@@ -151,6 +199,10 @@
                     allocate(ChangeBaseSeik(SeikDim,0:SeikDim))
                     ChangeBaseSeik = huge(ChangeBaseSeik(1,1))
                     
+                    
+                    allocate(HLTR1HL(SeikDim,SeikDim))
+                    HLTR1HL = huge(HLTR1HL(1,1))
+                    
                 end if
                 
             end if
@@ -188,7 +240,6 @@
       subroutine TTTSeik_builder()
             implicit none
             double precision, dimension(0:SeikDim,SeikDim) :: matrixT
-            double precision, dimension(SeikDim,0:SeikDim) :: matrixT2
             integer :: indexi
             
             do indexi=1, SeikDim
@@ -196,7 +247,7 @@
                 matrixT(indexi-1,indexi)=matrixT(indexi-1,indexi)+1
             end do
             do indexi=1, SeikDim
-                TTTSeik(indexi,:)=matmul(matrixT(:,indexi)/AllWeights,matrixT)
+                TTTSeik(:,indexi)=matmul(matrixT(:,indexi)/AllWeights,matrixT)
             end do
             
       end subroutine
@@ -217,6 +268,16 @@
             deallocate(TempSliceSeik)
             deallocate(TempMatrixSeik)
             deallocate(ChangeCoefSeik)
+            deallocate(ObsDataSeik)
+            deallocate(ComputedObsSeik)
+            deallocate(MisfitSeik)
+            deallocate(ObsErrorDiag1)
+            deallocate(ComputedObsMean)
+            deallocate(ObsBaseMember)
+            deallocate(HLSeik)
+            deallocate(MpiCountObs)
+            deallocate(MpiDisplacementObs)
+            deallocate(TempObsSeik)
             
             if (LocalRank==0) then
                 deallocate(TempSliceSeik2)
@@ -237,6 +298,7 @@
                     deallocate(LTQ1L)
                     deallocate(OrtMatrixSampling)
                     deallocate(ChangeBaseSeik)
+                    deallocate(HLTR1HL)
                 end if
             end if
             

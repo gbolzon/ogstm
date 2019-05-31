@@ -88,18 +88,7 @@ MODULE module_step
       TauAVEfrom_2 = TimeStepStart 
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
-      call mpi_barrier(mpi_comm_world,ierr)
-
-if (.false.) then
-tmask=bfmmask*tmask
-if (sum(tmask)/=sum(bfmmask)) then
-write(*,*) "-------------------------------------eccolo!----------------------------------------"
-else
-write(*,*) "ok"
-end if
-call mpi_barrier(mpi_comm_world,ierr)
-stop
-end if
+      !call mpi_barrier(mpi_comm_world,ierr)
 
       DO TAU = TimeStepStart, TimeStep__End
 
@@ -129,7 +118,8 @@ end if
 #endif
 
         if (IsaRestart(DATEstring).and.(EnsembleRank==0))  then
-            CALL trcwri(DATEstring) ! writes the restart files
+            !CALL trcwri(DATEstring) ! writes the restart files
+            call trcwriSeik(DATEstring, -1, 'RESTARTS/', trn)
 
          
             if (AVE_FREQ1%N .gt.0) then              !  void 1.aveTimes -> no backup
@@ -233,20 +223,32 @@ end if
 
 
 #ifdef ExecDA
+! 3D-VAR Assimilation
+    if (SeikDim.eq.0) then 
       if (IsaDataAssimilation(DATEstring)) then
         call tau2datestring(TauAVEfrom_1, datefrom_1)
         CALL mainAssimilation(DATEstring, datefrom_1)
          if (lwp) B = writeTemporization("DATA_ASSIMILATION____", DAparttime)
       endif
+    end if
 #endif
 
 #ifdef ExecDA
+
+! Seik Assimilation
+
+        if ((SeikDim.gt.0).and.(IsaDataAssimilation(DATEstring))) then            
+            CALL MainAssimilationSeik(DATEstring)            
+            if (lwp) B = writeTemporization("DATA_ASSIMILATION____", DAparttime)
+        endif
+
+! Ensemble creation
+
         if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
             call SeikCreateEnsemble()
 
             if (.false.) then !.true. if u want to save the ensemble before the evolution
-                BaseMember=trn 
-                call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/')
+                call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/', trn)
             endif
 
         endif
@@ -296,8 +298,7 @@ end if
         if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
 
             if (.false.) then !.true. if you want to save the ensamble after the evolution
-                BaseMember=trn
-                call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/')
+                call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/', trn)
             endif
 
             call SeikForecast()

@@ -64,7 +64,7 @@ subroutine PCASeik
     temptime=mpi_wtime()
     if(myrank==0) write(*,*) "building matrix"
 
-if (.true.) then
+if (.true.) then !true to calcolate mean, false for svd
     where (HistoryForSVD>1.0d-8)
         HistoryForSVD=log(HistoryForSVD)
     elsewhere
@@ -82,7 +82,7 @@ if (.true.) then
     call mpi_barrier(EnsembleComm, ierr)
     if (myrank==0) write(*,*) "exp"
     !call trcwri("20000101-00:00:00")
-    call trcwriSeik("20000101-00:00:00",101, 'REDUCED_BASE/PCA/')
+    call trcwriSeik("20000101-00:00:00",-1, 'REDUCED_BASE/PCA/', BaseMember)
 
 else    
 
@@ -102,27 +102,26 @@ else
     !PCASTD=0.0d0
     where (PCAMatrix<1.0d-6) PCAMatrix=1.0d-6
 
-    if (.false.) then
+    if (.false.) then ! checking
         do indexi=1, SpaceDim
             PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
         end do
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
         where (BaseMember.le.Threshold) BaseMember=1.0d20
-        call trcwriSeik('PCVar678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+        call trcwriSeik('PCVar678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         do indexi=1, jptra
             BaseMember(:,:,:,indexi)=bfmmask
 	end do
-        call trcwriSeik('bfmmask8901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+        call trcwriSeik('bfmmask8901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         BaseMember=reshape(HistoryForSVD(:,:,:,:, 10),(/jpk,jpj,jpi,jptra/))
-        call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/')
+        call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         call mpi_barrier(mpi_comm_World,ierr)
         call mpi_abort(mpi_comm_world,1,ierr)
-
-
     end if
+    
     do indexi=1, SpaceDim
         PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
         if (PCAVar(indexi)>Threshold) then
@@ -225,7 +224,7 @@ else
         PCAVar=matmul(Transformation(:,indexi),PCAMatrix)
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
         BaseMember=BaseMember/sqrt(dble(nHistoryForSVD))
-        call trcwriSeik('19990101-00:00:00', indexi, 'REDUCED_BASE/PCA/')
+        call trcwriSeik('19990101-00:00:00', indexi, 'REDUCED_BASE/PCA/', BaseMember)
         
     end do
     
