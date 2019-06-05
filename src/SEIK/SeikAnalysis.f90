@@ -8,9 +8,16 @@ use StringSEIK
     integer :: ierr
 integer jn
     
+call Save2DSeik("12345678901234567","12345678901234567","TEMP/ComputedObsSeik"//int2str(EnsembleRank,3)//".nc", ComputedObsSeik)
+
     ObsBaseMember=ComputedObsSeik*Weight
     call MPI_AllReduce(ObsBaseMember, ComputedObsMean, ObsSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
+    
+if (EnsembleRank==0) call Save2DSeik("12345678901234567","12345678901234567","TEMP/ComputedObsMean.nc", ComputedObsSeik)
+
     ObsBaseMember=ComputedObsSeik-ComputedObsMean
+    
+call Save2DSeik("12345678901234567","12345678901234567","TEMP/ObsBaseMember"//int2str(EnsembleRank,3)//".nc", ObsBaseMember)    
     
     if (EnsembleRank==NotWorkingMember) then
         call mpi_allgatherv(0,0,mpi_real8,HLSeik,MpiCountObs,MpiDisplacementObs,mpi_real8,EnsembleComm,ierr)
@@ -38,6 +45,8 @@ write(*,*) "controllo finale", EnsembleRank, MyRank, HLTR1HL
         TempSliceSeik=matmul(TempObsSeik,HLSeik)
 
 if (TempSliceSeik(1)>1) write(*,*) "controllo", EnsembleRank, MyRank, TempSliceSeik
+
+if (.true.) then
 if (EnsembleRank==1) then
     open(unit=UnitSEIK, file="temp"//int2str(MyRank,3)//".csv", form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
     write(UnitSEIK,*,iostat=ierr) ObsBaseMember
@@ -52,6 +61,7 @@ if (EnsembleRank==1) then
     write(UnitSEIK,*,iostat=ierr) TempSliceSeik
     close(unit=UnitSEIK, iostat=ierr)
 end if
+endif
 
         if (MyRank==0) then
             call mpi_reduce(TempSliceSeik,TempSliceSeik2, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)

@@ -177,6 +177,133 @@ subroutine trcwriSeikWrapped(PathAndFile, TimeString, Tracer)
 
 END SUBROUTINE 
 
+
+SUBROUTINE Save2DSeik(datefrom,dateTo,PathAndFile, Tracer)
+!     ******************
+      !USE calendar
+      USE myalloc
+      USE IO_mem
+      !USE FN_mem
+      !USE TIME_MANAGER
+      use mpi
+      !USE ogstm_mpi_module
+
+      IMPLICIT NONE
+
+
+      CHARACTER(LEN=17), INTENT(IN) ::  dateFrom, dateTo
+      character(len=*), intent(in) :: PathAndFile
+      double precision, dimension(jpj, jpi), intent(in) :: Tracer
+      
+      
+      INTEGER jj,ji
+      INTEGER ind, i_contribution
+
+      CHARACTER(LEN=20)  var
+
+      INTEGER idrank, ierr, istart, jstart, iPe, iPd, jPe, jPd, status(MPI_STATUS_SIZE)
+      INTEGER irange, jrange
+      INTEGER totistart, totiend, relistart, reliend
+      INTEGER totjstart, totjend, reljstart, reljend
+      double precision ::  Miss_val 
+
+        Miss_val =1.e20
+        if (myrank == 0) then
+        !   ! ******* myrank 0 sets indexes of tot matrix where to place its own part
+
+             iPd    = nldi
+             iPe    = nlei
+             jPd    = nldj
+             jPe    = nlej
+             istart = nimpp
+             jstart = njmpp
+             irange    = iPe - iPd + 1
+             jrange    = jPe - jPd + 1
+             totistart = istart + iPd - 1 
+             totiend   = totistart + irange - 1
+             totjstart = jstart + jPd - 1 
+             totjend   = totjstart + jrange - 1
+             relistart = 1 + iPd - 1      
+             reliend   = relistart + irange - 1
+             reljstart = 1 + jPd - 1      
+             reljend   = reljstart + jrange - 1
+
+              tottrnIO2d (totjstart:totjend,totistart:totiend) = Tracer( reljstart:reljend,relistart:reliend)
+
+
+              do idrank = 1,CommSize-1
+ ! **************  myrank 0 is receiving from the others their buffer  ****
+                 call MPI_RECV(jpi_rec    , 1,                 mpi_integer, idrank, 32,LocalComm, status, ierr) !* first info to know where idrank is working
+                 call MPI_RECV(jpj_rec    , 1,                 mpi_integer, idrank, 33,LocalComm, status, ierr)
+                 call MPI_RECV(istart     , 1,                 mpi_integer, idrank, 34,LocalComm, status, ierr)
+                 call MPI_RECV(jstart     , 1,                 mpi_integer, idrank, 35,LocalComm, status, ierr)
+                 call MPI_RECV(iPe        , 1,                 mpi_integer, idrank, 36,LocalComm, status, ierr)
+                 call MPI_RECV(jPe        , 1,                 mpi_integer, idrank, 37,LocalComm, status, ierr)
+                 call MPI_RECV(iPd        , 1,                 mpi_integer, idrank, 38,LocalComm, status, ierr)
+                 call MPI_RECV(jPd        , 1                 ,mpi_integer, idrank, 39,LocalComm, status, ierr)
+                 call MPI_RECV(buffDIA2d,jpi_rec*jpj_rec      ,mpi_real8,idrank, 40,LocalComm, status, ierr)
+ ! ******* myrank 0 sets indexes of tot matrix where to place buffers of idrank
+                 irange    = iPe - iPd + 1
+                 jrange    = jPe - jPd + 1
+                 totistart = istart + iPd - 1
+        totiend   = totistart + irange - 1
+                 totjstart = jstart + jPd - 1
+        totjend   = totjstart + jrange - 1
+                 relistart = 1 + iPd - 1
+        reliend   = relistart + irange - 1
+                 reljstart = 1 + jPd - 1
+        reljend   = reljstart + jrange - 1
+               do ji =totistart,totiend ! only 2d vars
+                 i_contribution = jpj_rec*(ji-totistart+ relistart -1)
+                 do jj =totjstart,totjend
+                   ind = jj-totjstart+ reljstart + i_contribution
+                   tottrnIO2d (jj,ji)= buffDIA2d(ind)
+                  enddo
+                 enddo
+              enddo !idrank = 1, size-1
+       ELSE ! ranks 1 --> size-1
+            do ji =1 , jpi
+                i_contribution = jpj * (ji-1)
+                    do jj =1 , jpj
+                    ind            = jj + i_contribution
+                    buffDIA2d (ind)= Tracer(jj,ji)
+                enddo
+            enddo
+
+               call MPI_SEND(jpi  , 1,mpi_integer, 0, 32, LocalComm,ierr)
+               call MPI_SEND(jpj  , 1,mpi_integer, 0, 33, LocalComm,ierr)
+               call MPI_SEND(nimpp, 1,mpi_integer, 0, 34, LocalComm,ierr)
+               call MPI_SEND(njmpp, 1,mpi_integer, 0, 35, LocalComm,ierr)
+               call MPI_SEND(nlei , 1,mpi_integer, 0, 36, LocalComm,ierr)
+               call MPI_SEND(nlej , 1,mpi_integer, 0, 37, LocalComm,ierr)
+               call MPI_SEND(nldi , 1,mpi_integer, 0, 38, LocalComm,ierr)
+               call MPI_SEND(nldj , 1,mpi_integer, 0, 39, LocalComm,ierr)
+              call MPI_SEND(buffDIA2d, jpi*jpj   ,mpi_real8, 0, 40, LocalComm,ierr)
+       ENDIF
+
+      if (myrank == 0) then
+              var        =  "MIS"
+
+            d2f2d = REAL(tottrnIO2d(:,:),4)
+            CALL WRITE_AVE_2d(PathAndFile,trim(var),datefrom,dateTo, d2f2d)
+ 
+      end if ! if(myrank == 0)
+end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
        USE netcdf
        USE myalloc
@@ -247,3 +374,70 @@ SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
 
 
 END SUBROUTINE write_restartSeik
+
+SUBROUTINE WRITE_AVE_2DSeik(fileNetCDF,VAR, datefrom, dateTo,M)
+       USE netcdf
+       USE myalloc
+       IMPLICIT NONE
+
+       character*(*),intent(in) :: fileNetCDF
+       character(LEN=17),intent(in) :: datefrom, dateTo
+       real,intent(in),dimension(jpjglo, jpiglo) :: M
+
+       character(LEN=*) :: VAR
+       integer :: istart,iend
+
+       integer :: s, nc, counter
+       integer :: timid, yid, xid
+       integer :: idvartime,idphit,idlamt,idVAR
+       real :: lat_actual_range(2), lon_actual_range(2)
+         lon_actual_range=(/-9.25  , 36.0   /)
+         lat_actual_range=(/30.5   , 44.5   /)
+
+
+
+        ! Just to try without 'or'
+        ! s = nf90_create(fileNetCDF, or(nf90_clobber,NF90_HDF5), nc)
+        s = nf90_create(fileNetCDF, NF90_HDF5, nc)
+        ! *********** GLOBAL ********************
+        s = nf90_put_att(nc, nf90_global, 'Convenctions'   ,'COARDS')
+        s = nf90_put_att(nc, nf90_global, 'DateStart'     , datefrom)
+        s = nf90_put_att(nc, nf90_global, 'Date__End'     ,   dateTo)
+
+        ! *********** DIMENSIONS ****************
+        s= nf90_def_dim(nc,'lon'           , jpiglo,  xid)
+        s= nf90_def_dim(nc,'lat'           , jpjglo,  yid)
+        s= nf90_def_dim(nc,'time'  , NF90_UNLIMITED,timid)
+
+        ! ********** VARIABLES *****************
+        !s = nf90_def_var(nc,'time',         nf90_double,(/timid/),       idvartime)
+        s = nf90_def_var(nc,'lat'   ,       nf90_float, (/yid/),            idphit)
+        s = nf90_def_var(nc,'lon'   ,       nf90_float, (/xid/),            idlamt)
+
+       s = nf90_def_var(nc,trim(VAR) ,        nf90_float, (/xid,yid,timid/),  idVAR)
+
+        s = nf90_put_att(nc,idphit, 'units'        ,'degrees_north')
+        s = nf90_put_att(nc,idphit, 'long_name'    ,'Latitude')
+        s = nf90_put_att(nc,idphit,'actual_range' ,lat_actual_range)
+
+        s = nf90_put_att(nc,idlamt, 'units'        ,'degrees_east')
+        s = nf90_put_att(nc,idlamt, 'long_name'    ,'Longitude')
+        s = nf90_put_att(nc,idlamt,'actual_range' ,lon_actual_range)
+
+        s = nf90_put_att(nc,idVAR, 'long_name'    ,VAR)
+        s = nf90_put_att(nc,idVAR, 'missing_value' ,1.e+20)
+
+        s =nf90_enddef(nc)
+
+        counter=0
+        s = nf90_put_var(nc, idlamt,  REAL(totglamt(jpjglo,:),4) )
+       call handle_err1(s,counter,fileNetCDF)
+        s = nf90_put_var(nc, idphit,  REAL(totgphit(:,jpiglo),4) )
+       call handle_err1(s,counter,fileNetCDF)
+        s = nf90_put_var(nc, idVAR  ,  transpose(M) )                    
+       call handle_err1(s,counter,fileNetCDF)
+
+
+        s =nf90_close(nc)
+
+END SUBROUTINE WRITE_AVE_2DSeik
