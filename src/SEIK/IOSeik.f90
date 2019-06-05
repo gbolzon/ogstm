@@ -209,6 +209,7 @@ SUBROUTINE Save2DSeik(datefrom,dateTo,PathAndFile, Tracer)
 
         Miss_val =1.e20
         if (myrank == 0) then
+             tottrnIO2d = Miss_val
         !   ! ******* myrank 0 sets indexes of tot matrix where to place its own part
 
              iPd    = nldi
@@ -285,7 +286,7 @@ SUBROUTINE Save2DSeik(datefrom,dateTo,PathAndFile, Tracer)
               var        =  "MIS"
 
             d2f2d = REAL(tottrnIO2d(:,:),4)
-            CALL WRITE_AVE_2d(PathAndFile,trim(var),datefrom,dateTo, d2f2d)
+            CALL WRITE_AVE_2dSeik(PathAndFile,trim(var),datefrom,dateTo, d2f2d)
  
       end if ! if(myrank == 0)
 end subroutine

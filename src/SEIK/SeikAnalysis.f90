@@ -40,6 +40,10 @@ write(*,*) "controllo finale", EnsembleRank, MyRank, HLTR1HL
         end if
     else
         call mpi_allgatherv(ObsBaseMember,ObsSpaceDim,mpi_real8,HLSeik,MpiCountObs,MpiDisplacementObs,mpi_real8,EnsembleComm,ierr)
+
+call Save2DSeik("12345678901234567","12345678901234567","TEMP/ObsBaseMember2."//int2str(EnsembleRank,3)//".nc", ObsBaseMember)
+call Save2DSeik("12345678901234567","12345678901234567","TEMP/HLSeik"//int2str(EnsembleRank,3)//".nc", HLSeik(:,EnsembleRank))
+
         TempObsSeik=reshape(ObsBaseMember,(/ObsSpaceDim/))
         TempObsSeik=TempObsSeik*ObsErrorDiag1
         TempSliceSeik=matmul(TempObsSeik,HLSeik)
@@ -59,6 +63,9 @@ if (EnsembleRank==1) then
     write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
     write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
     write(UnitSEIK,*,iostat=ierr) TempSliceSeik
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) bfmmask(1,:,:)
     close(unit=UnitSEIK, iostat=ierr)
 end if
 endif
