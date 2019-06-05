@@ -50,6 +50,8 @@
       double precision, allocatable, dimension (:) :: TempObsSeik
       double precision, allocatable, dimension(:,:) :: HLTR1HL
       
+      logical :: CutLeft, CutRight, CutTop, CutBottom
+      
       
       CONTAINS
        
@@ -60,8 +62,15 @@
             integer :: indexi
 
             Weight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
+            
             SpaceDim=jpk*jpj*jpi*jptra
+            
             ObsSpaceDim=jpj*jpi
+            
+            CutLeft=(.not.(nldi==1))
+            CutRight=(.not.(nlei==jpi))
+            CutTop=(.not.(nlej==jpj))
+            CutBottom=(.not.(nldj==1))
             
             allocate(trnEnsemble(jpk,jpj,jpi,jptra))                    
             trnEnsemble = huge(trnEnsemble(1,1,1,1))

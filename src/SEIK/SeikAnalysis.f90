@@ -17,6 +17,11 @@ if (EnsembleRank==0) call Save2DSeik("12345678901234567","12345678901234567","TE
 
     ObsBaseMember=ComputedObsSeik-ComputedObsMean
     
+    if (CutLeft) ObsBaseMember(:,1)=0d0.0
+    if (CutRight) ObsBaseMember(:,jpi)=0d0.0
+    if (CutTop) ObsBaseMember(jpj,:)=0d0.0
+    if (CutBottom) ObsBaseMember(1,:)=0d0.0
+    
 call Save2DSeik("12345678901234567","12345678901234567","TEMP/ObsBaseMember"//int2str(EnsembleRank,3)//".nc", ObsBaseMember)    
     
     if (EnsembleRank==NotWorkingMember) then

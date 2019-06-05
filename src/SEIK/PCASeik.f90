@@ -30,7 +30,7 @@ end function
 end module
 
 
-subroutine PCASeik
+subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary to put ghost cells to zero!
     use mpi
     use myalloc
     use StatSEIK
@@ -64,7 +64,7 @@ subroutine PCASeik
     temptime=mpi_wtime()
     if(myrank==0) write(*,*) "building matrix"
 
-if (.true.) then !true to calcolate mean, false for svd
+if (.false.) then !true to calcolate mean, false for svd
     where (HistoryForSVD>1.0d-8)
         HistoryForSVD=log(HistoryForSVD)
     elsewhere
