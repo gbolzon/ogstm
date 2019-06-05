@@ -47,10 +47,10 @@ subroutine SeikForecast()
             else
                 call mpi_gatherv(0,0,mpi_real8,LTQ1L,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
                 CovSmoother1part=TTTSeik+LTQ1L
-                CovSeik1=LTQ1L
+                CovSeik1=TTTSeik
                 TempMatrixSeik=CovSmoother1part
                 call InvMatMul(TempMatrixSeik,CovSeik1,SeikDim,ierr)
-                TempMatrixSeik=matmul(TTTSeik,CovSeik1)
+                TempMatrixSeik=matmul(LTQ1L,CovSeik1)
                 CovSeik1=TempMatrixSeik
             end if
         end if

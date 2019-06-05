@@ -14,7 +14,7 @@ SUBROUTINE trcwriSeik(TimeString, BaseIndex, Directory, Tracer)
     !FileName = 'BASE001.20111231-15:30:00.N1p.nc'
     
     if (BaseIndex==-1) then
-        call trcwriSeikWrapped(Directory//'TRN', TimeString, Tracer)
+        call trcwriSeikWrapped(Directory//'RST', TimeString, Tracer)
     else
         call trcwriSeikWrapped(Directory//'BASE'//int2str(BaseIndex,3) , TimeString, Tracer)
     end if
@@ -235,7 +235,7 @@ SUBROUTINE write_restartSeik(fileNetCDF,VAR, TimeString, deflate, deflate_level)
        call handle_err1(s,counter,fileNetCDF)
 
        do indexi=1, jpjglo
-            copy_inSeik(:,indexi,:)=tottrn(:,indexi,:)
+            copy_inSeik(:,indexi,:)=transpose(tottrn(:,indexi,:))
        end do
 
        !call switch_index_double(tottrn,copy_inSeik,jpiglo,jpjglo,jpk)

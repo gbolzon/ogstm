@@ -56,10 +56,15 @@
 
       CHLSUP_FOR_DA = 'DA__FREQ_1/chl.' // datestr // '.nc'
       if (EnsembleRank==0) then
+
+!write(*,*) EnsembleRank, myrank, "analisi0"
+
         CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
-        !call mpi_barrier(LocalComm, ierr)
-        !call mpi_abort(mpi_comm_world, -1, ierr)
+!call mpi_barrier(LocalComm, ierr)
+!write(*,*) EnsembleRank, myrank, "analisi1"	        
+!call mpi_barrier(LocalComm, ierr)
+!call mpi_abort(mpi_comm_world, -1, ierr)
 
       !if (myrank .lt. DA_Nprocs ) then
 
@@ -73,6 +78,7 @@
             write(*,*) 'varfile=', trim(VARFILE)
             write(*,*) 'misfit=', trim(MISFIT_FILE)
             call CREATEMISFIT(SATFILE,VARFILE,MISFIT_OPT, ISLOG, MISFIT_FILE) ! produces MISFIT.nc
+!write(*,*) EnsembleRank, myrank, "analisi2"
             !write(*,*) 'eof = ',   trim(EOF_FILE)
             !write(*,*) 'grid = ',  trim(GRID_FILE)
           endif
@@ -90,7 +96,11 @@
           ! deallocation of DA_VarList array
           !call clean_da_params
       endif
-      !call mpi_barrier(mpi_comm_world, ierr)
+
+!call mpi_barrier(mpi_comm_world, ierr)
+!write(*,*) EnsembleRank, myrank, "analisi3"
+!call mpi_barrier(LocalComm, ierr)
+
 !----------New Seik Part--------------------------------------------------------
       
         ComputedObsSeik=0.0d0
@@ -103,10 +113,16 @@
         end do
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
-        ObsErrorDiag1=1.0d0/log(1.1d0)**2
+        ObsErrorDiag1=1.0d0/log(1.35d0)**2
         !ObsErrorDiag1=1.0d0
         
         call readnc_slice_double_2d(trim(SATFILE),trim(satvarname), ObsDataSeik)
+
+!call mpi_barrier(mpi_comm_world, ierr)
+!write(*,*) EnsembleRank, myrank, "analisi4"
+!call mpi_barrier(LocalComm, ierr)
+!call mpi_abort(mpi_comm_world, -1, ierr)
+
         fillvalue999=-999.0d0
         fillValue = 1.0d20
 
@@ -140,7 +156,15 @@
             end do
         end do
 
+!call mpi_barrier(mpi_comm_world, ierr)
+!write(*,*) EnsembleRank, myrank, "analisi5"
+!call mpi_barrier(LocalComm, ierr)
+
         call SeikAnalysis
+
+!call mpi_barrier(mpi_comm_world, ierr)
+!write(*,*) EnsembleRank, myrank, "analisi6"
+!call mpi_barrier(LocalComm, ierr)
         
         if (EnsembleRank==0) then
             call trcwriSeik(DATEstr, -1, 'DA_SEIK/', trn)

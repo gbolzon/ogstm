@@ -3,7 +3,7 @@ subroutine WriteCov1Seik(FileNameCov)
     use mpi
     
     implicit none
-    CHARACTER(LEN=53), intent (in) :: FileNameCov
+    CHARACTER(LEN=*), intent (in) :: FileNameCov
     integer :: ierr, jn
     
     open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
