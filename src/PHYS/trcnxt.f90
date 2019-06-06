@@ -68,7 +68,7 @@
 
 ! ... Mpp : export boundary values to neighboring processors
 
-         CALL mpplnk_my(tra(1,1,1,jn))
+         CALL mpplnk_my(tra(:,:,:,jn)) !prima era CALL mpplnk_my(tra(1,1,1,jn))
 
 #  else
 

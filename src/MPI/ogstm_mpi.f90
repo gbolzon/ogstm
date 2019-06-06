@@ -171,8 +171,8 @@ END SUBROUTINE
 !!
 !!----------------------------------------------------------------------
  SUBROUTINE mpplnk_my(ptab)
-
-      double precision ptab(jpk,jpj,jpi)
+      implicit none
+      double precision, dimension(jpk,jpj,jpi), intent(inout) :: ptab
 
 
 #ifdef key_mpp_mpi

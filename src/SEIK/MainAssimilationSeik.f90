@@ -103,6 +103,7 @@
 
 !----------New Seik Part--------------------------------------------------------
       
+
         ComputedObsSeik=0.0d0
         MisfitSeik=0.0d0
         do jn=1, jptra
@@ -113,9 +114,13 @@
         end do
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
-        ObsErrorDiag1=1.0d0/log(1.35d0)**2
-        !ObsErrorDiag1=1.0d0
-        
+        ObsBaseMember=1.0d0/log(1.35d0)**2
+        if (CutLeft) ObsBaseMember(:,1)=0.0d0
+        if (CutRight) ObsBaseMember(:,jpi)=0.0d0
+        if (CutTop) ObsBaseMember(jpj,:)=0.0d0
+        if (CutBottom) ObsBaseMember(1,:)=0.0d0
+        ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
+
         call readnc_slice_double_2d(trim(SATFILE),trim(satvarname), ObsDataSeik)
 
 !call mpi_barrier(mpi_comm_world, ierr)

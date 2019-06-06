@@ -13,7 +13,7 @@
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
-      double precision, parameter :: MaxVarSEIK=4.0d0
+      double precision, parameter :: MaxVarSEIK=1.0d0
 
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
@@ -50,7 +50,7 @@
       double precision, allocatable, dimension (:) :: TempObsSeik
       double precision, allocatable, dimension(:,:) :: HLTR1HL
       
-      logical :: CutLeft, CutRight, CutTop, CutBottom
+      logical :: CutLeft, CutRight, CutTop, CutBottom ! definied in myalloc
       
       
       CONTAINS
@@ -67,10 +67,10 @@
             
             ObsSpaceDim=jpj*jpi
             
-            CutLeft=(.not.(nldi==1))
-            CutRight=(.not.(nlei==jpi))
-            CutTop=(.not.(nlej==jpj))
-            CutBottom=(.not.(nldj==1))
+            !CutLeft=(.not.(nldi==1)) !these are definied in myalloc, here we don't have nldi etc...
+            !CutRight=(.not.(nlei==jpi))
+            !CutTop=(.not.(nlej==jpj))
+            !CutBottom=(.not.(nldj==1))
             
             allocate(trnEnsemble(jpk,jpj,jpi,jptra))                    
             trnEnsemble = huge(trnEnsemble(1,1,1,1))
@@ -83,7 +83,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(2.0d0)**2)
+            ModelErrorDiag1 = 1/(log(1.3d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))

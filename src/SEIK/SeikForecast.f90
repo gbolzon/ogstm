@@ -29,10 +29,10 @@ subroutine SeikForecast()
         BaseMember=0.0d0
     end where
     
-    if (CutLeft) BaseMember(:,:,1,:)=0d0.0
-    if (CutRight) BaseMember(:,:,jpi,:)=0d0.0
-    if (CutTop) BaseMember(:,jpj,:,:)=0d0.0
-    if (CutBottom) BaseMember(:,1,:,:)=0d0.0
+    !if (CutLeft) BaseMember(:,:,1,:)=0.0d0
+    !if (CutRight) BaseMember(:,:,jpi,:)=0.0d0
+    !if (CutTop) BaseMember(:,jpj,:,:)=0.0d0
+    !if (CutBottom) BaseMember(:,1,:,:)=0.0d0
 
     !do indexi=1, jptra
         !where (bfmmask==0) BaseMember(:,:,:,indexi)=0.0d0

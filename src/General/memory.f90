@@ -759,6 +759,17 @@ subroutine alloc_tot()
 
 #ifdef ExecDA
        call myalloc_seik(myrank)
+       CutLeft=(.not.(nldi==1))
+       CutRight=(.not.(nlei==jpi))
+       CutTop=(.not.(nlej==jpj))
+       CutBottom=(.not.(nldj==1))
+       BaseMember=reshape(ModelErrorDiag1,(/jpk,jpj,jpi,jptra/))
+       if (CutLeft) BaseMember(:,:,1,:)=0.0d0
+       if (CutRight) BaseMember(:,:,jpi,:)=0.0d0
+       if (CutTop) BaseMember(:,jpj,:,:)=0.0d0
+       if (CutBottom) BaseMember(:,1,:,:)=0.0d0
+       ModelErrorDiag1=reshape(BaseMember,(/SpaceDim/))
+       BaseMember=Huge(BaseMember(1,1,1,1))
 #endif
   
         END subroutine alloc_tot
