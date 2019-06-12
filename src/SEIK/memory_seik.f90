@@ -52,6 +52,8 @@
       
       logical :: CutLeft, CutRight, CutTop, CutBottom ! definied in myalloc
       
+      double precision,  dimension(:,:), allocatable :: BufferMPILinkSend3, BufferMPILinkSend4, BufferMPILinkReceive3, BufferMPILinkReceive4
+      
       
       CONTAINS
        
@@ -148,6 +150,17 @@
             allocate(TempObsSeik(ObsSpaceDim))                    
             TempObsSeik = huge(TempObsSeik(1))
             
+            allocate(BufferMPILinkSend3(jpk,jpi))                    
+            BufferMPILinkSend3 = huge(BufferMPILinkSend3(1,1))
+            
+            allocate(BufferMPILinkSend4(jpk,jpi))                    
+            BufferMPILinkSend4 = huge(BufferMPILinkSend4(1,1))
+            
+            allocate(BufferMPILinkRecieve3(jpk,jpi))                    
+            BufferMPILinkRecieve3 = huge(BufferMPILinkRecieve3(1,1))
+            
+            allocate(BufferMPILinkRecieve4(jpk,jpi))                    
+            BufferMPILinkRecieve4 = huge(BufferMPILinkRecieve4(1,1))
             
             if(LocalRank==0) then
                 
@@ -287,6 +300,10 @@
             deallocate(MpiCountObs)
             deallocate(MpiDisplacementObs)
             deallocate(TempObsSeik)
+            deallocate(BufferMPILinkSend3)                    
+            deallocate(BufferMPILinkSend4)                    
+            deallocate(BufferMPILinkRecieve3)                    
+            deallocate(BufferMPILinkRecieve4)                    
             
             if (LocalRank==0) then
                 deallocate(TempSliceSeik2)

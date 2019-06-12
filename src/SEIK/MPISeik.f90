@@ -1,4 +1,4 @@
-SUBROUTINE mpplnkSeik(ptab) !this subroutine should be rewritten using black/white chess-like algorithm. whites send first, blacks recive first.
+SUBROUTINE mpplnkSeik2(ptab) !this subroutine should be rewritten using black/white chess-like algorithm. whites send first, blacks recive first.
     use ogstm_mpi_module
     use MPI
     use myalloc
@@ -84,26 +84,39 @@ SUBROUTINE mpplnkSeik(ptab) !this subroutine should be rewritten using black/whi
 !!
 !!
       packsize=jpk*jpi
+        BufferMPILinkSend3=ptab(:,jpj-1,:)        
+        BufferMPILinkSend4=ptab(:,2,:)          
+        ptab(:,1,:)=BufferMPILinkRecieve3                
+        ptab(:,jpj,:)=BufferMPILinkRecieve4
+        
       IF(nbondj.eq.-1) THEN ! We are at the south side of the domain
-          CALL mppsend(4,ptab(:,2,:),packsize,nono,0,reqs4)
-          CALL mpprecv(3,ptab(:,1,:),packsize,reqr3)
+            BufferMPILinkSend4=ptab(:,2,:)    
+          CALL mppsend(4,BufferMPILinkSend4,packsize,nono,0,reqs4)
+          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
           CALL mppwait(reqs4)
           CALL mppwait(reqr3)
+            ptab(:,1,:)=BufferMPILinkRecieve3 
       ELSE IF(nbondj.eq.0) THEN
-          CALL mppsend(4, ptab(:,2,:),packsize,nono,0,reqs4)
-          CALL mppsend(3, ptab(:,jpj-1,:),packsize,noso,0,reqs3)
-          CALL mpprecv(3,ptab(:,1,:),packsize,reqr3)
-          CALL mpprecv(4,ptab(:,jpj,:),packsize,reqr4)
+            BufferMPILinkSend3=ptab(:,jpj-1,:)        
+            BufferMPILinkSend4=ptab(:,2,:)   
+          CALL mppsend(4, BufferMPILinkSend4,packsize,nono,0,reqs4)
+          CALL mppsend(3, BufferMPILinkSend3,packsize,noso,0,reqs3)
+          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
+          CALL mpprecv(4,BufferMPILinkRecieve4,packsize,reqr4)
 
           CALL mppwait(reqs4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr3)
           CALL mppwait(reqr4)
+            ptab(:,1,:)=BufferMPILinkRecieve3                
+            ptab(:,jpj,:)=BufferMPILinkRecieve4
       ELSE IF(nbondj.eq.1) THEN ! We are at the north side of the domain
-          CALL mppsend(3,ptab(:,jpj-1,:),packsize, noso,0, reqs3)
-          CALL mpprecv(4,ptab(:,jpj,:),packsize, reqr4)
+            BufferMPILinkSend3=ptab(:,jpj-1,:) 
+          CALL mppsend(3,BufferMPILinkSend3,packsize, noso,0, reqs3)
+          CALL mpprecv(4,BufferMPILinkRecieve4,packsize, reqr4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr4)
+            ptab(:,jpj,:)=BufferMPILinkRecieve4
       ENDIF
 
 

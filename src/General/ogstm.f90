@@ -165,6 +165,7 @@ SUBROUTINE ogstm_initialize()
         write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": First part of initialization in sec ", temporarytime2-temporarytime1
         temporarytime1=temporarytime2
         
+        call SeikInit
         call ReadBaseSeik
         
         temporarytime2=MPI_Wtime()
