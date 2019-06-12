@@ -1,10 +1,12 @@
 subroutine SeikForecast()
     Use myalloc
     use mpi
+!use StringSEIK
 
     implicit none
 
     INTEGER :: ierr, indexi
+integer :: indexj, indexk, indexn
 
     where (trn<1.0d-12) trn=1.0d-12 !this should already be done with SMALL in another routine, but I don't have time to check now
     do indexi=1, jptra
@@ -37,12 +39,6 @@ subroutine SeikForecast()
     !do indexi=1, jptra
         !where (bfmmask==0) BaseMember(:,:,:,indexi)=0.0d0
     !end do
-
-    !if (UseInflation==.true.) then
-        !write(*,*) 'Missing code using inflation: check if is it necessary to prepare L and other matrices for future use. I will stop!'
-        !call MPI_ABORT(MPI_COMM_WORLD, 1, ierr)
-        !if (GlobalRank==0) CovSeik1=ForgettingFactor*TTTSeik
-    !else
     
     if (EnsembleRank==NotWorkingMember) then
         call mpi_allgatherv(0,0,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
@@ -51,6 +47,9 @@ subroutine SeikForecast()
                 CovSeik1=ForgettingFactor*TTTSeik
             else
                 call mpi_gatherv(0,0,mpi_real8,LTQ1L,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
+
+write(*,*) "LTQ1L=", LTQ1L
+
                 CovSmoother1part=TTTSeik+LTQ1L
                 CovSeik1=TTTSeik
                 TempMatrixSeik=CovSmoother1part
@@ -65,6 +64,39 @@ subroutine SeikForecast()
             TempVecSeik=reshape(BaseMember,(/SpaceDim/))
             TempVecSeik=TempVecSeik*ModelErrorDiag1
             TempSliceSeik=matmul(TempVecSeik,LSeik)
+
+if (.true.) then
+if (sum(abs(TempSliceSeik))>1) then
+    write(*,*) "controllo", EnsembleRank, MyRank, TempSliceSeik
+    do indexn=1, jptra
+        do indexi=1, jpi
+            do indexj=1, jpj
+                do indexk=1, jpk
+                    if ((abs(BaseMember(indexk, indexj, indexi, indexn))>1).and.(abs(ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk))>1.0d-12)) write(*,*) EnsembleRank, MyRank, trim(ctrcnm(indexn)), "(",indexk, indexj, indexi, indexn,")", BaseMember(indexk, indexj, indexi, indexn), ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk)  
+                end do
+            end do
+        end do
+    end do
+if (.false.) then
+    !open(unit=UnitSEIK, file="TEMP/temp"//int2str(EnsembleRank,2)//"."//int2str(MyRank,3)//"."//int2str(int(sum(TempSliceSeik)*1000),10)//".csv", form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
+    write(UnitSEIK,*,iostat=ierr) BaseMember
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) TempVecSeik
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) TempSliceSeik
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) bfmmask
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) "----------------------------------------------------"
+    write(UnitSEIK,*,iostat=ierr) ModelErrorDiag1
+    close(unit=UnitSEIK, iostat=ierr)
+end if
+end if
+end if
+
             if (MyRank==0) then
                 call mpi_reduce(TempSliceSeik,TempSliceSeik2, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
                 call mpi_gatherv(TempSliceSeik2,SeikDim,mpi_real8,0,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)

@@ -173,9 +173,10 @@ END SUBROUTINE
  SUBROUTINE mpplnk_my(ptab)
       implicit none
       double precision, dimension(jpk,jpj,jpi), intent(inout) :: ptab
+      
+      call mpplnkSeik(ptab)
 
-
-#ifdef key_mpp_mpi
+#ifdef key_mpp_mpi_I_dont_want_this_part
 
       INTEGER jk,jj,ji
       INTEGER reqs1, reqs2, reqr1, reqr2
