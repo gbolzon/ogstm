@@ -36,9 +36,9 @@ integer :: indexj, indexk, indexn
     !if (CutTop) BaseMember(:,jpj,:,:)=0.0d0
     !if (CutBottom) BaseMember(:,1,:,:)=0.0d0
 
-    !do indexi=1, jptra
-        !where (bfmmask==0) BaseMember(:,:,:,indexi)=0.0d0
-    !end do
+do indexi=1, jptra
+BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
+end do
     
     if (EnsembleRank==NotWorkingMember) then
         call mpi_allgatherv(0,0,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)

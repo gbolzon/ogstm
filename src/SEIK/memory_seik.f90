@@ -54,6 +54,7 @@
       
       double precision,  dimension(:,:), allocatable :: BufferMPILinkSend3, BufferMPILinkSend4, BufferMPILinkReceive3, BufferMPILinkReceive4
       
+      integer, dimension(:,:,:), allocatable :: SeikMask
       
       CONTAINS
        
@@ -156,12 +157,15 @@
             allocate(BufferMPILinkSend4(jpk,jpi))                    
             BufferMPILinkSend4 = huge(BufferMPILinkSend4(1,1))
             
-            allocate(BufferMPILinkRecieve3(jpk,jpi))                    
-            BufferMPILinkRecieve3 = huge(BufferMPILinkRecieve3(1,1))
+            allocate(BufferMPILinkReceive3(jpk,jpi))                    
+            BufferMPILinkReceive3 = huge(BufferMPILinkReceive3(1,1))
             
-            allocate(BufferMPILinkRecieve4(jpk,jpi))                    
-            BufferMPILinkRecieve4 = huge(BufferMPILinkRecieve4(1,1))
+            allocate(BufferMPILinkReceive4(jpk,jpi))                    
+            BufferMPILinkReceive4 = huge(BufferMPILinkReceive4(1,1))
             
+            allocate(SeikMask(jpk,jpj,jpi))
+            SeikMask = huge(SeikMask(1,1,1))
+
             if(LocalRank==0) then
                 
                 allocate(TempSliceSeik2(SeikDim))
@@ -302,9 +306,10 @@
             deallocate(TempObsSeik)
             deallocate(BufferMPILinkSend3)                    
             deallocate(BufferMPILinkSend4)                    
-            deallocate(BufferMPILinkRecieve3)                    
-            deallocate(BufferMPILinkRecieve4)                    
-            
+            deallocate(BufferMPILinkReceive3)                    
+            deallocate(BufferMPILinkReceive4)                    
+            deallocate(SeikMask)
+           
             if (LocalRank==0) then
                 deallocate(TempSliceSeik2)
                 deallocate(MpiCountCov)

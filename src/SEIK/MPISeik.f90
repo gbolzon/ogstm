@@ -84,39 +84,35 @@ SUBROUTINE mpplnkSeik2(ptab) !this subroutine should be rewritten using black/wh
 !!
 !!
       packsize=jpk*jpi
-        BufferMPILinkSend3=ptab(:,jpj-1,:)        
-        BufferMPILinkSend4=ptab(:,2,:)          
-        ptab(:,1,:)=BufferMPILinkRecieve3                
-        ptab(:,jpj,:)=BufferMPILinkRecieve4
         
       IF(nbondj.eq.-1) THEN ! We are at the south side of the domain
-            BufferMPILinkSend4=ptab(:,2,:)    
+            BufferMPILinkSend4=ptab(:,jpj-1,:)    
           CALL mppsend(4,BufferMPILinkSend4,packsize,nono,0,reqs4)
-          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
+          CALL mpprecv(3,BufferMPILinkReceive3,packsize,reqr3)
           CALL mppwait(reqs4)
           CALL mppwait(reqr3)
-            ptab(:,1,:)=BufferMPILinkRecieve3 
+            ptab(:,jpj,:)=BufferMPILinkReceive3 
       ELSE IF(nbondj.eq.0) THEN
-            BufferMPILinkSend3=ptab(:,jpj-1,:)        
-            BufferMPILinkSend4=ptab(:,2,:)   
+            BufferMPILinkSend4=ptab(:,jpj-1,:)        
+            BufferMPILinkSend3=ptab(:,2,:)   
           CALL mppsend(4, BufferMPILinkSend4,packsize,nono,0,reqs4)
           CALL mppsend(3, BufferMPILinkSend3,packsize,noso,0,reqs3)
-          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
-          CALL mpprecv(4,BufferMPILinkRecieve4,packsize,reqr4)
+          CALL mpprecv(3,BufferMPILinkReceive3,packsize,reqr3)
+          CALL mpprecv(4,BufferMPILinkReceive4,packsize,reqr4)
 
           CALL mppwait(reqs4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr3)
           CALL mppwait(reqr4)
-            ptab(:,1,:)=BufferMPILinkRecieve3                
-            ptab(:,jpj,:)=BufferMPILinkRecieve4
+            ptab(:,1,:)=BufferMPILinkReceive4              
+            ptab(:,jpj,:)=BufferMPILinkReceive3
       ELSE IF(nbondj.eq.1) THEN ! We are at the north side of the domain
-            BufferMPILinkSend3=ptab(:,jpj-1,:) 
+            BufferMPILinkSend3=ptab(:,2,:) 
           CALL mppsend(3,BufferMPILinkSend3,packsize, noso,0, reqs3)
-          CALL mpprecv(4,BufferMPILinkRecieve4,packsize, reqr4)
+          CALL mpprecv(4,BufferMPILinkReceive4,packsize, reqr4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr4)
-            ptab(:,jpj,:)=BufferMPILinkRecieve4
+            ptab(:,1,:)=BufferMPILinkReceive4
       ENDIF
 
 

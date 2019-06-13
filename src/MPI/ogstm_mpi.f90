@@ -1,7 +1,7 @@
 
 MODULE ogstm_mpi_module
 
-#ifdef ExecDA
+#ifdef ExecDA_I_dont_want_compile_this
 #include <petscversion.h>
 #if PETSC_VERSION_GE(3,8,0)
 #include "petsc/finclude/petscvec.h"
@@ -16,7 +16,7 @@ USE mpi
 #ifdef ExecDA
 use DA_mem
 use mpi_str, only: Var3DCommunicator
-use petscvec, only: PETSC_COMM_WORLD, PETSC_NULL_CHARACTER
+!use petscvec, only: PETSC_COMM_WORLD, PETSC_NULL_CHARACTER
 #endif
 
 implicit NONE
@@ -60,7 +60,7 @@ SUBROUTINE mynode
 
       INTEGER :: ierr
 #ifdef ExecDA
-      PetscErrorCode :: stat
+!      PetscErrorCode :: stat
 #endif
 
 #ifdef key_mpp_mpi
@@ -73,15 +73,15 @@ SUBROUTINE mynode
 
 ! 3DVar Code
 
-      if(GlobalRank .lt. DA_Nprocs) then
-        call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, GlobalRank, Var3DCommunicator, ierr)
-        
-        PETSC_COMM_WORLD = Var3DCommunicator
-        call PetscInitialize(PETSC_NULL_CHARACTER,stat)
-        CHKERRQ(stat)
-      else
-        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, GlobalRank, Var3DCommunicator, ierr)
-      endif
+!      if(GlobalRank .lt. DA_Nprocs) then
+!        call MPI_Comm_split(MPI_COMM_WORLD, DA_Nprocs, GlobalRank, Var3DCommunicator, ierr)
+!        
+!        PETSC_COMM_WORLD = Var3DCommunicator
+!        call PetscInitialize(PETSC_NULL_CHARACTER,stat)
+!        CHKERRQ(stat)
+!      else
+!        call MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, GlobalRank, Var3DCommunicator, ierr)
+!      endif
       
 !SEIK Code
 
@@ -418,39 +418,35 @@ SUBROUTINE mpplnkSeik(ptab) !this subroutine should be rewritten using black/whi
 !!
 !!
       packsize=jpk*jpi
-        BufferMPILinkSend3=ptab(:,jpj-1,:)        
-        BufferMPILinkSend4=ptab(:,2,:)          
-        ptab(:,1,:)=BufferMPILinkRecieve3                
-        ptab(:,jpj,:)=BufferMPILinkRecieve4
         
       IF(nbondj.eq.-1) THEN ! We are at the south side of the domain
-            BufferMPILinkSend4=ptab(:,2,:)    
+            BufferMPILinkSend4=ptab(:,jpj-1,:)    
           CALL mppsend(4,BufferMPILinkSend4,packsize,nono,0,reqs4)
-          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
+          CALL mpprecv(3,BufferMPILinkReceive3,packsize,reqr3)
           CALL mppwait(reqs4)
           CALL mppwait(reqr3)
-            ptab(:,1,:)=BufferMPILinkRecieve3 
+            ptab(:,jpj,:)=BufferMPILinkReceive3 
       ELSE IF(nbondj.eq.0) THEN
-            BufferMPILinkSend3=ptab(:,jpj-1,:)        
-            BufferMPILinkSend4=ptab(:,2,:)   
+            BufferMPILinkSend4=ptab(:,jpj-1,:)        
+            BufferMPILinkSend3=ptab(:,2,:)   
           CALL mppsend(4, BufferMPILinkSend4,packsize,nono,0,reqs4)
           CALL mppsend(3, BufferMPILinkSend3,packsize,noso,0,reqs3)
-          CALL mpprecv(3,BufferMPILinkRecieve3,packsize,reqr3)
-          CALL mpprecv(4,BufferMPILinkRecieve4,packsize,reqr4)
+          CALL mpprecv(3,BufferMPILinkReceive3,packsize,reqr3)
+          CALL mpprecv(4,BufferMPILinkReceive4,packsize,reqr4)
 
           CALL mppwait(reqs4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr3)
           CALL mppwait(reqr4)
-            ptab(:,1,:)=BufferMPILinkRecieve3                
-            ptab(:,jpj,:)=BufferMPILinkRecieve4
+            ptab(:,1,:)=BufferMPILinkReceive4                
+            ptab(:,jpj,:)=BufferMPILinkReceive3
       ELSE IF(nbondj.eq.1) THEN ! We are at the north side of the domain
-            BufferMPILinkSend3=ptab(:,jpj-1,:) 
+            BufferMPILinkSend3=ptab(:,2,:) 
           CALL mppsend(3,BufferMPILinkSend3,packsize, noso,0, reqs3)
-          CALL mpprecv(4,BufferMPILinkRecieve4,packsize, reqr4)
+          CALL mpprecv(4,BufferMPILinkReceive4,packsize, reqr4)
           CALL mppwait(reqs3)
           CALL mppwait(reqr4)
-            ptab(:,jpj,:)=BufferMPILinkRecieve4
+            ptab(:,1,:)=BufferMPILinkReceive4
       ENDIF
 
 

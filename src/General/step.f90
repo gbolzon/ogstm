@@ -88,7 +88,9 @@ MODULE module_step
       TauAVEfrom_2 = TimeStepStart 
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
-      !call mpi_barrier(mpi_comm_world,ierr)
+!call mpi_barrier(mpi_comm_world,ierr)
+!where (trn<1.0d-12) trn=1.0d-12
+!trb=trn
 
       DO TAU = TimeStepStart, TimeStep__End
 
@@ -275,6 +277,9 @@ end do
 end do
 end if
 
+!where ((trn<1.0d-12).or.(.not.(trn==trn))) trn=1.0d-12
+!trb=trn
+
 ! Call Passive tracer model between synchronization for small parallelisation
         CALL trcstp    ! se commento questo non fa calcoli
         
@@ -311,7 +316,7 @@ end if
         ave_counter_1 = ave_counter_1 +1  ! incrementing our counters
         ave_counter_2 = ave_counter_2 +1
 
-       ! call mpi_barrier(mpi_comm_world, ierr)
+call mpi_barrier(mpi_comm_world, ierr)
        stpparttime = MPI_WTIME() - stpparttime
        stptottime  = stptottime  + stpparttime
         if (lwp) write(*,*) "Step in sec ", stpparttime
