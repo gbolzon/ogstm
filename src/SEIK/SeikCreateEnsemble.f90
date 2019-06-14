@@ -5,6 +5,10 @@ subroutine SeikCreateEnsemble()
     implicit none
     integer :: ierr
     
+    if (UseModSeik) then
+    
+    end if
+    
     if (MyRank==0) then
         if (EnsembleRank==NotWorkingMember) then
             call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)

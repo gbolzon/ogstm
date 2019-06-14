@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false.
+      logical, parameter :: UseInflation=.false., UseModSeik=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       double precision, parameter :: MaxVarSEIK=1.0d0
 
@@ -88,7 +88,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(10.0d0)**2)
+            ModelErrorDiag1 = 1/(log(2.0d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
