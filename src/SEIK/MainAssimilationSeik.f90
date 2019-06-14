@@ -103,7 +103,7 @@
 
 !----------New Seik Part--------------------------------------------------------
       
-
+if (SeikDim>0) then
         ComputedObsSeik=0.0d0
         MisfitSeik=0.0d0
         do jn=1, jptra
@@ -183,6 +183,8 @@
         end if
         
         trb=trn
+
+end if
 
       !call mppsync()
       !CALL trcrstDA(datestr)

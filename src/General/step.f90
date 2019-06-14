@@ -22,7 +22,7 @@ MODULE module_step
 !  ---------------------------------------------------------------------
 
       USE ogstm_mpi_module
-
+use StringSEIK
 
  implicit NONE
 
@@ -116,6 +116,7 @@ MODULE module_step
 
         if (IsaRestart(DATEstring).and.(SeikDim.gt.0))  then
             call WriteBaseSeik(datestring)
+            call trcwriSeik(dateString, -1, "REDUCED_BASE/DIMENSION_"//int2str(SeikDim,3) //"/", trnVariance) !questa e' la varianza del giorno prima
         endif
 #endif
 
@@ -224,7 +225,7 @@ MODULE module_step
 
 
 
-#ifdef ExecDA
+#ifdef ExecDA_I_dont_want_this
 ! 3D-VAR Assimilation
     if (SeikDim.eq.0) then 
       if (IsaDataAssimilation(DATEstring)) then
@@ -239,7 +240,8 @@ MODULE module_step
 
 ! Seik Assimilation
 
-        if ((SeikDim.gt.0).and.(IsaDataAssimilation(DATEstring))) then            
+        !if ((SeikDim.gt.0).and.(IsaDataAssimilation(DATEstring))) then            
+        if (IsaDataAssimilation(DATEstring)) then
             CALL MainAssimilationSeik(DATEstring)            
             if (lwp) B = writeTemporization("DATA_ASSIMILATION____", DAparttime)
         endif
@@ -306,7 +308,7 @@ end if
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/', trn)
             endif
 
-            call SeikForecast()
+            call SeikForecast(datestring)
 
         endif
 #endif

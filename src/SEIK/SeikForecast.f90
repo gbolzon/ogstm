@@ -1,10 +1,10 @@
-subroutine SeikForecast()
+subroutine SeikForecast(datestring)
     Use myalloc
     use mpi
-!use StringSEIK
+use StringSEIK
 
     implicit none
-
+character(len=*), intent(in) :: datestring
     INTEGER :: ierr, indexi
 integer :: indexj, indexk, indexn
 
@@ -65,14 +65,14 @@ write(*,*) "LTQ1L=", LTQ1L
             TempVecSeik=TempVecSeik*ModelErrorDiag1
             TempSliceSeik=matmul(TempVecSeik,LSeik)
 
-if (.true.) then
+if (str2int(datestring(1:8))>20130501) then
 if (sum(abs(TempSliceSeik))>1) then
     write(*,*) "controllo", EnsembleRank, MyRank, TempSliceSeik
     do indexn=1, jptra
         do indexi=1, jpi
             do indexj=1, jpj
                 do indexk=1, jpk
-                    if ((abs(BaseMember(indexk, indexj, indexi, indexn))>1).and.(abs(ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk))>1.0d-12)) write(*,*) EnsembleRank, MyRank, trim(ctrcnm(indexn)), "(",indexk, indexj, indexi, indexn,")", BaseMember(indexk, indexj, indexi, indexn), ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk)  
+                    if ((abs(BaseMember(indexk, indexj, indexi, indexn))>0.1).and.(abs(ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk))>1.0d-12)) write(*,*) EnsembleRank, MyRank, trim(ctrcnm(indexn)), "(",indexk, indexj, indexi, indexn,")", BaseMember(indexk, indexj, indexi, indexn), ModelErrorDiag1((indexn-1)*jpi*jpj*jpk+(indexi-1)*jpj*jpk+(indexj-1)*jpk+indexk)  
                 end do
             end do
         end do

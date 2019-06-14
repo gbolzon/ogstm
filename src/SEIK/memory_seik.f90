@@ -39,6 +39,8 @@
       double precision, allocatable, dimension(:,:) :: PCAMatrixT
 
       double precision,allocatable,dimension(:,:,:) :: copy_inSeik
+
+      double precision, allocatable, dimension (:,:,:,:) :: trnVariance
       
       !for analisis
       integer :: ObsSpaceDim
@@ -86,7 +88,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.3d0)**2)
+            ModelErrorDiag1 = 1/(log(10.0d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -165,6 +167,9 @@
             
             allocate(SeikMask(jpk,jpj,jpi))
             SeikMask = huge(SeikMask(1,1,1))
+
+            allocate(trnVariance(jpk,jpj,jpi,jptra))
+            trnVariance = huge(trnVariance(1,1,1,1))
 
             if(LocalRank==0) then
                 
@@ -309,6 +314,7 @@
             deallocate(BufferMPILinkReceive3)                    
             deallocate(BufferMPILinkReceive4)                    
             deallocate(SeikMask)
+            deallocate(trnVariance)
            
             if (LocalRank==0) then
                 deallocate(TempSliceSeik2)

@@ -19,8 +19,8 @@ subroutine SeikCreateEnsemble()
 
     trnEnsembleWeighted=BaseMember**2
     trnEnsembleWeighted=trnEnsembleWeighted*Weight
-    call MPI_AllReduce(trnEnsembleWeighted, trnEnsemble, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
-    where (trnEnsemble>MaxVarSEIK)
+    call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
+    where (trnVariance>MaxVarSEIK)
         trnEnsemble=sqrt(MaxVarSEIK/trnEnsemble)
     elsewhere
         trnEnsemble=1.0d0
