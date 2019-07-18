@@ -88,7 +88,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(2.0d0)**2)
+            ModelErrorDiag1 = 1/(log(4.0d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))

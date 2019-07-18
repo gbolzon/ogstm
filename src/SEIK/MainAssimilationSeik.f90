@@ -114,7 +114,7 @@ if (SeikDim>0) then
         end do
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
-        ObsBaseMember=1.0d0/log(1.15d0)**2
+        ObsBaseMember=1.0d0/log(1.3d0)**2
         if (CutLeft) ObsBaseMember(:,1)=0.0d0
         if (CutRight) ObsBaseMember(:,jpi)=0.0d0
         if (CutTop) ObsBaseMember(jpj,:)=0.0d0

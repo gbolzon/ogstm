@@ -12,20 +12,28 @@ subroutine SeikInit
     CutBottom=(.not.(nldj==1))
     BaseMember=reshape(ModelErrorDiag1,(/jpk,jpj,jpi,jptra/))
     call CutCellsTracer(BaseMember)
-    ModelErrorDiag1=reshape(BaseMember,(/SpaceDim/))
-    BaseMember=Huge(BaseMember(1,1,1,1)) 
-
+    
     call readnc_slice_double_2d("BC/TIN_yyyy0115-00:00:00.nc", "riv_N3n", TempMask2D)
     call readnc_slice_double("BC/GIB_yyyy0215-12:00:00.nc", "gib_N6r", TempMask3D)
     SeikMask=0
     do indexi=1,jpi
         do indexj=1, jpj
             do indexk=1, 30 !jpk
-                if (abs(TempMask2D(indexj, indexi)+1)>1.0d-6) cycle
+                if ((abs(TempMask2D(indexj, indexi)+1)>1.0d-6).and.(indexk==1)) cycle
                 if ((abs(TempMask3D(indexk, indexj, indexi)+1)<1.0d-6).and.(bfmmask(indexk, indexj, indexi)==1)) SeikMask(indexk, indexj, indexi)=1
             end do
         end do
     end do
+
+    do indexi=1, jptra
+        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
+    end do
+
+!call trcwriSeik("12345678901234567",-1,"RESTARTS/",BaseMember)
+
+    ModelErrorDiag1=reshape(BaseMember,(/SpaceDim/))
+    BaseMember=Huge(BaseMember(1,1,1,1))
+
 
 end subroutine
 

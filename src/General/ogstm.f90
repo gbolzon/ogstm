@@ -63,9 +63,8 @@ SUBROUTINE ogstm_launcher()
 #include "BFM_module_list.h"
 #endif
 
-     
+     implicit none
       double precision :: timetosolution
-
       
       timetosolution = MPI_Wtime()
 
@@ -91,8 +90,9 @@ SUBROUTINE ogstm_initialize()
 
 ! local declarations
 ! ==================
+    implicit none
     double precision temporarytime1, temporarytime2
-     
+     integer ierr
       ! *********************************************
 
       temporarytime1=mpi_wtime()
@@ -166,6 +166,7 @@ SUBROUTINE ogstm_initialize()
         temporarytime1=temporarytime2
         
         call SeikInit
+call mpi_barrier(mpi_comm_world,ierr)
         call ReadBaseSeik
         
         temporarytime2=MPI_Wtime()

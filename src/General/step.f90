@@ -89,7 +89,7 @@ use StringSEIK
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
 !call mpi_barrier(mpi_comm_world,ierr)
-!where (trn<1.0d-12) trn=1.0d-12
+!where (trn<1.0d-6) trn=1.0d-6
 !trb=trn
 
       DO TAU = TimeStepStart, TimeStep__End
@@ -150,18 +150,18 @@ use StringSEIK
 ! For offline simulation READ DATA or precalculalted dynamics fields
 ! ------------------------------------------------------------------
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "written"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "written"
 
       CALL forcings_PHYS(DATEstring)
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "forcings_PHYS"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "forcings_PHYS"
 
       CALL forcings_KEXT(datestring)
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "forcings_KEXT"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "forcings_KEXT"
 
       !CALL bc_gib       (DATEstring)     ! CALL dtatrc(istp,0)! Gibraltar strait BC
       !CALL bc_tin       (DATEstring)     ! CALL dtatrc(istp,1)
@@ -173,8 +173,8 @@ use StringSEIK
       !bc_tin_partTime = MPI_WTIME()
       call boundaries%update(datestring)
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "boundaries"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "boundaries"
 
       !bc_tin_partTime = MPI_WTIME()    - bc_tin_partTime
       !bc_tin_TotTime  = bc_tin_TotTime + bc_tin_partTime
@@ -190,13 +190,13 @@ use StringSEIK
 
       CALL bc_co2       (DATEstring)
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "bc_co2"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "bc_co2"
 
       CALL eos          ()               ! Water density
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "eos"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "eos"
 
       if (IsAnAveDump(DATEstring,1).and.(EnsembleRank==0)) then
          call MIDDLEDATE(TauAVEfrom_1, TAU, datemean)
@@ -258,19 +258,19 @@ use StringSEIK
         endif
 #endif
 
-!call mpi_barrier(mpi_comm_world,ierr)
-!if (lwp) write(*,*) "ensemble"
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "ensemble"
 
 if (.false.) then
 trnEnsemble=trn
-if(lwp) write(*,*) ctrcnm
-do jk=1, jpk
+!if(lwp) write(*,*) ctrcnm
+do jn=1, jptra
+do ji=1, jpi
 do jj=1,jpj
-do ji=1,jpi
-do jn=1,jptra
-    if ((trn(jk,jj,ji,jn)<1.0d-6).and.(bfmmask(jk,jj,ji)==1)) then
-        write(*,*) "Small: gl", GlobalRank, "en", EnsembleRank, "my" , MyRank, "name ", ctrcnm(jn)
-        write(*,*) trn(jk,jj,ji,:)
+do jk=1,jpk
+    if ((trn(jk,jj,ji,jn)<1.0d-8).and.(bfmmask(jk,jj,ji)==1)) then
+        write(*,*) "Small:en", EnsembleRank, "my" , MyRank, "n ", ctrcnm(jn), "(",jk,jj,ji,jn,")=",trn(:,jj,ji,jn) 
+        !write(*,*) trn(jk,jj,ji,:)
         exit
     end if
 end do
@@ -286,13 +286,13 @@ end if
         CALL trcstp    ! se commento questo non fa calcoli
         
 if (.false.) then
-do jk=1, jpk
-do jj=1,jpj
+do jn=1, jptra
 do ji=1,jpi
-do jn=1,jptra
+do jj=1,jpj
+do jk=1,jpk
     if ((trn(jk,jj,ji,jn)<trnEnsemble(jk,jj,ji,jn)*0.5).and.(bfmmask(jk,jj,ji)==1)) then
-        write(*,*) "Halved: gl", GlobalRank, "en", EnsembleRank, "my" , MyRank, "name ", ctrcnm(jn)
-        write(*,*) trn(jk,jj,ji,:)
+        write(*,*) "Halved:en", EnsembleRank, "my" , MyRank, "n ", ctrcnm(jn), "(",jk,jj,ji,jn,")=",trn(:,jj,ji,jn)
+        !write(*,*) trn(jk,jj,ji,:)
         exit
     end if
 end do
@@ -417,18 +417,34 @@ call mpi_barrier(mpi_comm_world, ierr)
 
        IMPLICIT NONE
       integer jn,jk,ji,jj
+integer ierr
+
       trcstpparttime = MPI_WTIME() ! cronometer-start
 
       IF (ladv) CALL trcadv ! tracers: advection
 
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "adv"
+
 #    if defined key_trc_dmp
       CALL trcdmp ! tracers: damping for passive tracerstrcstp
+
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "dmp"
+
 
 ! ----------------------------------------------------------------------
 !  BEGIN BC_REFACTORING SECTION
 !  ---------------------------------------------------------------------
 
       call boundaries%apply(e3t, trb, tra)
+
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "bound"
+
 
 ! ----------------------------------------------------------------------
 !  END BC_REFACTORING SECTION
@@ -441,24 +457,83 @@ call mpi_barrier(mpi_comm_world, ierr)
 
       IF (lhdf) CALL trchdf
 
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "hdf"
+
+
 ! tracers: sink and source (must be  parallelized on vertical slab)
       IF (lsbc) CALL trcsbc ! surface cell processes, default lsbc = False
 
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "sbc"
+
+
       IF (lbfm) CALL trcsms
+
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "sms"
+
 
       IF (lzdf) CALL trczdf ! tracers: vertical diffusion
 
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "zdf"
+
+
       IF (lsnu) CALL snutel
 
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "snute"
+
+
       IF (lhtp) CALL hard_tissue_pump
+
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "hard"
+
 
       ! CALL checkValues
 
       CALL trcnxt ! tracers: fields at next time step
+
+call prova
+call mpi_barrier(mpi_comm_world,ierr)
+if (lwp) write(*,*) "nxt"
+
       
       trcstpparttime = MPI_WTIME() - trcstpparttime ! cronometer-stop
       trcstptottime = trcstptottime + trcstpparttime
 
       END SUBROUTINE trcstp
+
+subroutine prova
+implicit none
+integer ji,jj,jk,jn
+
+if(.false.) then
+do jn=1, jptra
+do ji=1,jpi
+do jj=1,jpj
+do jk=1,jpk
+    if ((trn(jk,jj,ji,jn)<trnEnsemble(jk,jj,ji,jn)*0.5).and.(bfmmask(jk,jj,ji)==1)) then
+        write(*,*) "Halved:en", EnsembleRank, "my" , MyRank, "n ", ctrcnm(jn), "(",jk,jj,ji,jn,")=",trn(:,jj,ji,jn)
+        !write(*,*) trn(jk,jj,ji,:)
+        exit
+    end if
+end do
+end do
+end do
+end do
+end if
+
+end subroutine
+
+
 
 end module
