@@ -8,7 +8,7 @@ character(len=*), intent(in) :: datestring
     INTEGER :: ierr, indexi
 integer :: indexj, indexk, indexn
 
-    where (trn<1.0d-12) trn=1.0d-12 !this should already be done with SMALL in another routine, but I don't have time to check now
+    where (trn<1.0d-10) trn=1.0d-10 !this should already be done with SMALL in another routine, but I don't have time to check now
     do indexi=1, jptra
         where (tmask==1) 
             trnEnsemble(:,:,:,indexi)=trn(:,:,:,indexi)
@@ -25,7 +25,7 @@ integer :: indexj, indexk, indexn
 
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     !BaseMember=trnEnsemble-trn
-    where (trn>log(1.0d-5)) 
+    where (trn>log(1.0d-6)) 
         BaseMember=BaseMember-trn
     elsewhere
         BaseMember=0.0d0

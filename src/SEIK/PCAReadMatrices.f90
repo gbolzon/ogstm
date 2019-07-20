@@ -6,9 +6,11 @@ subroutine PCAReadMatrices
     
     integer :: indexi
     logical :: ExistSVD
-        
-    !call LoadMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/SAVES/HistVar-"//int2str(MyRank,4)//".dat")
-    
+
+    if (PCAFullYear) then        
+        call LoadMatrix(HistoryForVar,nHistoryForVar,"REDUCED_BASE/PCA/SAVES/HistVar-"//int2str(MyRank,4)//".dat")
+    end if
+
     INQUIRE(FILE="REDUCED_BASE/PCA/SAVES/HistSVD-"//int2str(MyRank,4)//".dat", EXIST=ExistSVD)
     
     if (ExistSVD) then

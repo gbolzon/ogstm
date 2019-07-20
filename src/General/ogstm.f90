@@ -166,7 +166,7 @@ SUBROUTINE ogstm_initialize()
         temporarytime1=temporarytime2
         
         call SeikInit
-call mpi_barrier(mpi_comm_world,ierr)
+!call mpi_barrier(mpi_comm_world,ierr)
         call ReadBaseSeik
         
         temporarytime2=MPI_Wtime()

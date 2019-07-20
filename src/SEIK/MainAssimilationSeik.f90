@@ -115,10 +115,7 @@ if (SeikDim>0) then
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
         ObsBaseMember=1.0d0/log(1.3d0)**2
-        if (CutLeft) ObsBaseMember(:,1)=0.0d0
-        if (CutRight) ObsBaseMember(:,jpi)=0.0d0
-        if (CutTop) ObsBaseMember(jpj,:)=0.0d0
-        if (CutBottom) ObsBaseMember(1,:)=0.0d0
+        call CutCellsSurface(ObsBaseMember)
         ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
 
         call readnc_slice_double_2d(trim(SATFILE),trim(satvarname), ObsDataSeik)
@@ -134,7 +131,7 @@ if (SeikDim>0) then
         do ji=1,jpi
             do jj=1,jpj
                 if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
-                    (ObsDataSeik(jj,ji).eq.fillvalue999).or.(bfmmask(1,jj,ji).eq.0)) then
+                    (ObsDataSeik(jj,ji).eq.fillvalue999).or.(tmask(1,jj,ji).eq.0)) then !tmask instead of bfmmask
                     ComputedObsSeik(jj,ji)=0.0d0
                     ObsDataSeik(jj,ji)=0.0d0
                     MisfitSeik(jj,ji)=0.0d0

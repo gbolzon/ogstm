@@ -89,7 +89,7 @@ use StringSEIK
        if (IsStartBackup_2) TauAVEfrom_2 = datestringToTAU(BKPdatefrom_2)
        
 !call mpi_barrier(mpi_comm_world,ierr)
-!where (trn<1.0d-6) trn=1.0d-6
+!where (trn<1.0d-10) trn=1.0d-10
 !trb=trn
 
       DO TAU = TimeStepStart, TimeStep__End

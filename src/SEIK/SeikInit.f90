@@ -18,7 +18,7 @@ subroutine SeikInit
     SeikMask=0
     do indexi=1,jpi
         do indexj=1, jpj
-            do indexk=1, 30 !jpk
+            do indexk=1, jpk
                 if ((abs(TempMask2D(indexj, indexi)+1)>1.0d-6).and.(indexk==1)) cycle
                 if ((abs(TempMask3D(indexk, indexj, indexi)+1)<1.0d-6).and.(bfmmask(indexk, indexj, indexi)==1)) SeikMask(indexk, indexj, indexi)=1
             end do

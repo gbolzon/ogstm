@@ -12,7 +12,8 @@
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false., UseModSeik=.true.
-      character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
+      character(len=*), parameter :: PCANeeded="write" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
+      logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0
 
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
@@ -88,7 +89,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(4.0d0)**2)
+            ModelErrorDiag1 = 1/(log(2.0d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -242,16 +243,18 @@
             
                 DimForPCA=100
                 nHistoryForVar=365
-                nHistoryForSVD=310
+                nHistoryForSVD=31*10
                 nHistoryForSVDpart=31
                 CounterForVar=0
                 CounterForSVD=0 
                 CounterForSVDpart=0 
                 SVDpartID=0
-            
-                !allocate(HistoryForVar(jpk,jpj,jpi,jptra,nHistoryForVar))
-                !HistoryForVar = huge(HistoryForVar(1,1,1,1,1))
                 
+                if (PCAFullYear) then
+                    allocate(HistoryForVar(jpk,jpj,jpi,jptra,nHistoryForVar))
+                    HistoryForVar = huge(HistoryForVar(1,1,1,1,1))
+                end if
+        
                 allocate(HistoryForSVD(jpk,jpj,jpi,jptra,nHistoryForSVD))
                 HistoryForSVD = huge(HistoryForSVD(1,1,1,1,1))
                 
@@ -340,7 +343,9 @@
             end if
             
             if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
-                !deallocate(HistoryForVar)
+                if (PCAFullYear) then                
+                    deallocate(HistoryForVar)
+                end if                
                 deallocate(HistoryForSVD)
                 deallocate(HistoryForSVDpart)
                 deallocate(PCAMatrix)

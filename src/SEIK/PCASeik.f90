@@ -88,9 +88,10 @@ else
 
     do indexi=1, nHistoryForSVD
         do indexj=1, jptra
-            where (bfmmask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0
+            where (SeikMask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0 !instead of bfmmask
             !HistoryForSVD(:,:,:,indexj, indexi)=HistoryForSVD(:,:,:,indexj, indexi)*bfmmask
         end do
+        call CutCellsTracer(HistoryForSVD(:,:,:,:, indexi))
     end do
     PCAVar=0.0d0
     
@@ -102,7 +103,7 @@ else
     !PCASTD=0.0d0
     where (PCAMatrix<1.0d-6) PCAMatrix=1.0d-6
 
-    if (.false.) then ! checking
+    if (.true.) then ! checking
         do indexi=1, SpaceDim
             PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)
         end do
@@ -110,16 +111,16 @@ else
         where (BaseMember.le.Threshold) BaseMember=1.0d20
         call trcwriSeik('PCVar678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
-        do indexi=1, jptra
-            BaseMember(:,:,:,indexi)=bfmmask
-	end do
-        call trcwriSeik('bfmmask8901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
+        !do indexi=1, jptra
+        !    BaseMember(:,:,:,indexi)=bfmmask
+	!end do
+        !call trcwriSeik('bfmmask8901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
-        BaseMember=reshape(HistoryForSVD(:,:,:,:, 10),(/jpk,jpj,jpi,jptra/))
-        call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
+        !BaseMember=reshape(HistoryForSVD(:,:,:,:, 10),(/jpk,jpj,jpi,jptra/))
+        !call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         call mpi_barrier(mpi_comm_World,ierr)
-        call mpi_abort(mpi_comm_world,1,ierr)
+        !call mpi_abort(mpi_comm_world,1,ierr)
     end if
     
     do indexi=1, SpaceDim
