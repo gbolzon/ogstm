@@ -1,7 +1,9 @@
 subroutine SeikInit
     use myalloc
+use mpi
     
     implicit none
+integer ierr
 
     double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi)
     integer :: indexi, indexj, indexk
@@ -24,6 +26,20 @@ subroutine SeikInit
             end do
         end do
     end do
+
+call  mpi_barrier(mpi_comm_World,ierr)
+write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
+!call  mpi_barrier(mpi_comm_World,ierr)
+!if ((EnsembleRank==0).and.(MyRank==27)) then
+!write (*,*) "t="
+!write (*,*) tmask
+!write (*,*) "b="
+!write (*,*) bfmmask
+!write (*,*) "s="
+!write (*,*) SeikMask
+!end if
+!call  mpi_barrier(mpi_comm_World,ierr)
+!stop
 
     do indexi=1, jptra
         BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask

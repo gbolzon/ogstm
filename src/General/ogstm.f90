@@ -160,12 +160,13 @@ SUBROUTINE ogstm_initialize()
 #endif
 
 #ifdef ExecDA
+    call SeikInit
     if (SeikDim.gt.0) then
         temporarytime2=MPI_Wtime()
         write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": First part of initialization in sec ", temporarytime2-temporarytime1
         temporarytime1=temporarytime2
         
-        call SeikInit
+        !call SeikInit
 !call mpi_barrier(mpi_comm_world,ierr)
         call ReadBaseSeik
         

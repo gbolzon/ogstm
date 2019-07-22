@@ -47,7 +47,7 @@ subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary t
     double precision , dimension(SpaceDim) :: PCAVar
     !double precision , dimension(SpaceDim) :: PCASTD
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
-    integer :: indexi, indexj, ierr
+    integer :: indexi, indexj, indexk, indexc, indexn, ierr
     
     double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: work, iwork
     integer, dimension(2*maxNeigenvectors) :: isuppz
@@ -62,17 +62,33 @@ subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary t
 
     if(myrank==0) write(*,*) "Starting PCA"
     temptime=mpi_wtime()
+    call mpi_barrier(EnsembleComm, ierr)
     if(myrank==0) write(*,*) "building matrix"
 
 if (.false.) then !true to calcolate mean, false for svd
-    where (HistoryForSVD>1.0d-8)
-        HistoryForSVD=log(HistoryForSVD)
-    elsewhere
-        HistoryForSVD=log(1.0d-8)
-    end where
+    !where (HistoryForSVD>1.0d-8)
+    !    HistoryForSVD=log(HistoryForSVD)
+    !elsewhere
+    !    HistoryForSVD=log(1.0d-8)
+    !end where
+    do indexn=1, nHistoryForSVD
+        do indexc=1, jptra
+            do indexi=1, jpi
+                do indexj=1, jpj
+                    do indexk=1, jpk
+                        if (HistoryForSVD(indexk,indexj,indexi,indexc,indexn)>1.0d-8) then
+                            HistoryForSVD(indexk,indexj,indexi,indexc,indexn)=log(HistoryForSVD(indexk,indexj,indexi,indexc,indexn))
+                        else
+                            HistoryForSVD(indexk,indexj,indexi,indexc,indexn)=log(1.0d-8)
+                        end if
+                    end do
+                end do
+            end do
+        end do
+    end do
     call mpi_barrier(EnsembleComm, ierr)
     if (myrank==0) write(*,*) "log"
-    trn=sum(HistoryForSVD,4)
+    trn=sum(HistoryForSVD,5)
     call mpi_barrier(EnsembleComm, ierr)
     if (myrank==0) write(*,*) "sum"
     trn=trn/nHistoryForSVD
@@ -85,7 +101,8 @@ if (.false.) then !true to calcolate mean, false for svd
     call trcwriSeik("20000101-00:00:00",-1, 'REDUCED_BASE/PCA/', BaseMember)
 
 else    
-
+    
+    write(*,*) "r=", myrank, "sum SeikMask=", sum(SeikMask)
     do indexi=1, nHistoryForSVD
         do indexj=1, jptra
             where (SeikMask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0 !instead of bfmmask
@@ -124,6 +141,7 @@ else
         !call trcwriSeik('Hist5678901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         call mpi_barrier(mpi_comm_World,ierr)
+        if (myrank==0) write(*,*) "checks written"
         !call mpi_abort(mpi_comm_world,1,ierr)
     end if
     
@@ -136,7 +154,7 @@ else
             tempvec=tempvec-CalcMean(tempvec, nHistoryForSVD)
             PCAVar(indexi)=CalcVar(tempvec, nHistoryForSVD,0.0d0,workvec)
             !if (PCAVar(indexi)>1.0d0/ModelErrorDiag1(indexi)) then
-            if (PCAVar(indexi)>1.0d-8 then
+            if (PCAVar(indexi)>1.0d-8) then
                 !PCASTD(indexi)=sqrt(PCAVar(indexi))
                 PCAVar(indexi)=sqrt(PCAVar(indexi))
                 !LogMatrix(:,indexi)=tempvec
@@ -229,6 +247,7 @@ else
     if(myrank==0) write(*,*) "preparing and writing base"
 
     do indexi=1, SpaceDim
+        if (PCAVar(indexi)>sqrt(MaxVarSEIK)) PCAVar(indexi)=sqrt(MaxVarSEIK)
         PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
     end do
 
