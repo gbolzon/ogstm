@@ -116,7 +116,7 @@ use StringSEIK
 
         if (IsaRestart(DATEstring).and.(SeikDim.gt.0))  then
             call WriteBaseSeik(datestring)
-            call trcwriSeik(dateString, -1, "REDUCED_BASE/DIMENSION_"//int2str(SeikDim,3) //"/", trnVariance) !questa e' la varianza del giorno prima
+            if (EnsembleRank==0) call trcwriSeik(dateString, -1, "REDUCED_BASE/DIMENSION_"//int2str(SeikDim,3) //"/", trnVariance) !questa e' la varianza del giorno prima
         endif
 #endif
 
@@ -150,18 +150,18 @@ use StringSEIK
 ! For offline simulation READ DATA or precalculalted dynamics fields
 ! ------------------------------------------------------------------
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "written"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "written"
 
       CALL forcings_PHYS(DATEstring)
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "forcings_PHYS"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "forcings_PHYS"
 
       CALL forcings_KEXT(datestring)
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "forcings_KEXT"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "forcings_KEXT"
 
       !CALL bc_gib       (DATEstring)     ! CALL dtatrc(istp,0)! Gibraltar strait BC
       !CALL bc_tin       (DATEstring)     ! CALL dtatrc(istp,1)
@@ -173,8 +173,8 @@ if (lwp) write(*,*) "forcings_KEXT"
       !bc_tin_partTime = MPI_WTIME()
       call boundaries%update(datestring)
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "boundaries"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "boundaries"
 
       !bc_tin_partTime = MPI_WTIME()    - bc_tin_partTime
       !bc_tin_TotTime  = bc_tin_TotTime + bc_tin_partTime
@@ -190,13 +190,13 @@ if (lwp) write(*,*) "boundaries"
 
       CALL bc_co2       (DATEstring)
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "bc_co2"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "bc_co2"
 
       CALL eos          ()               ! Water density
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "eos"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "eos"
 
       if (IsAnAveDump(DATEstring,1).and.(EnsembleRank==0)) then
          call MIDDLEDATE(TauAVEfrom_1, TAU, datemean)
@@ -258,8 +258,8 @@ if (lwp) write(*,*) "eos"
         endif
 #endif
 
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "ensemble"
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "ensemble"
 
 if (.false.) then
 trnEnsemble=trn
@@ -423,16 +423,16 @@ integer ierr
 
       IF (ladv) CALL trcadv ! tracers: advection
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "adv"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "adv"
 
 #    if defined key_trc_dmp
       CALL trcdmp ! tracers: damping for passive tracerstrcstp
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "dmp"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "dmp"
 
 
 ! ----------------------------------------------------------------------
@@ -441,9 +441,9 @@ if (lwp) write(*,*) "dmp"
 
       call boundaries%apply(e3t, trb, tra)
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "bound"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "bound"
 
 
 ! ----------------------------------------------------------------------
@@ -457,54 +457,54 @@ if (lwp) write(*,*) "bound"
 
       IF (lhdf) CALL trchdf
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "hdf"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "hdf"
 
 
 ! tracers: sink and source (must be  parallelized on vertical slab)
       IF (lsbc) CALL trcsbc ! surface cell processes, default lsbc = False
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "sbc"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "sbc"
 
 
       IF (lbfm) CALL trcsms
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "sms"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "sms"
 
 
       IF (lzdf) CALL trczdf ! tracers: vertical diffusion
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "zdf"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "zdf"
 
 
       IF (lsnu) CALL snutel
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "snute"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "snute"
 
 
       IF (lhtp) CALL hard_tissue_pump
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "hard"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "hard"
 
 
       ! CALL checkValues
 
       CALL trcnxt ! tracers: fields at next time step
 
-call prova
-call mpi_barrier(mpi_comm_world,ierr)
-if (lwp) write(*,*) "nxt"
+!call prova
+!call mpi_barrier(mpi_comm_world,ierr)
+!if (lwp) write(*,*) "nxt"
 
       
       trcstpparttime = MPI_WTIME() - trcstpparttime ! cronometer-stop

@@ -25,7 +25,7 @@ integer :: indexj, indexk, indexn
 
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     !BaseMember=trnEnsemble-trn
-    where (trn>log(1.0d-6)) 
+    where (trn>log(1.0d-4)) 
         BaseMember=BaseMember-trn
     elsewhere
         BaseMember=0.0d0
@@ -36,9 +36,9 @@ integer :: indexj, indexk, indexn
     !if (CutTop) BaseMember(:,jpj,:,:)=0.0d0
     !if (CutBottom) BaseMember(:,1,:,:)=0.0d0
 
-!do indexi=1, jptra
-!BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
-!end do
+do indexi=1, jptra
+BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
+end do
     
     if (EnsembleRank==NotWorkingMember) then
         call mpi_allgatherv(0,0,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
@@ -65,7 +65,7 @@ write(*,*) "LTQ1L=", LTQ1L
             TempVecSeik=TempVecSeik*ModelErrorDiag1
             TempSliceSeik=matmul(TempVecSeik,LSeik)
 
-if (str2int(datestring(1:8))>20130501) then
+if (.false.) then ! (str2int(datestring(1:8))>20130501) then
 if (sum(abs(TempSliceSeik))>1) then
     write(*,*) "controllo", EnsembleRank, MyRank, TempSliceSeik
     do indexn=1, jptra
