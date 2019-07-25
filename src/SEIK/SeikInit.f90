@@ -40,7 +40,7 @@ integer ierr
             else
                 indexjp1=indexj+1
             end if
-            do indexk=1, jpk-1
+            do indexk=1, 30 !jpk-1
                 if ((abs(TempMask2D(indexj, indexi)+1)>1.0d-6).and.(indexk==1)) cycle
                 if (tmask(indexk+1, indexj, indexi)+tmask(indexk, indexjp1, indexi)+tmask(indexk, indexjm1, indexi) & 
                     +tmask(indexk, indexj, indexip1)+tmask(indexk, indexj, indexim1)<5) cycle

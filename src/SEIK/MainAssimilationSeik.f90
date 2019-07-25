@@ -131,7 +131,7 @@ if (SeikDim>0) then
         do ji=1,jpi
             do jj=1,jpj
                 if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
-                    (ObsDataSeik(jj,ji).eq.fillvalue999).or.(tmask(1,jj,ji).eq.0)) then !tmask instead of bfmmask
+                    (ObsDataSeik(jj,ji).eq.fillvalue999).or.(SeikMask(1,jj,ji).eq.0)) then !SeikMask instead of tmask instead of bfmmask
                     ComputedObsSeik(jj,ji)=0.0d0
                     ObsDataSeik(jj,ji)=0.0d0
                     MisfitSeik(jj,ji)=0.0d0

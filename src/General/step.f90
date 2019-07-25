@@ -116,7 +116,7 @@ use StringSEIK
 
         if (IsaRestart(DATEstring).and.(SeikDim.gt.0))  then
             call WriteBaseSeik(datestring)
-            if (EnsembleRank==0) call trcwriSeik(dateString, -1, "REDUCED_BASE/DIMENSION_"//int2str(SeikDim,3) //"/", trnVariance) !questa e' la varianza del giorno prima
+            if (EnsembleRank==0) call trcwriSeik(dateString, -1, "REDUCED_BASE/VARIANCE/", trnVariance) !questa e' la varianza del giorno prima
         endif
 #endif
 
