@@ -89,7 +89,11 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(2.0d0)**2)
+            ModelErrorDiag1 = 1/(log(1.1d0)**2)
+            
+            allocate(ObsErrorDiag1(ObsSpaceDim))                    
+            ObsErrorDiag1 = huge(ObsErrorDiag1(1))
+            ObsErrorDiag1 = 1/(log(1.1d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -126,9 +130,6 @@
             
             allocate(MisfitSeik(jpj,jpi))                    
             MisfitSeik = huge(MisfitSeik(1,1))
-            
-            allocate(ObsErrorDiag1(ObsSpaceDim))                    
-            ObsErrorDiag1 = huge(ObsErrorDiag1(1))
             
             allocate(ComputedObsMean(jpj,jpi))                    
             ComputedObsMean = huge(ComputedObsMean(1,1))

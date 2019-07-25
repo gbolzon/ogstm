@@ -114,9 +114,10 @@ if (SeikDim>0) then
         end do
         !ComputedObsSeik=ComputedObsSeik*bfmmask(1,:,:)
         
-        ObsBaseMember=1.0d0/log(1.3d0)**2
-        call CutCellsSurface(ObsBaseMember)
-        ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
+        !ObsBaseMember=1.0d0/log(1.3d0)**2
+        !call CutCellsSurface(ObsBaseMember)
+        !ObsBaseMember=ObsBaseMember*SeikMask(1,:,:)
+        !ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
 
         call readnc_slice_double_2d(trim(SATFILE),trim(satvarname), ObsDataSeik)
 

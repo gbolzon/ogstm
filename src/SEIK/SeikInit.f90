@@ -5,7 +5,7 @@ use mpi
     implicit none
 integer ierr
 
-    double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi)
+    double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi), partialsum, totalsum
     integer :: indexi, indexj, indexk, indexip1, indexim1, indexjp1, indexjm1
     
     CutLeft=(.not.(nldi==1))
@@ -40,7 +40,7 @@ integer ierr
             else
                 indexjp1=indexj+1
             end if
-            do indexk=1, 30 !jpk-1
+            do indexk=1, jpk-1
                 if ((abs(TempMask2D(indexj, indexi)+1)>1.0d-6).and.(indexk==1)) cycle
                 if (tmask(indexk+1, indexj, indexi)+tmask(indexk, indexjp1, indexi)+tmask(indexk, indexjm1, indexi) & 
                     +tmask(indexk, indexj, indexip1)+tmask(indexk, indexj, indexim1)<5) cycle
@@ -70,8 +70,31 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
 !call trcwriSeik("12345678901234567",-1,"RESTARTS/",BaseMember)
 
     ModelErrorDiag1=reshape(BaseMember,(/SpaceDim/))
-    BaseMember=Huge(BaseMember(1,1,1,1))
+    totalsum=0
+    partialsum=0
+    do indexi=1, SpaceDim
+        if (ModelErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
+    end do
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm)
+    if (lwp) write (*,*) "total sum=", sum(SeikMask)
+    ModelErrorDiag1=ModelErrorDiag1/totalsum
 
+    BaseMember=Huge(BaseMember(1,1,1,1))
+    
+    ObsBaseMember=reshape(ObsErrorDiag1,(/jpj,jpi/))
+    call CutCellsSurface(ObsBaseMember)
+    ObsBaseMember=ObsBaseMember*SeikMask(1,:,:)
+    ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
+    totalsum=0
+    partialsum=0
+    do indexi=1, ObsSpaceDim
+        if (ObsErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
+    end do
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm)
+    if (lwp) write (*,*) "total sum obs=", sum(SeikMask)
+    ObsErrorDiag1=ObsErrorDiag1/totalsum
+    
+    ObsBaseMember=Huge(ObsBaseMember(1,1))
 
 end subroutine
 
