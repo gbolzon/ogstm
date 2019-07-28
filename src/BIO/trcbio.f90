@@ -185,12 +185,12 @@
 
                              a(1:bottom, jtr) = trn(1:bottom,jj,ji,jtr) ! current biogeochemical concentrations
 
-do jk=1, bottom
-if ((trim(ctrcnm(jtr)).eq."N1p").and.(a(jk,jtr)<10.0d-5)) then 
-write (*,*) "bad point. E=", EnsembleRank, "my=", myrank, "(",jk,jj,ji,jtr,")=",a(1:bottom,jtr) 
-exit
-endif
-end do
+!do jk=1, bottom
+!if ((trim(ctrcnm(jtr)).eq."N1p").and.(a(jk,jtr)<10.0d-5)) then 
+!write (*,*) "bad point. E=", EnsembleRank, "my=", myrank, "(",jk,jj,ji,jtr,")=",a(1:bottom,jtr) 
+!exit
+!endif
+!end do
 
 
                           END DO

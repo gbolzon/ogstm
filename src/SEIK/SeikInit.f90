@@ -3,11 +3,12 @@ subroutine SeikInit
 use mpi
     
     implicit none
-integer ierr
-
-    double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi), partialsum, totalsum
-    integer :: indexi, indexj, indexk, indexip1, indexim1, indexjp1, indexjm1
     
+    integer ierr
+    double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi)
+    integer :: indexi, indexj, indexk, indexip1, indexim1, indexjp1, indexjm1
+    integer :: partialsum, totalsum
+
     CutLeft=(.not.(nldi==1))
     CutRight=(.not.(nlei==jpi))
     CutTop=(.not.(nlej==jpj))
@@ -75,8 +76,8 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
     do indexi=1, SpaceDim
         if (ModelErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
     end do
-    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm)
-    if (lwp) write (*,*) "total sum=", sum(SeikMask)
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_int, MPI_sum, LocalComm, ierr)
+    if (lwp) write (*,*) "total sum=", totalsum
     ModelErrorDiag1=ModelErrorDiag1/totalsum
 
     BaseMember=Huge(BaseMember(1,1,1,1))
@@ -90,8 +91,8 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
     do indexi=1, ObsSpaceDim
         if (ObsErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
     end do
-    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm)
-    if (lwp) write (*,*) "total sum obs=", sum(SeikMask)
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_int, MPI_sum, LocalComm, ierr)
+    if (lwp) write (*,*) "total sum obs=", totalsum
     ObsErrorDiag1=ObsErrorDiag1/totalsum
     
     ObsBaseMember=Huge(ObsBaseMember(1,1))
