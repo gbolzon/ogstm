@@ -162,9 +162,13 @@ if (SeikDim>0) then
 !call mpi_barrier(mpi_comm_world, ierr)
 !write(*,*) EnsembleRank, myrank, "analisi5"
 !call mpi_barrier(LocalComm, ierr)
-
-        call SeikAnalysis
-
+        
+        if (UseModSeik) then
+            call ModSeikAnalysis
+        else
+            call SeikAnalysis
+        end if
+        
 !call mpi_barrier(mpi_comm_world, ierr)
 !write(*,*) EnsembleRank, myrank, "analisi6"
 !call mpi_barrier(LocalComm, ierr)

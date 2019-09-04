@@ -1,4 +1,4 @@
-subroutine SeikAnalysis
+subroutine ModSeikAnalysis
     use mpi
     use myalloc
 

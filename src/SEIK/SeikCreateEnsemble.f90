@@ -6,7 +6,7 @@ subroutine SeikCreateEnsemble()
     integer :: ierr
     
     if (UseModSeik) then
-    
+        
     end if
     
     if (MyRank==0) then
