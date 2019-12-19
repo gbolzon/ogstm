@@ -50,6 +50,8 @@ use mpi
         end do
     end do
 
+!SeikMask=BfmMask
+
 call  mpi_barrier(mpi_comm_World,ierr)
 write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
 !call  mpi_barrier(mpi_comm_World,ierr)
@@ -78,7 +80,7 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
     end do
     call mpi_allreduce(partialsum, totalsum, 1, MPI_int, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum=", totalsum
-    ModelErrorDiag1=ModelErrorDiag1/totalsum
+    ModelErrorDiag1=ModelErrorDiag1/totalsum*21*5 !this is temporary, in order to avoid changes to memoryseik
 
     BaseMember=Huge(BaseMember(1,1,1,1))
     
