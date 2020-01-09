@@ -62,7 +62,7 @@ subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary t
 
     if(myrank==0) write(*,*) "Starting PCA"
     temptime=mpi_wtime()
-    call mpi_barrier(EnsembleComm, ierr)
+    !call mpi_barrier(EnsembleComm, ierr) qui in teoria abbiamo un solo member, che senso ha chiamare un barrier tra i members?
     if(myrank==0) write(*,*) "building matrix"
 
 if (.false.) then !true to calcolate mean, false for svd
@@ -247,7 +247,9 @@ else
     if(myrank==0) write(*,*) "preparing and writing base"
 
     do indexi=1, SpaceDim
-        if (PCAVar(indexi)>sqrt(MaxVarSEIK)) PCAVar(indexi)=sqrt(MaxVarSEIK)
+        if (UseMaxVarSEIK) then
+            if (PCAVar(indexi)>sqrt(MaxVarSEIK)) PCAVar(indexi)=sqrt(MaxVarSEIK)
+        end if
         PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
     end do
 

@@ -46,8 +46,12 @@ subroutine ModSeikAnalysis
     call MPI_Bcast( ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
     BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
-    trnEnsembleWeighted=BaseMember**2
-    where (trnEnsembleWeighted>MaxVarSEIK) BaseMember=sign(sqrt(MaxVarSEIK),BaseMember)
+    
+    if (UseMaxVarSEIK) then
+        trnEnsembleWeighted=BaseMember**2
+        where (trnEnsembleWeighted>MaxVarSEIK) BaseMember=sign(sqrt(MaxVarSEIK),BaseMember)
+    end if
+    
     
     BaseMember=exp(BaseMember)
     trn=trn*BaseMember

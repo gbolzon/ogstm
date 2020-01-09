@@ -372,7 +372,10 @@ call mpi_barrier(mpi_comm_world, ierr)
 #ifdef ExecDA
 !end if
         if ((PCANeeded.eq."read").and.(EnsembleRank==0)) call PCAReadMatrices
-        if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) call PCASeik
+        if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) then
+            call mpi_barrier(LocalComm, ierr)
+            call PCASeik
+        end if
 #endif
 
       CONTAINS

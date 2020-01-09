@@ -18,8 +18,8 @@ subroutine PCACreateMatrices(DateString)
     if (DATEstring(10:17).eq."00:00:00") then
         year=str2int(DATEstring(1:4))
         monthday=str2int(DATEstring(5:8))
-        if (((year.ge.2014).and.(year.le.2009).and.(monthday.le.116)) .or. &
-            ((year.ge.2013).and.(year.le.2008).and.(monthday.ge.1217))) then
+        if (((year.ge.2000).and.(year.le.2009).and.(monthday.le.116)) .or. &
+            ((year.ge.1999).and.(year.le.2008).and.(monthday.ge.1217))) then
             
             CounterForSVDpart=CounterForSVDpart+1
             HistoryForSVDpart(:,:,:,:,CounterForSVDpart)=trn

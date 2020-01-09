@@ -1,20 +1,19 @@
 subroutine SeikInit
     use myalloc
-use mpi
+    use mpi
     
     implicit none
     
     integer ierr
     double precision :: TempMask3D(jpk, jpj, jpi), TempMask2D(jpj, jpi)
     integer :: indexi, indexj, indexk, indexip1, indexim1, indexjp1, indexjm1
-    integer :: partialsum, totalsum
+    double precision :: partialsum, totalsum
 
     CutLeft=(.not.(nldi==1))
     CutRight=(.not.(nlei==jpi))
     CutTop=(.not.(nlej==jpj))
     CutBottom=(.not.(nldj==1))
-    BaseMember=reshape(ModelErrorDiag1,(/jpk,jpj,jpi,jptra/))
-    call CutCellsTracer(BaseMember)
+
     
     call readnc_slice_double_2d("BC/TIN_yyyy0115-00:00:00.nc", "riv_N3n", TempMask2D)
     call readnc_slice_double("BC/GIB_yyyy0215-12:00:00.nc", "gib_N6r", TempMask3D)
@@ -50,7 +49,7 @@ use mpi
         end do
     end do
 
-!SeikMask=BfmMask
+SeikMask=BfmMask
 
 call  mpi_barrier(mpi_comm_World,ierr)
 write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
@@ -65,37 +64,37 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
 !end if
 !call  mpi_barrier(mpi_comm_World,ierr)
 !stop
-
+    
     do indexi=1, jptra
-        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
+        do indexj=1, jpk
+            BaseMember(indexj,:,:,indexi)=e1t*e2t
+        end do
+        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t*SeikMask
     end do
+    call CutCellsTracer(BaseMember)
+    
+    totalsum=0.0d0
+    partialsum=sum(BaseMember(:,:,:,1))
+
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+    if (lwp) write (*,*) "total sum=", totalsum
+    
+    ModelErrorDiag1=ModelErrorDiag1/totalsum*reshape(BaseMember,(/SpaceDim/))
 
 !call trcwriSeik("12345678901234567",-1,"RESTARTS/",BaseMember)
 
-    ModelErrorDiag1=reshape(BaseMember,(/SpaceDim/))
-    totalsum=0
-    partialsum=0
-    do indexi=1, SpaceDim
-        if (ModelErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
-    end do
-    call mpi_allreduce(partialsum, totalsum, 1, MPI_int, MPI_sum, LocalComm, ierr)
-    if (lwp) write (*,*) "total sum=", totalsum
-    ModelErrorDiag1=ModelErrorDiag1/totalsum*21*5 !this is temporary, in order to avoid changes to memoryseik
-
     BaseMember=Huge(BaseMember(1,1,1,1))
     
-    ObsBaseMember=reshape(ObsErrorDiag1,(/jpj,jpi/))
+    ObsBaseMember=e1t*e2t*SeikMask(1,:,:)
     call CutCellsSurface(ObsBaseMember)
-    ObsBaseMember=ObsBaseMember*SeikMask(1,:,:)
-    ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))
-    totalsum=0
-    partialsum=0
-    do indexi=1, ObsSpaceDim
-        if (ObsErrorDiag1(indexi)>1.0d-12) partialsum=partialsum+1
-    end do
-    call mpi_allreduce(partialsum, totalsum, 1, MPI_int, MPI_sum, LocalComm, ierr)
+    
+    totalsum=0.0d0
+    partialsum=sum(ObsBaseMember)
+
+    call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum obs=", totalsum
-    ObsErrorDiag1=ObsErrorDiag1/totalsum
+    
+    ObsErrorDiag1=ObsErrorDiag1/totalsum*reshape(ObsBaseMember,(/ObsSpaceDim/))
     
     ObsBaseMember=Huge(ObsBaseMember(1,1))
 

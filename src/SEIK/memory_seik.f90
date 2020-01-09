@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseModSeik=.false.
+      logical, parameter :: UseInflation=.false., UseModSeik=.false., UseMaxVarSEIK=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0
@@ -31,7 +31,7 @@
       !for 1 process
       double precision, allocatable, dimension(:,:) :: CovSeik1, TTTSeik, CovSmoother1part, LTQ1L
       double precision, allocatable, dimension (:) :: AllWeights, AllWeightsSqrt, AllWeightsSqrt1
-      double precision :: ForgettingFactor=0.9
+      double precision :: ForgettingFactor
       
       !for PCANeeded
       integer :: DimForPCA, nHistoryForVar, nHistoryForSVD, nHistoryForSVDpart, CounterForVar, CounterForSVD, CounterForSVDpart, SVDpartID
@@ -72,6 +72,8 @@
             SpaceDim=jpk*jpj*jpi*jptra
             
             ObsSpaceDim=jpj*jpi
+            
+            ForgettingFactor=1.0d0 !0.9d0
             
             !CutLeft=(.not.(nldi==1)) !these are definied in myalloc, here we don't have nldi etc...
             !CutRight=(.not.(nlei==jpi))
