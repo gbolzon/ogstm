@@ -82,6 +82,17 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
     ModelErrorDiag1=ModelErrorDiag1/totalsum*reshape(BaseMember,(/SpaceDim/))
 
 !call trcwriSeik("12345678901234567",-1,"RESTARTS/",BaseMember)
+if (.false.) then
+    BaseMember =Huge(BaseMember(1,1,1,1))
+    BaseMember(:,:,:,1)=dble(myrank)
+    do indexi=1, jpi
+        BaseMember(:,:,indexi,2)=dble(indexi)
+    end do
+    do indexi=1, jpj
+        BaseMember(:,indexi,:,3)=dble(indexi)
+    end do
+    call trcwriSeik("r="//trim(ctrcnm(1))//".x="//trim(ctrcnm(2))//".y="//trim(ctrcnm(3)),-1,"RESTARTS/",BaseMember)
+end if
 
     BaseMember=Huge(BaseMember(1,1,1,1))
     

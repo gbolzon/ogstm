@@ -372,6 +372,14 @@ call mpi_barrier(mpi_comm_world, ierr)
 #ifdef ExecDA
 !end if
         if ((PCANeeded.eq."read").and.(EnsembleRank==0)) call PCAReadMatrices
+if ((.false.).and.(myrank==29)) then
+    do ji=1,3
+        write(*,*) "Level ", ji
+        write(*,*) HistoryForSVD(ji,9,3,3,:)
+        write(*,*) ""
+    end do
+    call mpi_abort(mpi_comm_world,1,ierr)
+end if
         if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) then
             call mpi_barrier(LocalComm, ierr)
             call PCASeik

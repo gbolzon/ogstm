@@ -76,17 +76,17 @@ if (.false.) then !true to calcolate mean, false for svd
             do indexi=1, jpi
                 do indexj=1, jpj
                     do indexk=1, jpk
-                        if (HistoryForSVD(indexk,indexj,indexi,indexc,indexn)>1.0d-8) then
+                        if (HistoryForSVD(indexk,indexj,indexi,indexc,indexn)>1.0d-11) then
                             HistoryForSVD(indexk,indexj,indexi,indexc,indexn)=log(HistoryForSVD(indexk,indexj,indexi,indexc,indexn))
                         else
-                            HistoryForSVD(indexk,indexj,indexi,indexc,indexn)=log(1.0d-8)
+                            HistoryForSVD(indexk,indexj,indexi,indexc,indexn)=log(1.0d-11)
                         end if
                     end do
                 end do
             end do
         end do
     end do
-    call mpi_barrier(EnsembleComm, ierr)
+    call mpi_barrier(EnsembleComm, ierr) !Errore, questi sono tutti LocalComm???
     if (myrank==0) write(*,*) "log"
     trn=sum(HistoryForSVD,5)
     call mpi_barrier(EnsembleComm, ierr)
@@ -126,11 +126,11 @@ else
         end do
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
         !where (BaseMember.le.Threshold) BaseMember=1.0d20
-        call trcwriSeik('PCAVar78901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
+        call trcwriSeik('PCAVar78901234567', -1, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
         
         BaseMember=sqrt(BaseMember)
         !where (BaseMember.le.Threshold) BaseMember=1.0d20
-        call trcwriSeik('PCAStd78901234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
+        call trcwriSeik('PCAStd78901234567', -1, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
 
         !do indexi=1, jptra
         !    BaseMember(:,:,:,indexi)=bfmmask
@@ -173,7 +173,7 @@ else
     
     if (.true.) then
         BaseMember=reshape(PCAVar,(/jpk,jpj,jpi,jptra/))
-        call trcwriSeik('PCALogStd01234567', 101, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
+        call trcwriSeik('PCALogStd01234567', -1, 'REDUCED_BASE/PCA/EXTRA/',BaseMember)
         call mpi_barrier(mpi_comm_World,ierr)
     end if
 

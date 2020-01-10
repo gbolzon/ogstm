@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseModSeik=.false., UseMaxVarSEIK=.false.
+      logical, parameter :: UseInflation=.false., UseModSeik=.false., UseMaxVarSEIK=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0
