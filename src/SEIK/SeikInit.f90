@@ -131,8 +131,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
-        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum*reshape(UDiffBaseMember,(/UDiffSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
-        
+        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum*reshape(UDiffBaseMember,(/UDiffSpaceDim/))!*16*10**12 !the med sea is about 4*10^6m long. I will use total sum of the obserror
         do indexi=1, jptra
             do indexj=1, jpk
                 VDiffBaseMember(indexj,:,:,indexi)=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)
@@ -150,7 +149,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
-        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum*reshape(VDiffBaseMember,(/VDiffSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
+        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum*reshape(VDiffBaseMember,(/VDiffSpaceDim/))!*16*10**12 !the med sea is about 4*10^6m long
         
         do indexi=1, jptra
             do indexj=1, jpk-1
@@ -184,7 +183,8 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum obs=", totalsum
         
-        UDiffObsErrorDiag1=UDiffObsErrorDiag1/totalsum*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
+        UDiffObsErrorDiag1=UDiffObsErrorDiag1*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/)) !/totalsum*16*10**12 !the med sea is about 4*10^6m long
+        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum
         
         VDiffObsBaseMember=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)*SeikVMask(1,:,:)
         if (CutLeft) VDiffObsBaseMember(:,1)=0.0d0
@@ -198,8 +198,8 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum obs=", totalsum
         
-        VDiffObsErrorDiag1=VDiffObsErrorDiag1/totalsum*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
-        
+        VDiffObsErrorDiag1=VDiffObsErrorDiag1*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/)) !/totalsum*16*10**12 !the med sea is about 4*10^6m long
+        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum
     end if
 
 end subroutine
