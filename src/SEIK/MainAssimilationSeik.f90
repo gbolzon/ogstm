@@ -176,12 +176,12 @@ if (SeikDim>0) then
         if (EnsembleRank==0) then
             call trcwriSeik(DATEstr, -1, 'DA_SEIK/', trn)
             if (myrank==0) call WriteCov1Seik('DA_SEIK/COV1.'//DateStr//'.csv')
-            if (SeikDim==1) call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', Basemember) ! only if we dont' have a 3rd ensemble member for parallel writing
+            if (SeikDim==1) call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', trnEnsemble) ! only if we dont' have a 3rd ensemble member for parallel writing
         else if (EnsembleRank==1) then
             trb=trn-trb
             call trcwriSeik(DATEstr, -1, 'DA_SEIK/DIFFERENCE/', trb)
         else if (EnsembleRank==2) then
-            call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', Basemember)
+            call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', trnEnsemble)
         end if
         
         trb=trn

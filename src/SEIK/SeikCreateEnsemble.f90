@@ -5,7 +5,8 @@ subroutine SeikCreateEnsemble()
     implicit none
     integer :: ierr
     
-    if (UseModSeik) then
+    if (UseHighOrder) then
+        
         
     end if
     
@@ -21,17 +22,23 @@ subroutine SeikCreateEnsemble()
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
     BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
 
-    if (UseMaxVarSEIK) then
-        trnEnsembleWeighted=BaseMember**2
-        trnEnsembleWeighted=trnEnsembleWeighted*Weight
-        call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
-        where (trnVariance>MaxVarSEIK)
-            trnEnsemble=sqrt(MaxVarSEIK/trnVariance)
-        elsewhere
-            trnEnsemble=1.0d0
-        end where
-        BaseMember=BaseMember*trnEnsemble
-    end if
+if (.false.) then
+! questa parte va rimossa, perche' inutile durante il main loop, ma non ho tempo ora.
+! L'unico momento in cui serve e' alla creazione del primo ensamble (se la PCA non è gia'
+! stata fatta con UseMaxVarSEIK). Bisognerebbe metterla su ReadBaseSeik.
+! Per il momento la tolgo, tanto al massimo avrò un po' di instabilita' al primo timestep.
+if (UseMaxVarSEIK) then
+    trnEnsembleWeighted=BaseMember**2
+    trnEnsembleWeighted=trnEnsembleWeighted*Weight
+    call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
+    where (trnVariance>MaxVarSEIK)
+        trnEnsemble=sqrt(MaxVarSEIK/trnVariance)
+    elsewhere
+        trnEnsemble=1.0d0
+    end where
+    BaseMember=BaseMember*trnEnsemble
+end if
+end if
 
     BaseMember=exp(BaseMember)
     trn=trn*BaseMember

@@ -49,10 +49,10 @@ subroutine SeikInit
         end do
     end do
 
-SeikMask=BfmMask
+SeikMask=BfmMask !per il momento preferisco la bfmmask
 
-call  mpi_barrier(mpi_comm_World,ierr)
-write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
+!call  mpi_barrier(mpi_comm_World,ierr)
+!write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
 !call  mpi_barrier(mpi_comm_World,ierr)
 !if ((EnsembleRank==0).and.(MyRank==27)) then
 !write (*,*) "t="
@@ -64,12 +64,12 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
 !end if
 !call  mpi_barrier(mpi_comm_World,ierr)
 !stop
-    
+        
     do indexi=1, jptra
         do indexj=1, jpk
             BaseMember(indexj,:,:,indexi)=e1t*e2t
         end do
-        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t*SeikMask
+        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t_0*SeikMask
     end do
     call CutCellsTracer(BaseMember)
     
@@ -82,7 +82,7 @@ write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmas
     ModelErrorDiag1=ModelErrorDiag1/totalsum*reshape(BaseMember,(/SpaceDim/))
 
 !call trcwriSeik("12345678901234567",-1,"RESTARTS/",BaseMember)
-if (.false.) then
+if (.false.) then !true to write a map of processes and coordinates
     BaseMember =Huge(BaseMember(1,1,1,1))
     BaseMember(:,:,:,1)=dble(myrank)
     do indexi=1, jpi
@@ -108,6 +108,98 @@ end if
     ObsErrorDiag1=ObsErrorDiag1/totalsum*reshape(ObsBaseMember,(/ObsSpaceDim/))
     
     ObsBaseMember=Huge(ObsBaseMember(1,1))
+    
+    if (UseDiffCov) then
+        SeikUMask=(SeikMask(:,:,1:jpi-1)+SeikMask(:,:,2:jpi))/2
+        SeikVMask=(SeikMask(:,1:jpj-1,:)+SeikMask(:,2:jpj,:))/2
+        SeikWMask=(SeikMask(1:jpk-1,:,:)+SeikMask(2:jpk,:,:))/2
+        
+        do indexi=1, jptra
+            do indexj=1, jpk
+                UDiffBaseMember(indexj,:,:,indexi)=e1u(:,1:jpi-1)*e2u(:,1:jpi-1)
+            end do
+            UDiffBaseMember(:,:,:,indexi)=UDiffBaseMember(:,:,:,indexi)*e3u_0(:,:,1:jpi-1)*SeikUMask
+        end do
+        !if (CutLeft) UDiffBaseMember(:,:,1,:)=0.0d0
+        if (CutRight) UDiffBaseMember(:,:,jpi-1,:)=0.0d0
+        if (CutTop) UDiffBaseMember(:,jpj,:,:)=0.0d0
+        if (CutBottom) UDiffBaseMember(:,1,:,:)=0.0d0
+        
+        totalsum=0.0d0
+        partialsum=sum(UDiffBaseMember(:,:,:,1))
+
+        call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+        if (lwp) write (*,*) "total sum=", totalsum
+        
+        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum*reshape(UDiffBaseMember,(/UDiffSpaceDim/))
+        
+        do indexi=1, jptra
+            do indexj=1, jpk
+                VDiffBaseMember(indexj,:,:,indexi)=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)
+            end do
+            VDiffBaseMember(:,:,:,indexi)=VDiffBaseMember(:,:,:,indexi)*e3v_0(:,1:jpi-1,:)*SeikVMask
+        end do
+        if (CutLeft) VDiffBaseMember(:,:,1,:)=0.0d0
+        if (CutRight) VDiffBaseMember(:,:,jpi,:)=0.0d0
+        if (CutTop) VDiffBaseMember(:,jpj-1,:,:)=0.0d0
+        !if (CutBottom) VDiffBaseMember(:,1,:,:)=0.0d0
+        
+        totalsum=0.0d0
+        partialsum=sum(VDiffBaseMember(:,:,:,1))
+
+        call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+        if (lwp) write (*,*) "total sum=", totalsum
+        
+        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum*reshape(VDiffBaseMember,(/VDiffSpaceDim/))
+        
+        do indexi=1, jptra
+            do indexj=1, jpk-1
+                WDiffBaseMember(indexj,:,:,indexi)=e1t*e2t
+            end do
+            WDiffBaseMember(:,:,:,indexi)=WDiffBaseMember(:,:,:,indexi)*e3w_0(2:jpk,:,:)*SeikWMask
+        end do
+        if (CutLeft) WDiffBaseMember(:,:,1,:)=0.0d0
+        if (CutRight) WDiffBaseMember(:,:,jpi,:)=0.0d0
+        if (CutTop) WDiffBaseMember(:,jpj,:,:)=0.0d0
+        if (CutBottom) WDiffBaseMember(:,1,:,:)=0.0d0
+                
+        totalsum=0.0d0
+        partialsum=sum(WDiffBaseMember(:,:,:,1))
+
+        call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+        if (lwp) write (*,*) "total sum=", totalsum
+        
+        WDiffModelErrorDiag1=WDiffModelErrorDiag1/totalsum*reshape(WDiffBaseMember,(/WDiffSpaceDim/))
+        
+        UDiffObsBaseMember=e1u(:,1:jpi-1)*e2u(:,1:jpi-1)*SeikUMask(1,:,:)
+        !if (CutLeft) UDiffObsBaseMember(:,1)=0.0d0
+        if (CutRight) UDiffObsBaseMember(:,jpi-1)=0.0d0
+        if (CutTop) UDiffObsBaseMember(jpj,:)=0.0d0
+        if (CutBottom) UDiffObsBaseMember(1,:)=0.0d0
+        
+        totalsum=0.0d0
+        partialsum=sum(UDiffObsBaseMember)
+
+        call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+        if (lwp) write (*,*) "total sum obs=", totalsum
+        
+        UDiffObsErrorDiag1=UDiffObsErrorDiag1/totalsum*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/))
+        
+        VDiffObsBaseMember=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)*SeikVMask(1,:,:)
+        if (CutLeft) VDiffObsBaseMember(:,1)=0.0d0
+        if (CutRight) VDiffObsBaseMember(:,jpi)=0.0d0
+        if (CutTop) VDiffObsBaseMember(jpj-1,:)=0.0d0
+        !if (CutBottom) VDiffObsBaseMember(1,:)=0.0d0
+        
+        totalsum=0.0d0
+        partialsum=sum(VDiffObsBaseMember)
+
+        call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
+        if (lwp) write (*,*) "total sum obs=", totalsum
+        
+        VDiffObsErrorDiag1=VDiffObsErrorDiag1/totalsum*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/))
+        
+    end if
 
 end subroutine
 

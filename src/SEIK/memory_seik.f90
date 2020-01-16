@@ -11,10 +11,10 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseModSeik=.false., UseMaxVarSEIK=.true.
+      logical, parameter :: UseInflation=.false., UseHighOrded=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
-      double precision, parameter :: MaxVarSEIK=1.0d0
+      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
 
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
@@ -59,6 +59,21 @@
       
       integer, dimension(:,:,:), allocatable :: SeikMask
       
+      ! Per UseDiffCov
+      integer :: UDiffSpaceDim, VDiffSpaceDim, WDiffSpaceDim, UDiffObsSpaceDim, VDiffObsSpaceDim
+      integer, dimension(:,:,:), allocatable :: SeikUMask, SeikVMask, SeikWMask
+      double precision, allocatable, dimension (:) :: UDiffModelErrorDiag1, VDiffModelErrorDiag1, WDiffModelErrorDiag1, UDiffObsErrorDiag1, VDiffObsErrorDiag1
+      double precision, allocatable, dimension (:,:,:,:) :: UDiffBaseMember, VDiffBaseMember, WDiffBaseMember
+      double precision, allocatable, dimension (:,:,:,:) :: TempUDiffBaseMember, TempVDiffBaseMember, TempWDiffBaseMember
+      double precision, allocatable, dimension (:) :: TempUDiffVecSeik, TempVDiffVecSeik, TempWDiffVecSeik
+      double precision, allocatable, dimension(:,:) :: UDiffObsBaseMember, VDiffObsBaseMember
+      double precision, allocatable, dimension(:) :: TempUDiffObsSeik, TempVDiffObsSeik
+      double precision, allocatable, dimension (:,:) :: ULSeik, VLSeik, WLSeik, UHLSeik, VHLSeik
+      double precision, allocatable, dimension (:,:,:,:) :: UVariance, VVariance, WVariance
+      integer, allocatable, dimension (:) :: UDiffMpiCount, UDiffMpiDisplacement,VDiffMpiCount, VDiffMpiDisplacement,WDiffMpiCount, WDiffMpiDisplacement
+      integer, allocatable, dimension (:) :: UDiffMpiCountObs, UDiffMpiDisplacementObs, VDiffMpiCountObs, VDiffMpiDisplacementObs
+      
+      
       CONTAINS
        
       subroutine myalloc_seik(LocalRank)
@@ -80,6 +95,175 @@
             !CutTop=(.not.(nlej==jpj))
             !CutBottom=(.not.(nldj==1))
             
+            allocate(ModelErrorDiag1(SpaceDim))
+            ModelErrorDiag1 = huge(ModelErrorDiag1(1))
+            ModelErrorDiag1 = 1/(log(1.1d0)**2)*1000 !il fattore mille significa che stiamo considerando la varianza sulla superficie
+            
+            allocate(ObsErrorDiag1(ObsSpaceDim))                    
+            ObsErrorDiag1 = huge(ObsErrorDiag1(1))
+            ObsErrorDiag1 = 1/(log(1.1d0)**2)
+            
+            if (UseDiffCov) then
+                UDiffSpaceDim=jpk*jpj*(jpi-1)*jptra
+                VDiffSpaceDim=jpk*(jpj-1)*jpi*jptra
+                WDiffSpaceDim=(jpk-1)*jpj*jpi*jptra
+                UDiffObsSpaceDim=jpj*(jpi-1)
+                VDiffObsSpaceDim=(jpj-1)*jpi
+                
+                allocate(UDiffModelErrorDiag1(UDiffSpaceDim))
+                UDiffModelErrorDiag1 = huge(UDiffModelErrorDiag1(1))
+                UDiffModelErrorDiag1 = 1/(log(1.1d0)**2)*3000 !3000 e' un'approssimazione della massima profondita'. e' 3 volte mille, perche' la prima cella ha profondita' 3
+                
+                allocate(VDiffModelErrorDiag1(VDiffSpaceDim))
+                VDiffModelErrorDiag1 = huge(VDiffModelErrorDiag1(1))
+                VDiffModelErrorDiag1 = 1/(log(1.1d0)**2)*3000
+                
+                allocate(WDiffModelErrorDiag1(WDiffSpaceDim))
+                WDiffModelErrorDiag1 = huge(WDiffModelErrorDiag1(1))
+                WDiffModelErrorDiag1 = 0.0d0
+                
+                allocate(UDiffObsErrorDiag1(UDiffObsSpaceDim))
+                UDiffObsErrorDiag1 = huge(UDiffObsErrorDiag1(1))
+                UDiffObsErrorDiag1 = 1/(log(1.1d0)**2)
+                
+                allocate(VDiffObsErrorDiag1(VDiffObsSpaceDim))
+                VDiffObsErrorDiag1 = huge(VDiffObsErrorDiag1(1))
+                VDiffObsErrorDiag1 = 1/(log(1.1d0)**2)
+                
+                allocate(SeikUMask(jpk,jpj,jpi-1))
+                SeikUMask = huge(SeikUMask(1,1,1))
+                
+                allocate(SeikVMask(jpk,jpj-1,jpi))
+                SeikVMask = huge(SeikVMask(1,1,1))
+                
+                allocate(SeikWMask(jpk-1,jpj,jpi))
+                SeikWMask = huge(SeikWMask(1,1,1))
+                
+                allocate(UDiffBaseMember(jpk,jpj,jpi-1,jptra))
+                UDiffBaseMember = huge(UDiffBaseMember(1,1,1,1))
+                
+                allocate(VDiffBaseMember(jpk,jpj-1,jpi,jptra))
+                VDiffBaseMember = huge(VDiffBaseMember(1,1,1,1))
+                
+                allocate(WDiffBaseMember(jpk-1,jpj,jpi,jptra))
+                WDiffBaseMember = huge(WDiffBaseMember(1,1,1,1))
+                
+                allocate(TempUDiffBaseMember(jpk,jpj,jpi-1,jptra))
+                TempUDiffBaseMember = huge(TempUDiffBaseMember(1,1,1,1))
+                
+                allocate(TempVDiffBaseMember(jpk,jpj-1,jpi,jptra))
+                TempVDiffBaseMember = huge(TempVDiffBaseMember(1,1,1,1))
+                
+                allocate(TempWDiffBaseMember(jpk-1,jpj,jpi,jptra))
+                TempWDiffBaseMember = huge(TempWDiffBaseMember(1,1,1,1))
+                
+                allocate(UVariance(jpk,jpj,jpi-1,jptra))
+                UVariance = huge(UVariance(1,1,1,1))
+                
+                allocate(VVariance(jpk,jpj-1,jpi,jptra))
+                VVariance = huge(VVariance(1,1,1,1))
+                
+                allocate(WVariance(jpk-1,jpj,jpi,jptra))
+                WVariance = huge(WVariance(1,1,1,1))
+                
+                allocate(UDiffObsBaseMember(jpj,jpi-1))                    
+                UDiffObsBaseMember = huge(UDiffObsBaseMember(1,1))
+                
+                allocate(VDiffObsBaseMember(jpj-1,jpi))                    
+                VDiffObsBaseMember = huge(VDiffObsBaseMember(1,1))
+                
+                allocate(TempUDiffObsSeik(UDiffObsSpaceDim))                    
+                TempUDiffObsSeik = huge(TempUDiffObsSeik(1))
+                
+                allocate(TempVDiffObsSeik(VDiffObsSpaceDim))                    
+                TempVDiffObsSeik = huge(TempVDiffObsSeik(1))
+                
+                allocate(ULSeik(UDiffSpaceDim,SeikDim))
+                ULSeik = huge(ULSeik(1,1))
+                
+                allocate(VLSeik(VDiffSpaceDim,SeikDim))
+                VLSeik = huge(VLSeik(1,1))
+                
+                allocate(WLSeik(WDiffSpaceDim,SeikDim))
+                WLSeik = huge(WLSeik(1,1))
+                
+                allocate(UHLSeik(UDiffObsSpaceDim,SeikDim))                    
+                UHLSeik = huge(UHLSeik(1,1))
+                
+                allocate(VHLSeik(VDiffObsSpaceDim,SeikDim))                    
+                VHLSeik = huge(VHLSeik(1,1))        
+                
+                allocate(TempUDiffVecSeik(UDiffSpaceDim))
+                TempUDiffVecSeik = huge(TempUDiffVecSeik(1))
+                
+                allocate(TempVDiffVecSeik(VDiffSpaceDim))
+                TempVDiffVecSeik = huge(TempVDiffVecSeik(1))
+                
+                allocate(TempWDiffVecSeik(WDiffSpaceDim))
+                TempWDiffVecSeik = huge(TempWDiffVecSeik(1))
+                
+                allocate(UDiffMpiCount(0:SeikDim))
+                UDiffMpiCount = huge(UDiffMpiCount(1))
+                UDiffMpiCount=UDiffSpaceDim
+                UDiffMpiCount(NotWorkingMember)=0
+                
+                allocate(UDiffMpiDisplacement(0:SeikDim))
+                UDiffMpiDisplacement = huge(UDiffMpiDisplacement(1))
+                UDiffMpiDisplacement(0)=0
+                do indexi=1, SeikDim
+                    UDiffMpiDisplacement(indexi)=UDiffMpiDisplacement(indexi-1)+UDiffMpiCount(indexi-1)
+                end do
+                
+                allocate(VDiffMpiCount(0:SeikDim))
+                VDiffMpiCount = huge(VDiffMpiCount(1))
+                VDiffMpiCount=VDiffSpaceDim
+                VDiffMpiCount(NotWorkingMember)=0
+                
+                allocate(VDiffMpiDisplacement(0:SeikDim))
+                VDiffMpiDisplacement = huge(VDiffMpiDisplacement(1))
+                VDiffMpiDisplacement(0)=0
+                do indexi=1, SeikDim
+                    VDiffMpiDisplacement(indexi)=VDiffMpiDisplacement(indexi-1)+VDiffMpiCount(indexi-1)
+                end do
+                
+                allocate(WDiffMpiCount(0:SeikDim))
+                WDiffMpiCount = huge(WDiffMpiCount(1))
+                WDiffMpiCount=WDiffSpaceDim
+                WDiffMpiCount(NotWorkingMember)=0
+                
+                allocate(WDiffMpiDisplacement(0:SeikDim))
+                WDiffMpiDisplacement = huge(WDiffMpiDisplacement(1))
+                WDiffMpiDisplacement(0)=0
+                do indexi=1, SeikDim
+                    WDiffMpiDisplacement(indexi)=WDiffMpiDisplacement(indexi-1)+WDiffMpiCount(indexi-1)
+                end do
+                
+                allocate(UDiffMpiCountObs(0:SeikDim))
+                UDiffMpiCountObs = huge(UDiffMpiCountObs(1))
+                UDiffMpiCountObs=UDiffObsSpaceDim
+                UDiffMpiCountObs(NotWorkingMember)=0
+                
+                allocate(UDiffMpiDisplacementObs(0:SeikDim))
+                UDiffMpiDisplacementObs = huge(UDiffMpiDisplacementObs(1))
+                UDiffMpiDisplacementObs(0)=0
+                do indexi=1, SeikDim
+                    UDiffMpiDisplacementObs(indexi)=UDiffMpiDisplacementObs(indexi-1)+UDiffMpiCountObs(indexi-1)
+                end do
+                
+                allocate(VDiffMpiCountObs(0:SeikDim))
+                VDiffMpiCountObs = huge(VDiffMpiCountObs(1))
+                VDiffMpiCountObs=VDiffObsSpaceDim
+                VDiffMpiCountObs(NotWorkingMember)=0
+                
+                allocate(VDiffMpiDisplacementObs(0:SeikDim))
+                VDiffMpiDisplacementObs = huge(VDiffMpiDisplacementObs(1))
+                VDiffMpiDisplacementObs(0)=0
+                do indexi=1, SeikDim
+                    VDiffMpiDisplacementObs(indexi)=VDiffMpiDisplacementObs(indexi-1)+VDiffMpiCountObs(indexi-1)
+                end do
+                
+            end if
+            
             allocate(trnEnsemble(jpk,jpj,jpi,jptra))                    
             trnEnsemble = huge(trnEnsemble(1,1,1,1))
             
@@ -88,14 +272,6 @@
             
             allocate(BaseMember(jpk,jpj,jpi,jptra))
             BaseMember = huge(BaseMember(1,1,1,1))
-            
-            allocate(ModelErrorDiag1(SpaceDim))
-            ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.2d0)**2)
-            
-            allocate(ObsErrorDiag1(ObsSpaceDim))                    
-            ObsErrorDiag1 = huge(ObsErrorDiag1(1))
-            ObsErrorDiag1 = 1/(log(1.05d0)**2)
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
@@ -142,15 +318,15 @@
             allocate(HLSeik(ObsSpaceDim,SeikDim))                    
             HLSeik = huge(HLSeik(1,1))
             
-            allocate(MpiCountObs(0:ObsSpaceDim))
+            allocate(MpiCountObs(0:SeikDim))
             MpiCountObs = huge(MpiCountObs(1))
             MpiCountObs=ObsSpaceDim
             MpiCountObs(NotWorkingMember)=0
             
-            allocate(MpiDisplacementObs(0:ObsSpaceDim))
+            allocate(MpiDisplacementObs(0:SeikDim))
             MpiDisplacementObs = huge(MpiDisplacementObs(1))
             MpiDisplacementObs(0)=0
-            do indexi=1, ObsSpaceDim
+            do indexi=1, SeikDim
                 MpiDisplacementObs(indexi)=MpiDisplacementObs(indexi-1)+MpiCountObs(indexi-1)
             end do
             
@@ -321,6 +497,49 @@
             deallocate(BufferMPILinkReceive4)                    
             deallocate(SeikMask)
             deallocate(trnVariance)
+            
+            if (UseDiffCov) then                
+                deallocate(UDiffModelErrorDiag1)
+                deallocate(VDiffModelErrorDiag1)
+                deallocate(WDiffModelErrorDiag1)
+                deallocate(UDiffObsErrorDiag1)
+                deallocate(VDiffObsErrorDiag1)
+                deallocate(SeikUMask)
+                deallocate(SeikVMask)
+                deallocate(SeikWMask)
+                deallocate(UDiffBaseMember)
+                deallocate(VDiffBaseMember)
+                deallocate(WDiffBaseMember)
+                deallocate(TempUDiffBaseMember)
+                deallocate(TempVDiffBaseMember)
+                deallocate(TempWDiffBaseMember)
+                deallocate(UVariance)
+                deallocate(VVariance)
+                deallocate(WVariance)
+                deallocate(UDiffObsBaseMember)                    
+                deallocate(VDiffObsBaseMember)                    
+                deallocate(ULSeik)
+                deallocate(VLSeik)
+                deallocate(WLSeik)
+                deallocate(UHLSeik)                    
+                deallocate(VHLSeik)                    
+                deallocate(TempUDiffVecSeik)
+                deallocate(TempVDiffVecSeik)
+                deallocate(TempWDiffVecSeik)
+                deallocate(TempUDiffObsSeik)
+                deallocate(TempVDiffObsSeik)
+                deallocate(UDiffMpiCount)
+                deallocate(UDiffMpiDisplacement)
+                deallocate(VDiffMpiCount)
+                deallocate(VDiffMpiDisplacement)
+                deallocate(WDiffMpiCount)
+                deallocate(WDiffMpiDisplacement)
+                deallocate(UDiffMpiCountObs)
+                deallocate(UDiffMpiDisplacementObs)
+                deallocate(VDiffMpiCountObs)
+                deallocate(VDiffMpiDisplacementObs)
+                
+            end if
            
             if (LocalRank==0) then
                 deallocate(TempSliceSeik2)
