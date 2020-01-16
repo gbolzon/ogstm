@@ -184,7 +184,7 @@ end if
         if (lwp) write (*,*) "total sum obs=", totalsum
         
         UDiffObsErrorDiag1=UDiffObsErrorDiag1*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/)) !/totalsum*16*10**12 !the med sea is about 4*10^6m long
-        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum
+        UDiffModelErrorDiag1=UDiffModelErrorDiag1*totalsum
         
         VDiffObsBaseMember=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)*SeikVMask(1,:,:)
         if (CutLeft) VDiffObsBaseMember(:,1)=0.0d0
@@ -199,7 +199,44 @@ end if
         if (lwp) write (*,*) "total sum obs=", totalsum
         
         VDiffObsErrorDiag1=VDiffObsErrorDiag1*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/)) !/totalsum*16*10**12 !the med sea is about 4*10^6m long
-        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum
+        VDiffModelErrorDiag1=VDiffModelErrorDiag1*totalsum
+        
+        do indexi=1, UDiffSpaceDim
+            if (.not.(UDiffModelErrorDiag1(indexi)==UDiffModelErrorDiag1(indexi))) then
+                write(*,*) "myrank=" ,myrank, " indexi=", indexi
+                error stop "NAN UDiffModelErrorDiag1"
+            end if
+        end do
+        
+        do indexi=1, VDiffSpaceDim
+            if (.not.(VDiffModelErrorDiag1(indexi)==VDiffModelErrorDiag1(indexi))) then
+                write(*,*) "myrank=" ,myrank, " indexi=", indexi
+                error stop "NAN VDiffModelErrorDiag1"
+            end if
+        end do
+        
+        do indexi=1, WDiffSpaceDim
+            if (.not.(WDiffModelErrorDiag1(indexi)==WDiffModelErrorDiag1(indexi))) then
+                write(*,*) "myrank=" ,myrank, " indexi=", indexi
+                error stop "NAN WDiffModelErrorDiag1"
+            end if
+        end do
+        
+        do indexi=1, UDiffObsSpaceDim
+            if (.not.(UDiffObsErrorDiag1(indexi)==UDiffObsErrorDiag1(indexi))) then
+                write(*,*) "myrank=" ,myrank, " indexi=", indexi
+                error stop "NAN UDiffObsErrorDiag1"
+            end if
+        end do
+        
+        do indexi=1, VDiffObsSpaceDim
+            if (.not.(VDiffObsErrorDiag1(indexi)==VDiffObsErrorDiag1(indexi))) then
+                write(*,*) "myrank=" ,myrank, " indexi=", indexi
+                error stop "NAN VDiffObsErrorDiag1"
+            end if
+        end do
+        
+        
     end if
 
 end subroutine

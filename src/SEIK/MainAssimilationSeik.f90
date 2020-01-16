@@ -151,10 +151,10 @@ if (SeikDim>0) then
                     
                     if (MisfitSeik(jj,ji)>0.01d0) then
                         MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
-                        MisfitSeik(jj,ji)=ObsDataSeik(jj,ji)-MisfitSeik(jj,ji)
                     else
                         MisfitSeik(jj,ji)=log(0.01d0)
                     end if
+                    MisfitSeik(jj,ji)=ObsDataSeik(jj,ji)-MisfitSeik(jj,ji)
                 end if
             end do
         end do

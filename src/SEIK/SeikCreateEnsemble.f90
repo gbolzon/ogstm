@@ -3,9 +3,37 @@ subroutine SeikCreateEnsemble()
     use mpi
     
     implicit none
-    integer :: ierr
+    integer :: ierr, indexi
     
     if (UseHighOrder) then
+        if (MyRank==0) then
+            if (EnsembleRank==NotWorkingMember) then
+                call dpotrf( 'U', SeikDim, CovSeik1, SeikDim, ierr )
+                if (ierr.ne.0) error stop 'Choleky failed!'
+                
+                ChangeBaseSeik=0.0d0
+                do indexi=1,SeikDim 
+                    if (indexi>=NotWorkingMember) then
+                        ChangeBaseSeik(i,i+1)=1.0d0
+                    else
+                        ChangeBaseSeik(i,i)=1.0d0
+                    end if
+                end do
+                call dtrtrs( 'U', 'N', 'N', SeikDim, SeikDim+1, CovSeik1, SeikDim, ChangeCoefSeik, SeikDim, ierr)
+                if (ierr.ne.0) error stop 'Sampling inversion failed'
+            
+                call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
+                call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            else
+            
+            
+                call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            end if
+        end if
+        
+        if (.not.(EnsembleRank==NotWorkingMember)) then
+            
+        end if
         
         
     end if

@@ -13,8 +13,11 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
     call dpotrf( 'U', nside, CovMatrix1, nside, ierr )
     if (ierr.ne.0) error stop 'Choleky failed'
     
+    
+!!! ATTENZIONE!!! qui ci sono seikdim al posto di nside, verifica!!!!
+    
     OrtMatrixSampling(:,1)=AllWeightsSqrt
-    call OrtMatrix(OrtMatrixSampling, SeikDim+1,SeikDim+1, 1, SeikDim)
+    call OrtMatrix(OrtMatrixSampling, SeikDim+1,SeikDim+1, 1, SeikDim) 
     do indexi=2, SeikDim+1
         OrtMatrixSampling(:,indexi)=OrtMatrixSampling(:,indexi)*AllWeightsSqrt1
     end do

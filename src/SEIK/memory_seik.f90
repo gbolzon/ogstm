@@ -97,7 +97,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.1d0)**2)*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.1d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
@@ -112,11 +112,11 @@
                 
                 allocate(UDiffModelErrorDiag1(UDiffSpaceDim))
                 UDiffModelErrorDiag1 = huge(UDiffModelErrorDiag1(1))
-                UDiffModelErrorDiag1 = 1/(log(1.1d0)**2)*500 
+                UDiffModelErrorDiag1 = 1/(log(1.1d0)**2)!*500 
                 
                 allocate(VDiffModelErrorDiag1(VDiffSpaceDim))
                 VDiffModelErrorDiag1 = huge(VDiffModelErrorDiag1(1))
-                VDiffModelErrorDiag1 = 1/(log(1.1d0)**2)*500
+                VDiffModelErrorDiag1 = 1/(log(1.1d0)**2)!*500
                 
                 allocate(WDiffModelErrorDiag1(WDiffSpaceDim))
                 WDiffModelErrorDiag1 = huge(WDiffModelErrorDiag1(1))
