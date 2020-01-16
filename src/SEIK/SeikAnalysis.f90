@@ -39,11 +39,11 @@ subroutine SeikAnalysis
             call mpi_allgatherv(VDiffObsBaseMember,VDiffObsSpaceDim,mpi_real8,VHLSeik,VDiffMpiCountObs,VDiffMpiDisplacementObs,mpi_real8,EnsembleComm,ierr)
         end if
         
-        TempUDiffObsSeik=reshape(ObsUDiffBaseMember,(/UDiffObsSpaceDim/))
+        TempUDiffObsSeik=reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/))
         TempUDiffObsSeik=TempUDiffObsSeik*UDiffObsErrorDiag1
         TempSliceSeik=TempSliceSeik+matmul(TempUDiffObsSeik,UHLSeik)
         
-        TempVDiffObsSeik=reshape(ObsVDiffBaseMember,(/VDiffObsSpaceDim/))
+        TempVDiffObsSeik=reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/))
         TempVDiffObsSeik=TempVDiffObsSeik*VDiffObsErrorDiag1
         TempSliceSeik=TempSliceSeik+matmul(TempVDiffObsSeik,VHLSeik)
     end if

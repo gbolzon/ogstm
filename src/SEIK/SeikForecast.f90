@@ -37,20 +37,20 @@ integer :: indexk, indexn
     if (UseDiffCov) then
         do indexi=1, jptra
             do indexj=1, jpk
-                UDiffBaseMember=(BaseMember(indexj,:,2:jpi,indexi)-BaseMember(indexj,:,1:jpi-1,indexi))/e1u(:,1:jpi-1)
+                UDiffBaseMember(indexj,:,:,indexi)=(BaseMember(indexj,:,2:jpi,indexi)-BaseMember(indexj,:,1:jpi-1,indexi))/e1u(:,1:jpi-1)
             end do
             UDiffBaseMember(:,:,:,indexi)=UDiffBaseMember(:,:,:,indexi)*SeikUMask
         end do
         
         do indexi=1, jptra
             do indexj=1, jpk
-                VDiffBaseMember=(BaseMember(indexj,2:jpj,:,indexi)-BaseMember(indexj,1:jpj-1,:,indexi))/e2v(1:jpj-1,:)
+                VDiffBaseMember(indexj,:,:,indexi)=(BaseMember(indexj,2:jpj,:,indexi)-BaseMember(indexj,1:jpj-1,:,indexi))/e2v(1:jpj-1,:)
             end do
             VDiffBaseMember(:,:,:,indexi)=VDiffBaseMember(:,:,:,indexi)*SeikVMask
         end do
         
         do indexi=1, jptra
-            WDiffBaseMember=(BaseMember(2:jpk,:,:,indexi)-BaseMember(1:jpk-1,:,:,indexi))/e3w_0(2:jpk,:,:)
+            WDiffBaseMember(:,:,:,indexi)=(BaseMember(2:jpk,:,:,indexi)-BaseMember(1:jpk-1,:,:,indexi))/e3w_0(2:jpk,:,:)
             WDiffBaseMember(:,:,:,indexi)=WDiffBaseMember(:,:,:,indexi)*SeikWMask
         end do
         
