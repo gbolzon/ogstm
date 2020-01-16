@@ -14,9 +14,9 @@ subroutine SeikCreateEnsemble()
                 ChangeBaseSeik=0.0d0
                 do indexi=1,SeikDim 
                     if (indexi>=NotWorkingMember) then
-                        ChangeBaseSeik(i,i+1)=1.0d0
+                        ChangeBaseSeik(indexi,indexi+1)=1.0d0
                     else
-                        ChangeBaseSeik(i,i)=1.0d0
+                        ChangeBaseSeik(indexi,indexi)=1.0d0
                     end if
                 end do
                 call dtrtrs( 'U', 'N', 'N', SeikDim, SeikDim+1, CovSeik1, SeikDim, ChangeCoefSeik, SeikDim, ierr)

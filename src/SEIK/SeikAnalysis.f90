@@ -32,15 +32,15 @@ subroutine SeikAnalysis
         VDiffObsBaseMember=(ObsBaseMember(2:jpi,:)-ObsBaseMember(1:jpi-1,:))/e2v(1:jpj-1,:)*SeikVMask(1,:,:)
         
 do indexi=1,jpi-1
-    do indexj=i, jpj-1
+    do indexj=1, jpj-1
         if (.not.(UDiffObsBaseMember(indexj,indexi)==UDiffObsBaseMember(indexj,indexi))) then
-            write(*,*) "myrank=", myrank, " EnRank=" EnsembleRank, " i=", indexi, " j=", indexj
-            write(*,*) "ObsBaseMember=", ObsBaseMember(indexj, indexi:indexi+1), " e1u=" e1u(indexj, indexi), " SeikUMask=", SeikUMask(1,indexj,indexi)
+            write(*,*) "myrank=", myrank, " EnRank=", EnsembleRank, " i=", indexi, " j=", indexj
+            write(*,*) "ObsBaseMember=", ObsBaseMember(indexj, indexi:indexi+1), " e1u=", e1u(indexj, indexi), " SeikUMask=", SeikUMask(1,indexj,indexi)
             error stop "NAN UDiffObsBaseMember"
         end if
         if (.not.(VDiffObsBaseMember(indexj,indexi)==VDiffObsBaseMember(indexj,indexi))) then
-            write(*,*) "myrank=", myrank, " EnRank=" EnsembleRank, " i=", indexi, " j=", indexj
-            write(*,*) "ObsBaseMember=", ObsBaseMember(indexj:indexj+1, indexi), " e2v=" e2v(indexj, indexi), " SeikVMask=", SeikUMask(1,indexj,indexi)
+            write(*,*) "myrank=", myrank, " EnRank=", EnsembleRank, " i=", indexi, " j=", indexj
+            write(*,*) "ObsBaseMember=", ObsBaseMember(indexj:indexj+1, indexi), " e2v=", e2v(indexj, indexi), " SeikVMask=", SeikUMask(1,indexj,indexi)
             error stop "NAN VDiffObsBaseMember"
         end if
     end do

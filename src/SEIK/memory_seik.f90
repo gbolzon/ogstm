@@ -97,11 +97,11 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.1d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
-            ObsErrorDiag1 = 1/(log(1.1d0)**2) 
+            ObsErrorDiag1 = 1/(log(1.05d0)**2) 
             
             if (UseDiffCov) then
                 UDiffSpaceDim=jpk*jpj*(jpi-1)*jptra
@@ -112,11 +112,11 @@
                 
                 allocate(UDiffModelErrorDiag1(UDiffSpaceDim))
                 UDiffModelErrorDiag1 = huge(UDiffModelErrorDiag1(1))
-                UDiffModelErrorDiag1 = 1/(log(1.1d0)**2)!*500 
+                UDiffModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 
                 
                 allocate(VDiffModelErrorDiag1(VDiffSpaceDim))
                 VDiffModelErrorDiag1 = huge(VDiffModelErrorDiag1(1))
-                VDiffModelErrorDiag1 = 1/(log(1.1d0)**2)!*500
+                VDiffModelErrorDiag1 = 1/(log(1.2d0)**2)!*500
                 
                 allocate(WDiffModelErrorDiag1(WDiffSpaceDim))
                 WDiffModelErrorDiag1 = huge(WDiffModelErrorDiag1(1))
@@ -124,11 +124,11 @@
                 
                 allocate(UDiffObsErrorDiag1(UDiffObsSpaceDim))
                 UDiffObsErrorDiag1 = huge(UDiffObsErrorDiag1(1))
-                UDiffObsErrorDiag1 = 1/(log(1.1d0)**2)
+                UDiffObsErrorDiag1 = 1/(log(1.05d0)**2)
                 
                 allocate(VDiffObsErrorDiag1(VDiffObsSpaceDim))
                 VDiffObsErrorDiag1 = huge(VDiffObsErrorDiag1(1))
-                VDiffObsErrorDiag1 = 1/(log(1.1d0)**2)
+                VDiffObsErrorDiag1 = 1/(log(1.05d0)**2)
                 
                 allocate(SeikUMask(jpk,jpj,jpi-1))
                 SeikUMask = huge(SeikUMask(1,1,1))
