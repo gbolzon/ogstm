@@ -131,7 +131,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
-        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum*reshape(UDiffBaseMember,(/UDiffSpaceDim/))
+        UDiffModelErrorDiag1=UDiffModelErrorDiag1/totalsum*reshape(UDiffBaseMember,(/UDiffSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
         
         do indexi=1, jptra
             do indexj=1, jpk
@@ -150,7 +150,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
-        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum*reshape(VDiffBaseMember,(/VDiffSpaceDim/))
+        VDiffModelErrorDiag1=VDiffModelErrorDiag1/totalsum*reshape(VDiffBaseMember,(/VDiffSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
         
         do indexi=1, jptra
             do indexj=1, jpk-1
@@ -169,7 +169,8 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
-        WDiffModelErrorDiag1=WDiffModelErrorDiag1/totalsum*reshape(WDiffBaseMember,(/WDiffSpaceDim/))
+        WDiffModelErrorDiag1=WDiffModelErrorDiag1/totalsum*reshape(WDiffBaseMember,(/WDiffSpaceDim/))*25*10**6 !the med sea is about 5*10^3m deep. 
+        !in this case it is convenient to set a different rescaling for horizontal and vertical covariance. probably it is advisable to keep WDiffModelErrorDiag1 small.
         
         UDiffObsBaseMember=e1u(:,1:jpi-1)*e2u(:,1:jpi-1)*SeikUMask(1,:,:)
         !if (CutLeft) UDiffObsBaseMember(:,1)=0.0d0
@@ -183,7 +184,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum obs=", totalsum
         
-        UDiffObsErrorDiag1=UDiffObsErrorDiag1/totalsum*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/))
+        UDiffObsErrorDiag1=UDiffObsErrorDiag1/totalsum*reshape(UDiffObsBaseMember,(/UDiffObsSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
         
         VDiffObsBaseMember=e1v(1:jpj-1,:)*e2v(1:jpj-1,:)*SeikVMask(1,:,:)
         if (CutLeft) VDiffObsBaseMember(:,1)=0.0d0
@@ -197,7 +198,7 @@ end if
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum obs=", totalsum
         
-        VDiffObsErrorDiag1=VDiffObsErrorDiag1/totalsum*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/))
+        VDiffObsErrorDiag1=VDiffObsErrorDiag1/totalsum*reshape(VDiffObsBaseMember,(/VDiffObsSpaceDim/))*16*10**12 !the med sea is about 4*10^6m long
         
     end if
 
