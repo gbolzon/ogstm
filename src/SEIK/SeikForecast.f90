@@ -25,7 +25,7 @@ integer :: indexk, indexn
     
     BaseMember=BaseMember-trn
     
-    where (SeikTrcMask==0) BaseMember==0
+    where (SeikTrcMask==0) BaseMember=0.0d0
     
     !if (CutLeft) BaseMember(:,:,1,:)=0.0d0
     !if (CutRight) BaseMember(:,:,jpi,:)=0.0d0

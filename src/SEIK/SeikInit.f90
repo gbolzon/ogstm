@@ -1,6 +1,7 @@
 subroutine SeikInit
     use myalloc
     use mpi
+    USE DA_mem
     
     implicit none
     
@@ -52,7 +53,7 @@ subroutine SeikInit
     SeikMask=BfmMask !per il momento preferisco la bfmmask
     SeikTrcMask=0
     do indexi=1,jptra
-        if (isaCHLVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask
+        if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask
     end do
 
 

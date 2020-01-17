@@ -3,37 +3,121 @@ subroutine SeikCreateEnsemble()
     use mpi
     
     implicit none
-    integer :: ierr, indexi
+    integer :: ierr, indexi, neigenvalues
+    double precision dlamch
     
     if (UseHighOrder) then
-        if (MyRank==0) then
-            if (EnsembleRank==NotWorkingMember) then
-                call dpotrf( 'U', SeikDim, CovSeik1, SeikDim, ierr )
-                if (ierr.ne.0) error stop 'Choleky failed!'
-                
-                ChangeBaseSeik=0.0d0
-                do indexi=1,SeikDim 
-                    if (indexi>=NotWorkingMember) then
-                        ChangeBaseSeik(indexi,indexi+1)=1.0d0
-                    else
-                        ChangeBaseSeik(indexi,indexi)=1.0d0
-                    end if
-                end do
-                call dtrtrs( 'U', 'N', 'N', SeikDim, SeikDim+1, CovSeik1, SeikDim, ChangeCoefSeik, SeikDim, ierr)
-                if (ierr.ne.0) error stop 'Sampling inversion failed'
+if (.false.) then
+if (MyRank==0) then
+    if (EnsembleRank==NotWorkingMember) then
+        call dpotrf( 'U', SeikDim, CovSeik1, SeikDim, ierr )
+        if (ierr.ne.0) error stop 'Choleky failed!'
+        
+        ChangeBaseSeik=0.0d0
+        do indexi=1,SeikDim 
+            if (indexi>=NotWorkingMember) then
+                ChangeBaseSeik(indexi,indexi+1)=1.0d0
+            else
+                ChangeBaseSeik(indexi,indexi)=1.0d0
+            end if
+        end do
+        call dtrtrs( 'U', 'N', 'N', SeikDim, SeikDim+1, CovSeik1, SeikDim, ChangeBaseSeik, SeikDim, ierr)
+        if (ierr.ne.0) error stop 'Sampling inversion failed'
+    
+        call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+    else
+        call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+        
+        call MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
+        TempVecSeik=matmul(Lseik,ChangeCoefSeik)
+        BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
+        
+    end if
+end if
+
+if (.not.(EnsembleRank==NotWorkingMember)) then
+    
+end if
+end if
+        
+        !da parallelizzare
+        if (EnsembleRank==NotWorkingMember) then
+            do indexi=1,SeikDim 
+                BaseMember=reshape(LSeik(:,indexi), (/jpk,jpj,jpi,jptra/)
+                where (SeikTrcMask==0) BaseMember=0.0d0
+                call CutCellsTracer(BaseMember)
+                LSeik(:,indexi)=reshape(BaseMember, (/SpaceDim/)
+            end do
             
-                call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
-                call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            LSeikT=transpose(LSeik)
+            
+            if (MyRank==0) then
+                call dpotrf( 'L', SeikDim, CovSeik1, SeikDim, ierr )
+                if (ierr.ne.0) error stop 'Choleky failed!'
+            end if
+            
+            call MPI_Bcast(CovSeik1, SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
+            
+            call dtrtrs( 'L', 'N', 'N', SeikDim, SpaceDim, CovSeik1, SeikDim, LSeikT, SeikDim, ierr)
+            if (ierr.ne.0) error stop 'Sampling inversion failed'
+                
+            do indexi=1,SpaceDim
+                TempSliceSeik=LSeikT(:,indexi)
+                TempVecSeik(indexi)=norm2(TempSliceSeik)
+                if (TempVecSeik(indexi)>1.0d-4) then
+                    LSeikT(:,indexi)=TempSliceSeik/TempVecSeik(indexi)
+                else
+                    LSeikT(:,indexi)=0.0d0
+                    TempVecSeik(indexi)=0.0d0
+                end if
+            end do
+            
+            LSeik=transpose(LSeikT)
+            CovSeik1=matmul(LSeikT,LSeik)
+            call mpi_reduce(CovSeik1,SvdMatrix, SeikDim*SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
+        
+            if (MyRank==0) then
+                call dsyevr("V", "A", "U", SeikDim, SvdMatrix, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, & 
+                    dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+                    isuppz, work, SeikDim*SeikDim, iwork, SeikDim*SeikDim, ierr)
+                    
+                if (ierr/=0) then
+                    write(*,*) "something wrong with svd. I will stop"
+                    call mpi_abort(mpi_comm_world,1,ierr)
+                end if
+                
+                if (SeikDim/=neigenvalues) then
+                    write(*,*) "something strange in the number of eigenvalues!"
+                    write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
+                end if
+                
+                CovSeik1=eigenvectors(:,SeikDim:+1:-1)
+                
+                call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
+            
             else
             
+                call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
             
-                call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
             end if
+        
+            do indexi=1, SpaceDim
+                if (UseMaxVarSEIK) then
+                    if (TempVecSeik(indexi)>sqrt(MaxVarSEIK)) TempVecSeik(indexi)=sqrt(MaxVarSEIK)
+                end if
+                LSeikT(:, indexi)=LSeikT(:, indexi)*TempVecSeik(indexi)
+            end do
+
+            do indexi=1, SeikDim
+            
+                LSeik(:,indexi)=matmul(CovSeik1(:,indexi),LSeikT)
+                
+                
+            end do
+        
+        
         end if
         
-        if (.not.(EnsembleRank==NotWorkingMember)) then
-            
-        end if
         
         
     end if

@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.true.
+      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
@@ -62,7 +62,8 @@
       
       ! Per UseDiffCov
       integer :: UDiffSpaceDim, VDiffSpaceDim, WDiffSpaceDim, UDiffObsSpaceDim, VDiffObsSpaceDim
-      integer, dimension(:,:,:), allocatable :: SeikUMask, SeikVMask, SeikWMask, SeikUTrcMask, SeikVTrcMask, SeikWTrcMask
+      integer, dimension(:,:,:), allocatable :: SeikUMask, SeikVMask, SeikWMask
+      integer, dimension(:,:,:,:), allocatable :: SeikUTrcMask, SeikVTrcMask, SeikWTrcMask
       double precision, allocatable, dimension (:) :: UDiffModelErrorDiag1, VDiffModelErrorDiag1, WDiffModelErrorDiag1, UDiffObsErrorDiag1, VDiffObsErrorDiag1
       double precision, allocatable, dimension (:,:,:,:) :: UDiffBaseMember, VDiffBaseMember, WDiffBaseMember
       double precision, allocatable, dimension (:,:,:,:) :: TempUDiffBaseMember, TempVDiffBaseMember, TempWDiffBaseMember
@@ -74,7 +75,12 @@
       integer, allocatable, dimension (:) :: UDiffMpiCount, UDiffMpiDisplacement,VDiffMpiCount, VDiffMpiDisplacement,WDiffMpiCount, WDiffMpiDisplacement
       integer, allocatable, dimension (:) :: UDiffMpiCountObs, UDiffMpiDisplacementObs, VDiffMpiCountObs, VDiffMpiDisplacementObs
       
+      ! Per UseHighOrder
+      double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors, work, iwork
+      double precision, allocatable, dimension (:) :: eigenvalues
+      integer, dimension(:) :: isuppz
       
+                
       CONTAINS
        
       subroutine myalloc_seik(LocalRank)
@@ -286,6 +292,30 @@
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
             
+            if ((EnsembleRank==NotWorkingMember) .and. (UseHighOrder)) then
+                allocate(LSeikT(SeikDim,SpaceDim))
+                LSeikT = huge(LSeikT(1,1))
+                
+                allocate(SvdMatrix(SeikDim,SeikDim))
+                SvdMatrix = huge(SvdMatrix(1,1))
+                
+                allocate(eigenvalues(SeikDim))
+                eigenvalues = huge(eigenvalues(1))
+                
+                allocate(eigenvectors(SeikDim,SeikDim))
+                eigenvectors = huge(eigenvectors(1,1))
+                
+                allocate(work(SeikDim,SeikDim))
+                work = huge(work(1,1))
+                
+                allocate(iwork(SeikDim,SeikDim))
+                iwork = huge(iwork(1,1))
+                
+                allocate(isuppz(2*SeikDim))
+                isuppz = huge(isuppz(1))
+                
+            end if
+            
             allocate(MpiCount(0:SeikDim))
             MpiCount = huge(MpiCount(1))
             MpiCount=SpaceDim
@@ -397,7 +427,9 @@
                 TTTSeik = huge(TTTSeik(1,1))
                 call TTTSeik_builder()
                 
-                
+                allocate(CovSeik1(SeikDim,SeikDim))
+                CovSeik1 = huge(CovSeik1(1,1))
+                    
                 if(LocalRank==0) then
                 
                     allocate(AllWeightsSqrt(0:SeikDim))                    
@@ -407,9 +439,6 @@
                     allocate(AllWeightsSqrt1(0:SeikDim))                    
                     AllWeightsSqrt1 = huge(AllWeightsSqrt1(0))
                     AllWeightsSqrt1 = 1.0d0/AllWeightsSqrt
-            
-                    allocate(CovSeik1(SeikDim,SeikDim))
-                    CovSeik1 = huge(CovSeik1(1,1))
                     
                     allocate(CovSmoother1part(SeikDim,SeikDim))
                     CovSmoother1part = huge(CovSmoother1part(1,1))
@@ -555,7 +584,11 @@
                 deallocate(UDiffMpiDisplacementObs)
                 deallocate(VDiffMpiCountObs)
                 deallocate(VDiffMpiDisplacementObs)
-                
+            end if
+            
+            if ((EnsembleRank==NotWorkingMember) .and. (UseHighOrder)) then
+                deallocate(LSeikT)
+                deallocate(SvdMatrix)
             end if
            
             if (LocalRank==0) then
@@ -565,14 +598,14 @@
                 deallocate(copy_inSeik)
             end if
             
-            if (EnsembleRank==0) then
+            if (EnsembleRank==NotWorkingMember) then
                 deallocate(AllWeights)
                 deallocate(TTTSeik)
+                deallocate(CovSeik1)
                 
                 if (LocalRank==0) then
                     deallocate(AllWeightsSqrt)
-                    deallocate(AllWeightsSqrt1)
-                    deallocate(CovSeik1)
+                    deallocate(AllWeightsSqrt1)                    
                     deallocate(CovSmoother1part)
                     deallocate(LTQ1L)
                     deallocate(OrtMatrixSampling)
