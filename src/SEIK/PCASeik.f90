@@ -108,6 +108,7 @@ else
             where (SeikMask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0 !instead of bfmmask
             !HistoryForSVD(:,:,:,indexj, indexi)=HistoryForSVD(:,:,:,indexj, indexi)*bfmmask
         end do
+        where (SeikTrcMask==0) HistoryForSVD(:,:,:,:, indexi)=0.0d0
         call CutCellsTracer(HistoryForSVD(:,:,:,:, indexi))
     end do
     PCAVar=0.0d0
@@ -145,7 +146,7 @@ else
         !call mpi_abort(mpi_comm_world,1,ierr)
     end if
     
-    where (PCAMatrix<1.0d-11) PCAMatrix=1.0d-11
+    where (PCAMatrix<CutOffValue) PCAMatrix=CutOffValue
     
     do indexi=1, SpaceDim
         !PCAVar(indexi)=CalcVar(PCAMatrix(:,indexi), nHistoryForSVD, CalcMean(PCAMatrix(:,indexi), nHistoryForSVD), workvec)

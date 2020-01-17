@@ -58,10 +58,11 @@
       double precision,  dimension(:,:), allocatable :: BufferMPILinkSend3, BufferMPILinkSend4, BufferMPILinkReceive3, BufferMPILinkReceive4
       
       integer, dimension(:,:,:), allocatable :: SeikMask
+      integer, dimension(:,:,:,:), allocatable :: SeikTrcMask
       
       ! Per UseDiffCov
       integer :: UDiffSpaceDim, VDiffSpaceDim, WDiffSpaceDim, UDiffObsSpaceDim, VDiffObsSpaceDim
-      integer, dimension(:,:,:), allocatable :: SeikUMask, SeikVMask, SeikWMask
+      integer, dimension(:,:,:), allocatable :: SeikUMask, SeikVMask, SeikWMask, SeikUTrcMask, SeikVTrcMask, SeikWTrcMask
       double precision, allocatable, dimension (:) :: UDiffModelErrorDiag1, VDiffModelErrorDiag1, WDiffModelErrorDiag1, UDiffObsErrorDiag1, VDiffObsErrorDiag1
       double precision, allocatable, dimension (:,:,:,:) :: UDiffBaseMember, VDiffBaseMember, WDiffBaseMember
       double precision, allocatable, dimension (:,:,:,:) :: TempUDiffBaseMember, TempVDiffBaseMember, TempWDiffBaseMember
@@ -129,6 +130,15 @@
                 allocate(VDiffObsErrorDiag1(VDiffObsSpaceDim))
                 VDiffObsErrorDiag1 = huge(VDiffObsErrorDiag1(1))
                 VDiffObsErrorDiag1 = 1/(log(1.05d0)**2)
+                
+                allocate(SeikUTrcMask(jpk,jpj,jpi-1,jptra))
+                SeikUTrcMask = huge(SeikUTrcMask(1,1,1,1))
+                
+                allocate(SeikVTrcMask(jpk,jpj-1,jpi,jptra))
+                SeikVTrcMask = huge(SeikVTrcMask(1,1,1,1))
+                
+                allocate(SeikWTrcMask(jpk-1,jpj,jpi,jptra))
+                SeikWTrcMask = huge(SeikWTrcMask(1,1,1,1))
                 
                 allocate(SeikUMask(jpk,jpj,jpi-1))
                 SeikUMask = huge(SeikUMask(1,1,1))
@@ -347,6 +357,9 @@
             
             allocate(SeikMask(jpk,jpj,jpi))
             SeikMask = huge(SeikMask(1,1,1))
+            
+            allocate(SeikTrcMask(jpk,jpj,jpi,jptra))
+            SeikTrcMask = huge(SeikTrcMask(1,1,1,1))
 
             allocate(trnVariance(jpk,jpj,jpi,jptra))
             trnVariance = huge(trnVariance(1,1,1,1))
@@ -496,6 +509,7 @@
             deallocate(BufferMPILinkReceive3)                    
             deallocate(BufferMPILinkReceive4)                    
             deallocate(SeikMask)
+            deallocate(SeikTrcMask)
             deallocate(trnVariance)
             
             if (UseDiffCov) then                
@@ -507,6 +521,9 @@
                 deallocate(SeikUMask)
                 deallocate(SeikVMask)
                 deallocate(SeikWMask)
+                deallocate(SeikUTrcMask)
+                deallocate(SeikVTrcMask)
+                deallocate(SeikWTrcMask)
                 deallocate(UDiffBaseMember)
                 deallocate(VDiffBaseMember)
                 deallocate(WDiffBaseMember)

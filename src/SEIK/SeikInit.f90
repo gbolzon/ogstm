@@ -49,7 +49,12 @@ subroutine SeikInit
         end do
     end do
 
-SeikMask=BfmMask !per il momento preferisco la bfmmask
+    SeikMask=BfmMask !per il momento preferisco la bfmmask
+    SeikTrcMask=0
+    do indexi=1,jptra
+        if (isaCHLVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask
+    end do
+
 
 !call  mpi_barrier(mpi_comm_World,ierr)
 !write (*,*) "e=", EnsembleRank, "m=", MyRank, "t=", sum(tmask), "b=", sum(bfmmask), "s=", sum(SeikMask)
@@ -75,6 +80,8 @@ SeikMask=BfmMask !per il momento preferisco la bfmmask
     
     totalsum=0.0d0
     partialsum=sum(BaseMember(:,:,:,1))
+    
+    BaseMember=BaseMember*SeikTrcMask
 
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum=", totalsum
@@ -114,6 +121,10 @@ end if
         SeikVMask=(SeikMask(:,1:jpj-1,:)+SeikMask(:,2:jpj,:))/2
         SeikWMask=(SeikMask(1:jpk-1,:,:)+SeikMask(2:jpk,:,:))/2
         
+        SeikUTrcMask=(SeikTrcMask(:,:,1:jpi-1,:)+SeikTrcMask(:,:,2:jpi,:))/2
+        SeikVTrcMask=(SeikTrcMask(:,1:jpj-1,:,:)+SeikTrcMask(:,2:jpj,:,:))/2
+        SeikWTrcMask=(SeikTrcMask(1:jpk-1,:,:,:)+SeikTrcMask(2:jpk,:,:,:))/2
+        
         do indexi=1, jptra
             do indexj=1, jpk
                 UDiffBaseMember(indexj,:,:,indexi)=e1u(:,1:jpi-1)*e2u(:,1:jpi-1)
@@ -127,6 +138,7 @@ end if
         
         totalsum=0.0d0
         partialsum=sum(UDiffBaseMember(:,:,:,1))
+        UDiffBaseMember=UDiffBaseMember*SeikUTrcMask
 
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
@@ -145,7 +157,8 @@ end if
         
         totalsum=0.0d0
         partialsum=sum(VDiffBaseMember(:,:,:,1))
-
+        VDiffBaseMember=VDiffBaseMember*SeikVTrcMask
+        
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
@@ -164,7 +177,8 @@ end if
                 
         totalsum=0.0d0
         partialsum=sum(WDiffBaseMember(:,:,:,1))
-
+        WDiffBaseMember=WDiffBaseMember*SeikWTrcMask
+        
         call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
         if (lwp) write (*,*) "total sum=", totalsum
         
