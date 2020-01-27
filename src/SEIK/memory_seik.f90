@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false.
+      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
@@ -108,7 +108,7 @@
             
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
-            ObsErrorDiag1 = 1/(log(1.05d0)**2) 
+            ObsErrorDiag1 = 1/(log(1.13d0)**2) 
             
             if (UseDiffCov) then
                 UDiffSpaceDim=jpk*jpj*(jpi-1)*jptra

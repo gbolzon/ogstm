@@ -11,7 +11,7 @@ if (.false.) then
 if (MyRank==0) then
     if (EnsembleRank==NotWorkingMember) then
         call dpotrf( 'U', SeikDim, CovSeik1, SeikDim, ierr )
-        if (ierr.ne.0) error stop 'Choleky failed!'
+        if (ierr.ne.0) error stop 'Cholesky failed!'
         
         ChangeBaseSeik=0.0d0
         do indexi=1,SeikDim 
@@ -52,15 +52,41 @@ end if
             LSeikT=transpose(LSeik)
             
             if (MyRank==0) then
-                call dpotrf( 'L', SeikDim, CovSeik1, SeikDim, ierr )
-                if (ierr.ne.0) error stop 'Choleky failed!'
+                if (UseCholesky) then
+                    call dpotrf( 'L', SeikDim, CovSeik1, SeikDim, ierr )
+                    if (ierr.ne.0) error stop 'Cholesky failed!'
+                else
+                    call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+                        isuppz, work, SeikDim*SeikDim, iwork, SeikDim*SeikDim, ierr)
+
+                    if (ierr/=0) then
+                        write(*,*) "something wrong with svd. I will stop"
+                        call mpi_abort(mpi_comm_world,1,ierr)
+                    end if
+
+                    if (SeikDim/=neigenvalues) then
+                        write(*,*) "something strange in the number of eigenvalues!"
+                        write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
+                    end if
+                    
+                    do indexi=1, SeikDim
+                        CovSeik1(:,indexi)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
+                    end do
+                    CovSeik1=Inverse(CovSeik1)
+                    CovSeik1=MatMul(eigenvectos,CovSeik1)
+               end if
             end if
             
             call MPI_Bcast(CovSeik1, SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
             
-            call dtrtrs( 'L', 'N', 'N', SeikDim, SpaceDim, CovSeik1, SeikDim, LSeikT, SeikDim, ierr)
-            if (ierr.ne.0) error stop 'Sampling inversion failed'
-                
+            if (UseCholesky) then
+                call dtrtrs( 'L', 'N', 'N', SeikDim, SpaceDim, CovSeik1, SeikDim, LSeikT, SeikDim, ierr)
+                if (ierr.ne.0) error stop 'Sampling inversion failed'
+            else
+                LSeikT=MatMul(CovSeik1,LSeikT)
+            end if
+    
             do indexi=1,SpaceDim
                 TempSliceSeik=LSeikT(:,indexi)
                 TempVecSeik(indexi)=norm2(TempSliceSeik)
