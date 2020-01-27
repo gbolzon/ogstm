@@ -162,17 +162,17 @@ SUBROUTINE ogstm_initialize()
 #ifdef ExecDA
     call SeikInit
     if (SeikDim.gt.0) then
-        temporarytime2=MPI_Wtime()
-        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": First part of initialization in sec ", temporarytime2-temporarytime1
-        temporarytime1=temporarytime2
+        !temporarytime2=MPI_Wtime()
+        !write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": First part of initialization in sec ", temporarytime2-temporarytime1
+        !temporarytime1=temporarytime2
         
-        !call SeikInit
-!call mpi_barrier(mpi_comm_world,ierr)
+        !call mpi_barrier(mpi_comm_world,ierr)
         call ReadBaseSeik
+        if (UseHighOrder) call ReadWeightsSeik
         
-        temporarytime2=MPI_Wtime()
-        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": SEIK initialization in sec ", temporarytime2-temporarytime1
-        temporarytime1=temporarytime2
+        !temporarytime2=MPI_Wtime()
+        !write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": SEIK initialization in sec ", temporarytime2-temporarytime1
+        !temporarytime1=temporarytime2
     endif
 #endif
 
@@ -191,9 +191,17 @@ SUBROUTINE ogstm_initialize()
 
 #ifdef ExecDA
     if (SeikDim.gt.0) then
+        !temporarytime2=MPI_Wtime()
+        !write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": Second part of initialization in sec ", temporarytime2-temporarytime1
+        !temporarytime1=temporarytime2
+
+        call mpi_barrier(mpi_comm_world,ierr)
         temporarytime2=MPI_Wtime()
-        write(*,*) "EnsembleRank=", EnsembleRank, ", MyRank=", MyRank, ": Second part of initialization in sec ", temporarytime2-temporarytime1
-        temporarytime1=temporarytime2
+        if (lwp) then
+            write(*,*) "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"   
+            write(*,*) "Initialization in sec ", temporarytime2-temporarytime1
+            write(*,*) "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"   
+        end if
     endif
 #endif
 

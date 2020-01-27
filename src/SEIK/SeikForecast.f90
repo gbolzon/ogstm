@@ -13,7 +13,7 @@ integer :: indexk, indexn
         where (tmask==1) 
             trnEnsemble(:,:,:,indexi)=trn(:,:,:,indexi)
             BaseMember(:,:,:,indexi)=log(trn(:,:,:,indexi))
-            trnEnsembleWeighted(:,:,:,indexi)=BaseMember(:,:,:,indexi)*Weight
+            trnEnsembleWeighted(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikWeight
         elsewhere
             trnEnsemble(:,:,:,indexi)=0.0d0
             BaseMember(:,:,:,indexi)=0.0d0
@@ -58,22 +58,22 @@ integer :: indexk, indexn
         
     end if
     
-    trnEnsembleWeighted=BaseMember**2*Weight
+    trnEnsembleWeighted=BaseMember**2*SeikWeight
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     
     if (UseMaxVarSEIK) then
         where (trnVariance>MaxVarSEIK) BaseMember=BaseMember*sqrt(MaxVarSEIK/trnVariance)
         
         if (UseDiffCov) then
-            TempUDiffBaseMember=UDiffBaseMember**2*Weight
+            TempUDiffBaseMember=UDiffBaseMember**2*SeikWeight
             call MPI_AllReduce(TempUDiffBaseMember, UVariance, UDiffSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
             where (UVariance>MaxVarSEIK) UDiffBaseMember=UDiffBaseMember*sqrt(MaxVarSEIK/UVariance)
             
-            TempVDiffBaseMember=VDiffBaseMember**2*Weight
+            TempVDiffBaseMember=VDiffBaseMember**2*SeikWeight
             call MPI_AllReduce(TempVDiffBaseMember, VVariance, VDiffSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
             where (VVariance>MaxVarSEIK) VDiffBaseMember=VDiffBaseMember*sqrt(MaxVarSEIK/VVariance)
             
-            TempWDiffBaseMember=WDiffBaseMember**2*Weight
+            TempWDiffBaseMember=WDiffBaseMember**2*SeikWeight
             call MPI_AllReduce(TempWDiffBaseMember, WVariance, WDiffSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
             where (WVariance>MaxVarSEIK) WDiffBaseMember=WDiffBaseMember*sqrt(MaxVarSEIK/WVariance)
             

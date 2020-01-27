@@ -6,7 +6,7 @@ subroutine SeikAnalysis
     
     integer :: ierr, indexi, indexj
 
-    ObsBaseMember=ComputedObsSeik*Weight
+    ObsBaseMember=ComputedObsSeik*SeikWeight
     call MPI_AllReduce(ObsBaseMember, ComputedObsMean, ObsSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     
     if (EnsembleRank==NotWorkingMember) then

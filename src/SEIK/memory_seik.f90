@@ -19,7 +19,7 @@
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
       double precision, allocatable, dimension (:,:) :: LSeik
-      double precision :: Weight ! teporary defined in myalloc_seik
+      double precision :: SeikWeight 
       double precision, allocatable, dimension (:,:) :: ChangeBaseSeik
       double precision, allocatable, dimension (:) :: ChangeCoefSeik
       
@@ -79,6 +79,10 @@
       double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors, work, iwork
       double precision, allocatable, dimension (:) :: eigenvalues
       integer, dimension(:) :: isuppz
+
+      ! Per High Order
+      integer :: HighOrderDim
+      double precision, allocatable, dimension (:,:) :: HighOrderMatrix
       
                 
       CONTAINS
@@ -89,7 +93,7 @@
             integer, intent(in) :: LocalRank        
             integer :: indexi
 
-            Weight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
+            SeikWeight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             
             SpaceDim=jpk*jpj*jpi*jptra
             
@@ -291,15 +295,9 @@
             
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
-            
-            if ((EnsembleRank==NotWorkingMember) .and. (UseHighOrder)) then
-                allocate(LSeikT(SeikDim,SpaceDim))
-                LSeikT = huge(LSeikT(1,1))
-                
-                allocate(SvdMatrix(SeikDim,SeikDim))
-                SvdMatrix = huge(SvdMatrix(1,1))
-                
-                allocate(eigenvalues(SeikDim))
+
+            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder))) then
+		        allocate(eigenvalues(SeikDim))
                 eigenvalues = huge(eigenvalues(1))
                 
                 allocate(eigenvectors(SeikDim,SeikDim))
@@ -313,6 +311,18 @@
                 
                 allocate(isuppz(2*SeikDim))
                 isuppz = huge(isuppz(1))
+
+                if (UseHighOrder) then
+                    allocate(LSeikT(SeikDim,SpaceDim))
+                    LSeikT = huge(LSeikT(1,1))
+                    
+                    allocate(SvdMatrix(SeikDim,SeikDim))
+                    SvdMatrix = huge(SvdMatrix(1,1))
+
+                    allocate(SvdMatrix(SeikDim,SeikDim))
+                    SvdMatrix = huge(SvdMatrix(1,1))
+
+                end if
                 
             end if
             
@@ -586,9 +596,18 @@
                 deallocate(VDiffMpiDisplacementObs)
             end if
             
-            if ((EnsembleRank==NotWorkingMember) .and. (UseHighOrder)) then
-                deallocate(LSeikT)
-                deallocate(SvdMatrix)
+            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder))) then
+                deallocate(eigenvalues)
+                deallocate(eigenvectors)
+                deallocate(work)
+                deallocate(iwork)
+                deallocate(isuppz)
+
+                if (UseHighOrder) then
+                    deallocate(LSeikT)
+                    deallocate(SvdMatrix)
+                    if (LocalRank==0) deallocate(HighOrderMatrix)
+                end if
             end if
            
             if (LocalRank==0) then

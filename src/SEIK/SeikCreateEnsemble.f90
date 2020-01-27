@@ -7,6 +7,7 @@ subroutine SeikCreateEnsemble()
     double precision dlamch
     
     if (UseHighOrder) then
+
 if (.false.) then
 if (MyRank==0) then
     if (EnsembleRank==NotWorkingMember) then
@@ -40,7 +41,7 @@ if (.not.(EnsembleRank==NotWorkingMember)) then
 end if
 end if
         
-        !da parallelizzare
+        !da parallelizzare bene
         if (EnsembleRank==NotWorkingMember) then
             do indexi=1,SeikDim 
                 BaseMember=reshape(LSeik(:,indexi), (/jpk,jpj,jpi,jptra/)
@@ -135,12 +136,10 @@ end if
             end do
 
             do indexi=1, SeikDim
-            
-                LSeik(:,indexi)=matmul(CovSeik1(:,indexi),LSeikT)
-                
-                
+                LSeik(:,indexi)=matmul(CovSeik1(:,indexi),LSeikT)              
             end do
         
+            call SamplingHighOrder(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
         
         end if
         
@@ -167,7 +166,7 @@ if (.false.) then
 ! Per il momento la tolgo, tanto al massimo avrò un po' di instabilita' al primo timestep.
 if (UseMaxVarSEIK) then
     trnEnsembleWeighted=BaseMember**2
-    trnEnsembleWeighted=trnEnsembleWeighted*Weight
+    trnEnsembleWeighted=trnEnsembleWeighted*SeikWeight
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     where (trnVariance>MaxVarSEIK)
         trnEnsemble=sqrt(MaxVarSEIK/trnVariance)
