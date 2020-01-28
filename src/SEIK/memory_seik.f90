@@ -78,7 +78,7 @@
       ! Per UseHighOrder
       double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors, work, iwork
       double precision, allocatable, dimension (:) :: eigenvalues
-      integer, dimension(:) :: isuppz
+      integer, allocatable, dimension(:) :: isuppz
 
       ! Per High Order
       integer :: HighOrderDim

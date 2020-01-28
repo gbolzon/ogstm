@@ -38,7 +38,7 @@ subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary t
     implicit none
     
     double precision, parameter :: Threshold=1.0d-8
-    integer, parameter :: maxNeigenvectors=100
+    integer, parameter :: maxNeigenvectorsPCA=100
     
     !double precision, dimension(nHistoryForSVD,SpaceDim) :: PCAMatrix
     !double precision, dimension(SpaceDim,nHistoryForSVD) :: PCAMatrixT
@@ -49,13 +49,13 @@ subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary t
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
     integer :: indexi, indexj, indexk, indexc, indexn, ierr
     
-    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: work, iwork
-    integer, dimension(2*maxNeigenvectors) :: isuppz
+    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA, iworkPCA
+    integer, dimension(2*maxNeigenvectorsPCA) :: isuppzPCA
     double precision dlamch
     
-    double precision, dimension(nHistoryForSVD) :: eigenvalues
-    double precision, dimension(nHistoryForSVD,maxNeigenvectors) :: eigenvectors
-    integer :: neigenvalues
+    double precision, dimension(nHistoryForSVD) :: eigenvaluesPCA
+    double precision, dimension(nHistoryForSVD,maxNeigenvectorsPCA) :: eigenvectorsPCA
+    integer :: neigenvaluesPCA
     
     double precision, dimension(:,:), allocatable :: Transformation
     double precision :: temptime
@@ -188,17 +188,17 @@ else
     if(myrank==0) write(*,*) "svd"
 
     if (MyRank==0) then
-        call dsyevr("V", "I", "U", nHistoryForSVD, NormalizedLogMatrix2, nHistoryForSVD, 0.0d0, 0.0d0, nHistoryForSVD-maxNeigenvectors+1, nHistoryForSVD, & 
-            dlamch('S'), neigenvalues, eigenvalues, eigenvectors, nHistoryForSVD, &
-            isuppz, work, nHistoryForSVD*nHistoryForSVD, iwork, nHistoryForSVD*nHistoryForSVD, ierr)
+        call dsyevr("V", "I", "U", nHistoryForSVD, NormalizedLogMatrix2, nHistoryForSVD, 0.0d0, 0.0d0, nHistoryForSVD-maxNeigenvectorsPCA+1, nHistoryForSVD, & 
+            dlamch('S'), neigenvaluesPCA, eigenvaluesPCA, eigenvectorsPCA, nHistoryForSVD, &
+            isuppzPCA, workPCA, nHistoryForSVD*nHistoryForSVD, iworkPCA, nHistoryForSVD*nHistoryForSVD, ierr)
         if (ierr/=0) then
             write(*,*) "something wrong with PCA. I will stop"
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
         
-        if (maxNeigenvectors/=neigenvalues) then
+        if (maxNeigenvectorsPCA/=neigenvaluesPCA) then
             write(*,*) "something strange in the number of eigenvalues!"
-            write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
+            write(*,*) "maxNeigenvectors=", maxNeigenvectorsPCA, " neigenvalues=", neigenvaluesPCA
         end if
         
         open(unit=UnitSEIK, file='REDUCED_BASE/PCA/eigenvalues.csv', form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
@@ -207,7 +207,7 @@ else
             write(*,*) 'I will stop'
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
-        write(UnitSEIK,*,iostat=ierr) eigenvalues
+        write(UnitSEIK,*,iostat=ierr) eigenvaluesPCA
         if (ierr/=0) then
             write(*,*) 'Error writing eigenvalues:', ierr
             write(*,*) 'I will stop'
@@ -220,28 +220,28 @@ else
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
         
-        do indexi=1, maxNeigenvectors
-            if (eigenvalues(indexi)>1.0d-12) then
+        do indexi=1, maxNeigenvectorsPCA
+            if (eigenvaluesPCA(indexi)>1.0d-12) then
                 exit
             else
-                neigenvalues=neigenvalues-1
+                neigenvaluesPCA=neigenvaluesPCA-1
             end if
         end do
         
-        call mpi_bcast(neigenvalues,1, MPI_int, 0, LocalComm, ierr)
+        call mpi_bcast(neigenvaluesPCA,1, MPI_int, 0, LocalComm, ierr)
         
-        allocate(Transformation(nHistoryForSVD,neigenvalues))
-        Transformation(:,:)=eigenvectors(:,maxNeigenvectors:maxNeigenvectors-neigenvalues+1:-1)
+        allocate(Transformation(nHistoryForSVD,neigenvaluesPCA))
+        Transformation(:,:)=eigenvectorsPCA(:,maxNeigenvectorsPCA:maxNeigenvectorsPCA-neigenvaluesPCA+1:-1)
         
-        call mpi_bcast(Transformation,nHistoryForSVD*neigenvalues, mpi_real8, 0, LocalComm, ierr)
+        call mpi_bcast(Transformation,nHistoryForSVD*neigenvaluesPCA, mpi_real8, 0, LocalComm, ierr)
     
     else
         
-        call mpi_bcast(neigenvalues,1, MPI_int, 0, LocalComm, ierr)
+        call mpi_bcast(neigenvaluesPCA,1, MPI_int, 0, LocalComm, ierr)
         
-        allocate(Transformation(nHistoryForSVD,neigenvalues))
+        allocate(Transformation(nHistoryForSVD,neigenvaluesPCA))
         
-        call mpi_bcast(Transformation,nHistoryForSVD*neigenvalues, mpi_real8, 0, LocalComm, ierr)
+        call mpi_bcast(Transformation,nHistoryForSVD*neigenvaluesPCA, mpi_real8, 0, LocalComm, ierr)
     
     end if
     
@@ -254,7 +254,7 @@ else
         PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
     end do
 
-    do indexi=1, neigenvalues
+    do indexi=1, neigenvaluesPCA
     
         !reusing pcavar instead of defining a new temp array
         PCAVar=matmul(Transformation(:,indexi),PCAMatrix)
@@ -280,7 +280,7 @@ subroutine PCASeikOld !ATTENTION! This routine need a correction: It is necessar
     implicit none
     
     double precision, parameter :: Threshold=1.0d-8
-    integer, parameter :: maxNeigenvectors=100
+    integer, parameter :: maxNeigenvectorsPCA=100
     
     !double precision, dimension(nHistoryForSVD,SpaceDim) :: PCAMatrix
     !double precision, dimension(SpaceDim,nHistoryForSVD) :: PCAMatrixT
@@ -291,13 +291,13 @@ subroutine PCASeikOld !ATTENTION! This routine need a correction: It is necessar
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
     integer :: indexi, indexj, ierr
     
-    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: work, iwork
-    integer, dimension(2*maxNeigenvectors) :: isuppz
+    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA, iworkPCA
+    integer, dimension(2*maxNeigenvectorsPCA) :: isuppzPCA
     double precision dlamch
     
-    double precision, dimension(nHistoryForSVD) :: eigenvalues
-    double precision, dimension(nHistoryForSVD,maxNeigenvectors) :: eigenvectors
-    integer :: neigenvalues
+    double precision, dimension(nHistoryForSVD) :: eigenvaluesPCA
+    double precision, dimension(nHistoryForSVD,maxNeigenvectorsPCA) :: eigenvectorsPCA
+    integer :: neigenvaluesPCA
     
     double precision, dimension(:,:), allocatable :: Transformation
     double precision :: temptime
@@ -398,17 +398,17 @@ else
     if(myrank==0) write(*,*) "svd"
 
     if (MyRank==0) then
-        call dsyevr("V", "I", "U", nHistoryForSVD, NormalizedLogMatrix2, nHistoryForSVD, 0.0d0, 0.0d0, nHistoryForSVD-maxNeigenvectors+1, nHistoryForSVD, & 
-            dlamch('S'), neigenvalues, eigenvalues, eigenvectors, nHistoryForSVD, &
-            isuppz, work, nHistoryForSVD*nHistoryForSVD, iwork, nHistoryForSVD*nHistoryForSVD, ierr)
+        call dsyevr("V", "I", "U", nHistoryForSVD, NormalizedLogMatrix2, nHistoryForSVD, 0.0d0, 0.0d0, nHistoryForSVD-maxNeigenvectorsPCA+1, nHistoryForSVD, & 
+            dlamch('S'), neigenvaluesPCA, eigenvaluesPCA, eigenvectorsPCA, nHistoryForSVD, &
+            isuppzPCA, workPCA, nHistoryForSVD*nHistoryForSVD, iworkPCA, nHistoryForSVD*nHistoryForSVD, ierr)
         if (ierr/=0) then
             write(*,*) "something wrong with PCA. I will stop"
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
         
-        if (maxNeigenvectors/=neigenvalues) then
+        if (maxNeigenvectorsPCA/=neigenvaluesPCA) then
             write(*,*) "something strange in the number of eigenvalues!"
-            write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
+            write(*,*) "maxNeigenvectors=", maxNeigenvectorsPCA, " neigenvalues=", neigenvaluesPCA
         end if
         
         open(unit=UnitSEIK, file='REDUCED_BASE/PCA/eigenvalues.csv', form='formatted', iostat=ierr, action='write', access='sequential',status='replace')
@@ -417,7 +417,7 @@ else
             write(*,*) 'I will stop'
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
-        write(UnitSEIK,*,iostat=ierr) eigenvalues
+        write(UnitSEIK,*,iostat=ierr) eigenvaluesPCA
         if (ierr/=0) then
             write(*,*) 'Error writing eigenvalues:', ierr
             write(*,*) 'I will stop'
@@ -430,28 +430,28 @@ else
             call mpi_abort(mpi_comm_world,1,ierr)
         end if
         
-        do indexi=1, maxNeigenvectors
-            if (eigenvalues(indexi)>1.0d-12) then
+        do indexi=1, maxNeigenvectorsPCA
+            if (eigenvaluesPCA(indexi)>1.0d-12) then
                 exit
             else
-                neigenvalues=neigenvalues-1
+                neigenvaluesPCA=neigenvaluesPCA-1
             end if
         end do
         
-        call mpi_bcast(neigenvalues,1, MPI_int, 0, LocalComm, ierr)
+        call mpi_bcast(neigenvaluesPCA,1, MPI_int, 0, LocalComm, ierr)
         
-        allocate(Transformation(nHistoryForSVD,neigenvalues))
-        Transformation(:,:)=eigenvectors(:,maxNeigenvectors:maxNeigenvectors-neigenvalues+1:-1)
+        allocate(Transformation(nHistoryForSVD,neigenvaluesPCA))
+        Transformation(:,:)=eigenvectorsPCA(:,maxNeigenvectorsPCA:maxNeigenvectorsPCA-neigenvaluesPCA+1:-1)
         
-        call mpi_bcast(Transformation,nHistoryForSVD*neigenvalues, mpi_real8, 0, LocalComm, ierr)
+        call mpi_bcast(Transformation,nHistoryForSVD*neigenvaluesPCA, mpi_real8, 0, LocalComm, ierr)
     
     else
         
-        call mpi_bcast(neigenvalues,1, MPI_int, 0, LocalComm, ierr)
+        call mpi_bcast(neigenvaluesPCA,1, MPI_int, 0, LocalComm, ierr)
         
-        allocate(Transformation(nHistoryForSVD,neigenvalues))
+        allocate(Transformation(nHistoryForSVD,neigenvaluesPCA))
         
-        call mpi_bcast(Transformation,nHistoryForSVD*neigenvalues, mpi_real8, 0, LocalComm, ierr)
+        call mpi_bcast(Transformation,nHistoryForSVD*neigenvaluesPCA, mpi_real8, 0, LocalComm, ierr)
     
     end if
     
@@ -461,7 +461,7 @@ else
         PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
     end do
 
-    do indexi=1, neigenvalues
+    do indexi=1, neigenvaluesPCA
     
         !reusing pcavar instead of defining a new temp array
         PCAVar=matmul(Transformation(:,indexi),PCAMatrix)
