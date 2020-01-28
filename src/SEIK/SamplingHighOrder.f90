@@ -1,12 +1,12 @@
-subroutine SamplingHighOrder(nside, ChangeBase, ierr)
+subroutine SamplingHighOrder(nside, ChangeBase)
     !use mpi
     use myalloc
     
     implicit none
     
     integer, intent(in) :: nside
-    integer, intent(out) :: ierr
-    double precision, dimension(nside,nside), intent(inout) :: CovMatrix1
+    !integer, intent(out) :: ierr
+    !double precision, dimension(nside,nside), intent(inout) :: CovMatrix1
     double precision, dimension(nside,0:nside), intent(out) :: ChangeBase
     integer :: indexi
     !double precision :: dlamch

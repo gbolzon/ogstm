@@ -1,5 +1,5 @@
 subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
-    !use mpi
+    use mpi
     use myalloc
     
     implicit none
@@ -8,7 +8,7 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
     integer, intent(out) :: ierr
     double precision, dimension(nside,nside), intent(inout) :: CovMatrix1
     double precision, dimension(nside,0:nside), intent(out) :: ChangeBase
-    integer :: indexi
+    integer :: indexi, neigenvalues
     double precision :: dlamch
 
     if (UseCholesky) then
@@ -26,14 +26,13 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
 
         if (SeikDim/=neigenvalues) then
             write(*,*) "something strange in the number of eigenvalues!"
-            write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
         end if
 
         do indexi=1, SeikDim
             CovSeik1(:,indexi)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
         end do
-        CovSeik1=Inverse(CovSeik1)
-        CovSeik1=MatMul(eigenvectos,CovSeik1)
+        CovSeik1=Transpose(CovSeik1)
+        CovSeik1=MatMul(eigenvectors,CovSeik1)
     end if
     
 !!! ATTENZIONE!!! qui ci sono seikdim al posto di nside, verifica!!!!

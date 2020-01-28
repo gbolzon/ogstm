@@ -15,7 +15,7 @@ SUBROUTINE ReadWeightsSeik
     write(FileName,'(A25,I3.3,A4)') DirName//'/WGT_', SeikDim,'.csv'
     if (EnsembleRank==NotWorkingMember) then
         if (myrank==0) then
-            open(unit=UnitSEIK, file=FileNameCov, form='formatted', iostat=ierr, action='read', access='sequential',status='old')
+            open(unit=UnitSEIK, file=FileName, form='formatted', iostat=ierr, action='read', access='sequential',status='old')
             if (ierr/=0) then
                 write(*,*) 'Error initializing weights matrix from file: ', ierr
                 write(*,*) 'I will stop'

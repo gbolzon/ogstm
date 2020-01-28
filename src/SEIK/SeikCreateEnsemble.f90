@@ -44,10 +44,10 @@ end if
         !da parallelizzare bene
         if (EnsembleRank==NotWorkingMember) then
             do indexi=1,SeikDim 
-                BaseMember=reshape(LSeik(:,indexi), (/jpk,jpj,jpi,jptra/)
+                BaseMember=reshape(LSeik(:,indexi), (/jpk,jpj,jpi,jptra/))
                 where (SeikTrcMask==0) BaseMember=0.0d0
                 call CutCellsTracer(BaseMember)
-                LSeik(:,indexi)=reshape(BaseMember, (/SpaceDim/)
+                LSeik(:,indexi)=reshape(BaseMember, (/SpaceDim/))
             end do
             
             LSeikT=transpose(LSeik)
@@ -68,14 +68,13 @@ end if
 
                     if (SeikDim/=neigenvalues) then
                         write(*,*) "something strange in the number of eigenvalues!"
-                        write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
                     end if
                     
                     do indexi=1, SeikDim
                         CovSeik1(:,indexi)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
                     end do
-                    CovSeik1=Inverse(CovSeik1)
-                    CovSeik1=MatMul(eigenvectos,CovSeik1)
+                    CovSeik1=Transpose(CovSeik1)
+                    CovSeik1=MatMul(eigenvectors,CovSeik1)
                end if
             end if
             
@@ -115,7 +114,6 @@ end if
                 
                 if (SeikDim/=neigenvalues) then
                     write(*,*) "something strange in the number of eigenvalues!"
-                    write(*,*) "maxNeigenvectors=", maxNeigenvectors, " neigenvalues=", neigenvalues
                 end if
                 
                 CovSeik1=eigenvectors(:,SeikDim:+1:-1)
@@ -137,13 +135,13 @@ end if
 
         end if
 
-        call mpi_bcast(LSeik,SeikDim*SpaceDim, mpi_real8, NotWorkingMemeber, EnsembleComm, ierr)
+        call mpi_bcast(LSeik,SeikDim*SpaceDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
 
 !!!fine parte da parallelizzare bene
 
         if (MyRank==0) then
             if (EnsembleRank==NotWorkingMember) then
-                call SamplingHighOrder( SeikDim, ChangeBaseSeik, ierr)
+                call SamplingHighOrder( SeikDim, ChangeBaseSeik)
                 call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
             else
                 call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
