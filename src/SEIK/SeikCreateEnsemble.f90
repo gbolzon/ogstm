@@ -119,15 +119,11 @@ end if
                 end if
                 
                 CovSeik1=eigenvectors(:,SeikDim:+1:-1)
-                
-                call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
-            
-            else
-            
-                call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
-            
+
             end if
-        
+
+            call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
+
             do indexi=1, SpaceDim
                 if (UseMaxVarSEIK) then
                     if (TempVecSeik(indexi)>sqrt(MaxVarSEIK)) TempVecSeik(indexi)=sqrt(MaxVarSEIK)
@@ -138,23 +134,35 @@ end if
             do indexi=1, SeikDim
                 LSeik(:,indexi)=matmul(CovSeik1(:,indexi),LSeikT)              
             end do
-        
-            call SamplingHighOrder(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
-        
+
+        end if
+
+        call mpi_bcast(LSeik,SeikDim*SpaceDim, mpi_real8, NotWorkingMemeber, EnsembleComm, ierr)
+
+!!!fine parte da parallelizzare bene
+
+        if (MyRank==0) then
+            if (EnsembleRank==NotWorkingMember) then
+                call SamplingHighOrder( SeikDim, ChangeBaseSeik, ierr)
+                call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            else
+                call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            end if
         end if
         
-        
-        
-    end if
+    else
     
-    if (MyRank==0) then
-        if (EnsembleRank==NotWorkingMember) then
-            call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
-            call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
-        else
-            call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+        if (MyRank==0) then
+            if (EnsembleRank==NotWorkingMember) then
+                call Sampling(CovSeik1, SeikDim, ChangeBaseSeik, ierr)
+                call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            else
+                call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
+            end if
         end if
+
     end if
+
     call MPI_Bcast(ChangeCoefSeik, SeikDim, mpi_real8, 0, LocalComm, ierr)
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
     BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))

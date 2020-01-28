@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
+      logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
@@ -429,18 +429,18 @@
             
             if(EnsembleRank==NotWorkingMember) then
                 
-                allocate(AllWeights(0:SeikDim))                    
-                AllWeights = huge(AllWeights(0))
-                AllWeights = 1.0d0/(SeikDim+1)
-                
-                allocate(TTTSeik(SeikDim,SeikDim))
-                TTTSeik = huge(TTTSeik(1,1))
-                call TTTSeik_builder()
-                
                 allocate(CovSeik1(SeikDim,SeikDim))
                 CovSeik1 = huge(CovSeik1(1,1))
                     
                 if(LocalRank==0) then
+
+                    allocate(AllWeights(0:SeikDim))                    
+                    AllWeights = huge(AllWeights(0))
+                    AllWeights = 1.0d0/(SeikDim+1)
+                    
+                    allocate(TTTSeik(SeikDim,SeikDim))
+                    TTTSeik = huge(TTTSeik(1,1))
+                    call TTTSeik_builder()
                 
                     allocate(AllWeightsSqrt(0:SeikDim))                    
                     AllWeightsSqrt = huge(AllWeightsSqrt(0))
