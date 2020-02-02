@@ -76,22 +76,20 @@
       integer, allocatable, dimension (:) :: UDiffMpiCountObs, UDiffMpiDisplacementObs, VDiffMpiCountObs, VDiffMpiDisplacementObs
       
       ! Per UseHighOrder
-      double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors, work, iwork
-      double precision, allocatable, dimension (:) :: eigenvalues
+      double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors
+      double precision, allocatable, dimension (:) :: eigenvalues, work, iwork
       integer, allocatable, dimension(:) :: isuppz
-
-      ! Per High Order
+      integer :: lwork, liwork
       integer :: HighOrderDim
-      double precision, allocatable, dimension (:,:) :: HighOrderMatrix
-      
+      double precision, allocatable, dimension (:,:) :: HighOrderMatrix     
                 
       CONTAINS
        
       subroutine myalloc_seik(LocalRank)
             implicit none
-
+            double precision :: dlamch
             integer, intent(in) :: LocalRank        
-            integer :: indexi
+            integer :: indexi, ierr, neigenvalues
 
             SeikWeight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             
@@ -296,36 +294,6 @@
             allocate(LSeik(SpaceDim,SeikDim))
             LSeik = huge(LSeik(1,1))
 
-            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder))) then
-		        allocate(eigenvalues(SeikDim))
-                eigenvalues = huge(eigenvalues(1))
-                
-                allocate(eigenvectors(SeikDim,SeikDim))
-                eigenvectors = huge(eigenvectors(1,1))
-                
-                allocate(work(SeikDim,SeikDim))
-                work = huge(work(1,1))
-                
-                allocate(iwork(SeikDim,SeikDim))
-                iwork = huge(iwork(1,1))
-                
-                allocate(isuppz(2*SeikDim))
-                isuppz = huge(isuppz(1))
-
-                if (UseHighOrder) then
-                    allocate(LSeikT(SeikDim,SpaceDim))
-                    LSeikT = huge(LSeikT(1,1))
-                    
-                    allocate(SvdMatrix(SeikDim,SeikDim))
-                    SvdMatrix = huge(SvdMatrix(1,1))
-
-                    allocate(SvdMatrix(SeikDim,SeikDim))
-                    SvdMatrix = huge(SvdMatrix(1,1))
-
-                end if
-                
-            end if
-            
             allocate(MpiCount(0:SeikDim))
             MpiCount = huge(MpiCount(1))
             MpiCount=SpaceDim
@@ -470,6 +438,68 @@
                 
             end if
             
+            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder)) .and. (SeikDim>0)) then
+                
+                if (UseHighOrder) then
+                    allocate(LSeikT(SeikDim,SpaceDim))
+                    LSeikT = huge(LSeikT(1,1))
+
+                    allocate(SvdMatrix(SeikDim,SeikDim))
+                    SvdMatrix = huge(SvdMatrix(1,1))
+                end if
+ 
+                if (LocalRank==0) then
+                allocate(eigenvalues(SeikDim))
+                eigenvalues = huge(eigenvalues(1))
+
+                allocate(eigenvectors(SeikDim,SeikDim))
+                eigenvectors = huge(eigenvectors(1,1))
+
+                allocate(isuppz(2*SeikDim))
+                isuppz = huge(isuppz(1))
+
+                allocate(work(SeikDim*SeikDim))
+                work = huge(work(1))
+
+                allocate(iwork(SeikDim*SeikDim))
+                iwork = huge(iwork(1))
+
+                call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+                        isuppz, work, -1, iwork, -1, ierr)
+! for some reason the workspace query does not work on iwork. I'll use minimum value= 10*n
+!write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+!                write(*,*) 'Parameters for dsyevr:'
+!                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
+!                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+                lwork=Int(work(1))
+                deallocate(work)
+                allocate(work(lwork))
+                work = huge(work(1))
+
+!                call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+!                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+!                        isuppz, work, lwork, iwork, -1, ierr)
+!
+!write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+!                write(*,*) 'Parameters for dsyevr:'
+!                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
+!                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+                liwork=10*SeikDim !Int(iwork(1))
+                deallocate(iwork)
+                allocate(iwork(liwork))
+                iwork = huge(iwork(1))
+
+                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+                write(*,*) 'Parameters for dsyevr:'
+                write(*,*) 'lwork= ', lwork, ' liwork= ', liwork
+                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+            end if
+            end if
+
             if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
             
                 DimForPCA=100

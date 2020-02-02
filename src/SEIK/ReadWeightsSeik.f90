@@ -49,7 +49,7 @@ SUBROUTINE ReadWeightsSeik
             AllWeights=AllWeightsSqrt**2
             AllWeightsSqrt1=1.0d0/AllWeightsSqrt
             call TTTSeik_builder()
-            call MPI_Scatter(AllWeights,SeikDim+1,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
+            call MPI_Scatter(AllWeights,1,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
         end if
         
     else

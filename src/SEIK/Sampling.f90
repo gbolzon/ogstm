@@ -17,7 +17,7 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
     else
         call dsyevr("V", "A", "U", nside, CovMatrix1, nside, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
             dlamch('S'), neigenvalues, eigenvalues, eigenvectors, nside, &
-            isuppz, work, nside*nside, iwork, nside*nside, ierr)
+            isuppz, work, lwork, iwork, liwork, ierr)
 
         if (ierr/=0) then
             write(*,*) "something wrong with svd. I will stop"

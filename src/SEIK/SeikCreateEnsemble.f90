@@ -59,7 +59,7 @@ end if
                 else
                     call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
                         dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
-                        isuppz, work, SeikDim*SeikDim, iwork, SeikDim*SeikDim, ierr)
+                        isuppz, work, lwork, iwork, liwork, ierr)
 
                     if (ierr/=0) then
                         write(*,*) "something wrong with svd. I will stop"
@@ -105,7 +105,7 @@ end if
             if (MyRank==0) then
                 call dsyevr("V", "A", "U", SeikDim, SvdMatrix, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, & 
                     dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
-                    isuppz, work, SeikDim*SeikDim, iwork, SeikDim*SeikDim, ierr)
+                    isuppz, work, lwork, iwork, liwork, ierr)
                     
                 if (ierr/=0) then
                     write(*,*) "something wrong with svd. I will stop"
