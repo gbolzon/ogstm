@@ -290,7 +290,7 @@
 
       call MPI_ALLREDUCE(Fsize, FsizeMax, 1, MPI_INTEGER, MPI_MAX,LocalComm, ierr)
 
-      write(*,*) 'myrank=', myrank, ' Fsize = ' , Fsize,' FsizeMax = ' , FsizeMax
+!      write(*,*) 'myrank=', myrank, ' Fsize = ' , Fsize,' FsizeMax = ' , FsizeMax
 
       if (Fsize.NE.0) then
          call alloc_DIA_local_flx
@@ -300,13 +300,13 @@
 
       if (Fsize.NE.0) then
          B=FLXRe_Indexing()
-         write(*,*) 'domrea->FLXRE_Indexing finita, myrank=', myrank
+!         write(*,*) 'domrea->FLXRE_Indexing finita, myrank=', myrank
 
       endif
 
       call alloc_DIA_MPI_flx()
 
-      write(*,*) 'DOMREA finita, myrank = ', myrank
+!      write(*,*) 'DOMREA finita, myrank = ', myrank
 
    !   DEALLOCATE(idxt)
     !  DEALLOCATE(idxt2glo)

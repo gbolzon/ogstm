@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
+      logical, parameter :: UseInflation=.false., UseHighOrder=.false., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
@@ -626,12 +626,14 @@
                 deallocate(VDiffMpiDisplacementObs)
             end if
             
-            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder))) then
+            if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder)) .and. (SeikDim>0)) then
+                if (LocalRank==0) then
                 deallocate(eigenvalues)
                 deallocate(eigenvectors)
                 deallocate(work)
                 deallocate(iwork)
                 deallocate(isuppz)
+                end if
 
                 if (UseHighOrder) then
                     deallocate(LSeikT)
@@ -648,11 +650,11 @@
             end if
             
             if (EnsembleRank==NotWorkingMember) then
-                deallocate(AllWeights)
-                deallocate(TTTSeik)
                 deallocate(CovSeik1)
                 
                 if (LocalRank==0) then
+                    deallocate(AllWeights)
+                    deallocate(TTTSeik)
                     deallocate(AllWeightsSqrt)
                     deallocate(AllWeightsSqrt1)                    
                     deallocate(CovSmoother1part)
