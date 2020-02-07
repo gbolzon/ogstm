@@ -75,6 +75,9 @@ end if
                     end do
                     CovSeik1=Transpose(CovSeik1)
                     CovSeik1=MatMul(eigenvectors,CovSeik1)
+
+write(*,*) "After Sym change of base= ", CovSeik1
+
                end if
             end if
             
@@ -90,7 +93,7 @@ end if
             do indexi=1,SpaceDim
                 TempSliceSeik=LSeikT(:,indexi)
                 TempVecSeik(indexi)=norm2(TempSliceSeik)
-                if (TempVecSeik(indexi)>1.0d-4) then
+                if (TempVecSeik(indexi)>1.0d-8) then
                     LSeikT(:,indexi)=TempSliceSeik/TempVecSeik(indexi)
                 else
                     LSeikT(:,indexi)=0.0d0
@@ -103,6 +106,9 @@ end if
             call mpi_reduce(CovSeik1,SvdMatrix, SeikDim*SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
         
             if (MyRank==0) then
+
+write(*,*) "LTL= ", SvdMatrix
+
                 call dsyevr("V", "A", "U", SeikDim, SvdMatrix, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, & 
                     dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
                     isuppz, work, lwork, iwork, liwork, ierr)
@@ -117,6 +123,9 @@ end if
                 end if
                 
                 CovSeik1=eigenvectors(:,SeikDim:+1:-1)
+
+write(*,*) "eigenvalues= ", eigenvalues
+write(*,*) "eigenvectors= ", CovSeik1
 
             end if
 
@@ -142,6 +151,9 @@ end if
         if (MyRank==0) then
             if (EnsembleRank==NotWorkingMember) then
                 call SamplingHighOrder( SeikDim, ChangeBaseSeik)
+
+write(*,*) "ChangeBaseSeik= ", ChangeBaseSeik
+
                 call MPI_Scatter(ChangeBaseSeik, SeikDim, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
             else
                 call MPI_Scatter(0, 0, mpi_real8, ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)

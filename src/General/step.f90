@@ -251,7 +251,7 @@ use StringSEIK
         if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
             call SeikCreateEnsemble()
 
-            if (.false.) then !.true. if u want to save the ensemble before the evolution
+            if (.true.) then !.true. if u want to save the ensemble before the evolution
                 call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/', trn)
             endif
 
@@ -304,7 +304,7 @@ end if
 #ifdef ExecDA
         if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
 
-            if (.false.) then !.true. if you want to save the ensamble after the evolution
+            if (.true.) then !.true. if you want to save the ensamble after the evolution
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/', trn)
             endif
 

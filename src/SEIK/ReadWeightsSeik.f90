@@ -50,6 +50,10 @@ SUBROUTINE ReadWeightsSeik
             AllWeightsSqrt1=1.0d0/AllWeightsSqrt
             call TTTSeik_builder()
             call MPI_Scatter(AllWeights,1,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
+
+write(*,*) "HighOrderMatrix= ", HighOrderMatrix
+write(*,*) "AllWeights= ", AllWeights
+
         end if
         
     else
