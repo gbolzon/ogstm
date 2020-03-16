@@ -81,7 +81,7 @@
       integer, allocatable, dimension(:) :: isuppz
       integer :: lwork, liwork
       integer :: HighOrderDim
-      double precision, allocatable, dimension (:,:) :: HighOrderMatrix     
+      double precision, allocatable, dimension (:,:) :: HighOrderMatrix, HighOrderRotation     
                 
       CONTAINS
        
@@ -638,7 +638,10 @@
                 if (UseHighOrder) then
                     deallocate(LSeikT)
                     deallocate(SvdMatrix)
-                    if (LocalRank==0) deallocate(HighOrderMatrix)
+                    if (LocalRank==0) then
+                        deallocate(HighOrderMatrix)
+                        deallocate(HighOrderRotation)
+                    end if
                 end if
             end if
            

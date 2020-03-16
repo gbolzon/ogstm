@@ -30,6 +30,7 @@ SUBROUTINE ReadWeightsSeik
             end if
 
             allocate(HighOrderMatrix(SeikDim+1,HighOrderDim+1))
+            allocate(HighOrderRotation(HighOrderDim,HighOrderDim))
 
             read(UnitSEIK,*,iostat=ierr) HighOrderMatrix !verifica la costruzione di TTT. davvero si divide per i pesi??? Si', X T (T^T W^-1 T)^-1 T^T W^-1 = X se X ha media nulla.
             if (ierr/=0) then

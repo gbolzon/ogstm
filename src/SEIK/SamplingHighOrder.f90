@@ -10,8 +10,10 @@ subroutine SamplingHighOrder(nside, ChangeBase)
     double precision, dimension(nside,0:nside), intent(out) :: ChangeBase
     integer :: indexi
     !double precision :: dlamch
-    
-    OrtMatrixSampling(:,1:HighOrderDim+1)=HighOrderMatrix
+
+    call OrtMatrix(HighOrderRotation, HighOrderDim,HighOrderDim, 0, HighOrderDim)    
+    OrtMatrixSampling(:,1)=HighOrderMatrix(:,1)
+    OrtMatrixSampling(:,2:HighOrderDim+1)=MatMul(HighOrderMatrix(:,2:HighOrderDim+1),HighOrderRotation)
     call OrtMatrix(OrtMatrixSampling, nside+1,nside+1, HighOrderDim+1, nside-HighOrderDim) 
     do indexi=2, nside+1
         OrtMatrixSampling(:,indexi)=OrtMatrixSampling(:,indexi)*AllWeightsSqrt1
