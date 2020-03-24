@@ -62,8 +62,9 @@ integer :: indexk, indexn
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     
     if (UseMaxVarSEIK) then
-        where (trnVariance>MaxVarSEIK) BaseMember=BaseMember*sqrt(MaxVarSEIK/trnVariance)
+        where (trnVariance>MaxVarVec) BaseMember=BaseMember*sqrt(MaxVarVec/trnVariance)
         
+        !qui bisognerebbe introdurre maxvarUvec ecc
         if (UseDiffCov) then
             TempUDiffBaseMember=UDiffBaseMember**2*SeikWeight
             call MPI_AllReduce(TempUDiffBaseMember, UVariance, UDiffSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)

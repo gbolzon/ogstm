@@ -247,9 +247,10 @@ else
     
     if(myrank==0) write(*,*) "preparing and writing base"
 
+    !in questa parte forse conviene sostituire con maxvarvec?
     do indexi=1, SpaceDim
         if (UseMaxVarSEIK) then
-            if (PCAVar(indexi)>sqrt(MaxVarSEIK)) PCAVar(indexi)=sqrt(MaxVarSEIK)
+            if (PCAVar(indexi)>sqrt(MaxVarSEIK)) PCAVar(indexi)=sqrt(MaxVarSEIK) 
         end if
         PCAMatrix(:, indexi)=PCAMatrix(:, indexi)*PCAVar(indexi)
     end do

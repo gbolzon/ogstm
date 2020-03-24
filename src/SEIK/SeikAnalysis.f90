@@ -85,7 +85,7 @@ write(*,*) "TempSliceSeik2=", TempSliceSeik2
         else
             call mpi_gatherv(TempSliceSeik2,SeikDim,mpi_real8,0,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
         end if
-        ChangeCoefSeik=TempSliceSeik2 !Si puo' eliminare TempSlice2 in facore di ChangeCoefSeik?
+        ChangeCoefSeik=TempSliceSeik2 !Si puo' eliminare TempSlice2 in favore di ChangeCoefSeik?
         call MPI_Bcast( ChangeCoefSeik, SeikDim, mpi_real8, NotWorkingMember, EnsembleComm, ierr)        
     else
         call mpi_reduce(TempSliceSeik,0, SeikDim, mpi_real8, mpi_sum, 0, LocalComm, ierr)
@@ -97,7 +97,7 @@ write(*,*) "TempSliceSeik2=", TempSliceSeik2
     
     if (UseMaxVarSEIK) then
         trnEnsembleWeighted=trnEnsemble**2
-        where (trnEnsembleWeighted>MaxVarSEIK) trnEnsemble=sign(sqrt(MaxVarSEIK),trnEnsemble)
+        where (trnEnsembleWeighted>MaxVarVec) trnEnsemble=sign(sqrt(MaxVarVec),trnEnsemble)
     end if
     
     trnEnsemble=exp(trnEnsemble)

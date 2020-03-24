@@ -15,6 +15,8 @@
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
+      double precision, allocatable, dimension (:,:,:,:) :: MaxVarVec
+      logical :: MaxVarFirstTime
 
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
@@ -106,11 +108,19 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.09d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
-            ObsErrorDiag1 = 1/(log(1.13d0)**2) 
+            ObsErrorDiag1 = 1/(log(1.03d0)**2) 
+            
+            if (UseMaxVarSEIK) then
+                allocate(MaxVarVec(jpk,jpj,jpi,jptra))
+                MaxVarVec=Huge(MaxVarVec(1,1,1,1))
+                MaxVarVec=MaxVarSEIK*(27800*22220*3)
+                
+                MaxVarFirstTime=.true.
+            end if
             
             if (UseDiffCov) then
                 UDiffSpaceDim=jpk*jpj*(jpi-1)*jptra
@@ -580,6 +590,10 @@
             deallocate(SeikMask)
             deallocate(SeikTrcMask)
             deallocate(trnVariance)
+            
+            if (UseMaxVarSEIK) then
+                deallocate(MaxVarVec)
+            end if
             
             if (UseDiffCov) then                
                 deallocate(UDiffModelErrorDiag1)

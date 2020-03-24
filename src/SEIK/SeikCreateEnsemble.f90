@@ -93,7 +93,7 @@ write(*,*) "After Sym change of base= ", CovSeik1
             do indexi=1,SpaceDim
                 TempSliceSeik=LSeikT(:,indexi)
                 TempVecSeik(indexi)=norm2(TempSliceSeik)
-                if (TempVecSeik(indexi)>1.0d-8) then
+                if (TempVecSeik(indexi)>1.0d-4) then
                     LSeikT(:,indexi)=TempSliceSeik/TempVecSeik(indexi)
                 else
                     LSeikT(:,indexi)=0.0d0
@@ -131,12 +131,16 @@ write(*,*) "eigenvectors= ", CovSeik1
 
             call mpi_bcast(CovSeik1,SeikDim*SeikDim, mpi_real8, 0, LocalComm, ierr)
 
+ 
             do indexi=1, SpaceDim
+if (.false.) then !questa parte dovrebbe essere inutile perche' la varianza dovrebbe essere gia' stata controllata al forecast, e l'analisi la riduce      
                 if (UseMaxVarSEIK) then
                     if (TempVecSeik(indexi)>sqrt(MaxVarSEIK)) TempVecSeik(indexi)=sqrt(MaxVarSEIK)
                 end if
+end if                
                 LSeikT(:, indexi)=LSeikT(:, indexi)*TempVecSeik(indexi)
             end do
+
 
             do indexi=1, SeikDim
                 LSeik(:,indexi)=matmul(CovSeik1(:,indexi),LSeikT)              
@@ -177,21 +181,18 @@ write(*,*) "ChangeBaseSeik= ", ChangeBaseSeik
     TempVecSeik=matmul(Lseik,ChangeCoefSeik)
     BaseMember=reshape(TempVecSeik,(/ jpk,jpj,jpi,jptra /))
 
-if (.false.) then
+if (UseMaxVarSEIK) then
 ! questa parte va rimossa, perche' inutile durante il main loop, ma non ho tempo ora.
 ! L'unico momento in cui serve e' alla creazione del primo ensamble (se la PCA non è gia'
 ! stata fatta con UseMaxVarSEIK). Bisognerebbe metterla su ReadBaseSeik.
 ! Per il momento la tolgo, tanto al massimo avrò un po' di instabilita' al primo timestep.
-if (UseMaxVarSEIK) then
+!reinserito con firsttime
+if (MaxVarFirstTime) then
+    MaxVarFirstTime=.false.
     trnEnsembleWeighted=BaseMember**2
     trnEnsembleWeighted=trnEnsembleWeighted*SeikWeight
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
-    where (trnVariance>MaxVarSEIK)
-        trnEnsemble=sqrt(MaxVarSEIK/trnVariance)
-    elsewhere
-        trnEnsemble=1.0d0
-    end where
-    BaseMember=BaseMember*trnEnsemble
+    where (trnVariance>MaxVarSEIK) BaseMember=BaseMember*sqrt(MaxVarSEIK/trnVariance)
 end if
 end if
 

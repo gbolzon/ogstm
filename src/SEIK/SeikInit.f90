@@ -53,7 +53,8 @@ subroutine SeikInit
     SeikMask=BfmMask !per il momento preferisco la bfmmask
     SeikTrcMask=0
     do indexi=1,jptra
-        if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask
+        !if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask usa questa se vuoi solo le variabili di clorofilla
+        SeikTrcMask(:,:,:,indexi)=SeikMask
     end do
 
 
@@ -77,6 +78,9 @@ subroutine SeikInit
         end do
         BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t_0*SeikMask
     end do
+    
+    MaxVarVec=MaxVarVec/BaseMember
+    
     call CutCellsTracer(BaseMember)
     
     totalsum=0.0d0
