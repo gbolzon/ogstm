@@ -14,7 +14,7 @@
       logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
-      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-5
+      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4
       double precision, allocatable, dimension (:,:,:,:) :: MaxVarVec
       logical :: MaxVarFirstTime
 
@@ -108,7 +108,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.09d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
@@ -117,7 +117,7 @@
             if (UseMaxVarSEIK) then
                 allocate(MaxVarVec(jpk,jpj,jpi,jptra))
                 MaxVarVec=Huge(MaxVarVec(1,1,1,1))
-                MaxVarVec=MaxVarSEIK*(27800*22220*3)
+                MaxVarVec=MaxVarSEIK*(27800*22220*3) ! area media di una cella in superficie
                 
                 MaxVarFirstTime=.true.
             end if

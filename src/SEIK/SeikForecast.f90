@@ -8,6 +8,7 @@ character(len=*), intent(in) :: datestring
     INTEGER :: ierr, indexj, indexi
 integer :: indexk, indexn
 
+if(.false.) then !vecchia versione, buggata a gibilterra di sicuro, e imprcisa in generale
     where (trn<CutOffValue) trn=CutOffValue !this should already be done with SMALL in another routine, but I don't have time to check now
     do indexi=1, jptra
         where (tmask==1) 
@@ -24,9 +25,22 @@ integer :: indexk, indexn
     call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     
     BaseMember=BaseMember-trn
+end if
+
+    trnEnsemble=trn
+    BaseMember=log(trn)
+    where (BaseMember<log(CutOffValue)) BaseMember=log(CutOffValue)
+    trnEnsembleWeighted=BaseMember*SeikWeight
     
-    where (SeikTrcMask==0) BaseMember=0.0d0
+    call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     
+    BaseMember=BaseMember-trn
+    where (SeikTrcMask==0) BaseMember=0.0d0   
+    
+    trnEnsembleWeighted=log(trnEnsemble)*SeikWeight
+    
+    call MPI_AllReduce(trnEnsembleWeighted, trn, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
+
     !if (CutLeft) BaseMember(:,:,1,:)=0.0d0
     !if (CutRight) BaseMember(:,:,jpi,:)=0.0d0
     !if (CutTop) BaseMember(:,jpj,:,:)=0.0d0

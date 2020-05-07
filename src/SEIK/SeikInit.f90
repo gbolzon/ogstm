@@ -2,6 +2,7 @@ subroutine SeikInit
     use myalloc
     use mpi
     USE DA_mem
+    use DAVariables
     
     implicit none
     
@@ -53,7 +54,7 @@ subroutine SeikInit
     SeikMask=BfmMask !per il momento preferisco la bfmmask
     SeikTrcMask=0
     do indexi=1,jptra
-        !if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask usa questa se vuoi solo le variabili di clorofilla
+        !if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili di clorofilla
         SeikTrcMask(:,:,:,indexi)=SeikMask
     end do
 
@@ -84,9 +85,25 @@ subroutine SeikInit
     call CutCellsTracer(BaseMember)
     
     totalsum=0.0d0
-    partialsum=sum(BaseMember(:,:,:,1))
+    if(.false.) then
+        partialsum=sum(BaseMember(:,:,:,1)) !use this line for renormalization over whole spacial domain
+    else
+        partialsum=sum(BaseMember(1,:,:,1)) !use this line for renormalizatoin over surface
+    end if
     
     BaseMember=BaseMember*SeikTrcMask
+    
+!wrong procedure. this is saying that i don't trust any non-chl variable.
+!do indexi=1,jptra
+!    if (.not.(isaDAVAR(ctrcnm(indexi)))) BaseMember(:,:,:,indexi)=0.0d0 
+!end do
+
+!procedura temporanea per dare meno varianza alle variabili non chl
+do indexi=1,jptra
+    !if (.not.(isaDAVAR(ctrcnm(indexi)))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*100 
+    !if (isaDAVAR(ctrcnm(indexi))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*0.01d0
+    if (IsHighVariance(ctrcnm(indexi))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*0.01d0
+end do
 
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum=", totalsum
