@@ -134,7 +134,9 @@ end if
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum obs=", totalsum
     
-    ObsErrorDiag1=ObsErrorDiag1/totalsum*reshape(ObsBaseMember,(/ObsSpaceDim/))
+    ObsErrorArea=reshape(ObsBaseMember,(/ObsSpaceDim/))/totalsum
+    
+    ObsErrorDiag1=ObsErrorDiag1*ObsErrorArea
     
     ObsBaseMember=Huge(ObsBaseMember(1,1))
     

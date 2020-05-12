@@ -48,7 +48,8 @@
       !for analisis
       integer :: ObsSpaceDim
       double precision, allocatable, dimension(:,:) :: ObsDataSeik, ComputedObsSeik, MisfitSeik
-      double precision, allocatable, dimension(:) :: ObsErrorDiag1
+      double precision, allocatable, dimension(:) :: ObsErrorDiag1, ObsErrorArea
+      double precision :: ObsErrorValue
       double precision, allocatable, dimension(:,:) :: ComputedObsMean, ObsBaseMember
       double precision, allocatable, dimension(:,:) :: HLSeik 
       integer, allocatable, dimension (:) :: MpiCountObs, MpiDisplacementObs
@@ -110,9 +111,13 @@
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
             ModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
+            ObsErrorValue=1.06d0
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
-            ObsErrorDiag1 = 1/(log(1.03d0)**2) 
+            ObsErrorDiag1 = 1/(log(ObsErrorValue)**2) 
+            
+            allocate(ObsErrorArea(ObsSpaceDim))                    
+            ObsErrorArea = huge(ObsErrorArea(1))
             
             if (UseMaxVarSEIK) then
                 allocate(MaxVarVec(jpk,jpj,jpi,jptra))
@@ -577,6 +582,7 @@
             deallocate(ComputedObsSeik)
             deallocate(MisfitSeik)
             deallocate(ObsErrorDiag1)
+            deallocate(ObsErrorArea)
             deallocate(ComputedObsMean)
             deallocate(ObsBaseMember)
             deallocate(HLSeik)

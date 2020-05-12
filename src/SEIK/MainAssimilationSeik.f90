@@ -129,35 +129,65 @@ if (SeikDim>0) then
         fillvalue999=-999.0d0
         fillValue = 1.0d20
 
-        do ji=1,jpi
-            do jj=1,jpj
-                if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
-                    (ObsDataSeik(jj,ji).eq.fillvalue999).or.(SeikMask(1,jj,ji).eq.0)) then !SeikMask instead of tmask instead of bfmmask
-                    ComputedObsSeik(jj,ji)=0.0d0
-                    ObsDataSeik(jj,ji)=0.0d0
-                    MisfitSeik(jj,ji)=0.0d0
-                else
-                    if (ComputedObsSeik(jj,ji)>0.01d0) then
-                        ComputedObsSeik(jj,ji)=log(ComputedObsSeik(jj,ji))
+        if (.false.) then !false for usual method, true for bigger error for smaller values
+            do ji=1,jpi
+                do jj=1,jpj
+                    if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
+                        (ObsDataSeik(jj,ji).eq.fillvalue999).or.(SeikMask(1,jj,ji).eq.0)) then !SeikMask instead of tmask instead of bfmmask
+                        ComputedObsSeik(jj,ji)=0.0d0
+                        ObsDataSeik(jj,ji)=0.0d0
+                        MisfitSeik(jj,ji)=0.0d0
                     else
-                        ComputedObsSeik(jj,ji)=log(0.01d0)
+                        if (ComputedObsSeik(jj,ji)>0.01d0) then
+                            ComputedObsSeik(jj,ji)=log(ComputedObsSeik(jj,ji))
+                        else
+                            ComputedObsSeik(jj,ji)=log(0.01d0)
+                        end if
+                        
+                        if (ObsDataSeik(jj,ji)>0.01d0) then
+                            ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
+                        else
+                            ObsDataSeik(jj,ji)=log(0.01d0)
+                        end if
+                        
+                        if (MisfitSeik(jj,ji)>0.01d0) then
+                            MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
+                        else
+                            MisfitSeik(jj,ji)=log(0.01d0)
+                        end if
+                        MisfitSeik(jj,ji)=ObsDataSeik(jj,ji)-MisfitSeik(jj,ji)
                     end if
-                    
-                    if (ObsDataSeik(jj,ji)>0.01d0) then
-                        ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
-                    else
-                        ObsDataSeik(jj,ji)=log(0.01d0)
-                    end if
-                    
-                    if (MisfitSeik(jj,ji)>0.01d0) then
-                        MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
-                    else
-                        MisfitSeik(jj,ji)=log(0.01d0)
-                    end if
-                    MisfitSeik(jj,ji)=ObsDataSeik(jj,ji)-MisfitSeik(jj,ji)
-                end if
+                end do
             end do
-        end do
+        else
+            ObsBaseMember=0.0d0
+            do ji=1,jpi
+                do jj=1,jpj
+                    if ( isnanSeik(ObsDataSeik(jj,ji)).or.(ObsDataSeik(jj,ji).eq.fillValue).or. & 
+                        (ObsDataSeik(jj,ji).eq.fillvalue999).or.(SeikMask(1,jj,ji).eq.0)) then !SeikMask instead of tmask instead of bfmmask
+                        ComputedObsSeik(jj,ji)=0.0d0
+                        ObsDataSeik(jj,ji)=0.0d0
+                        MisfitSeik(jj,ji)=0.0d0
+                    else
+                        ComputedObsSeik(jj,ji)=log(ComputedObsSeik(jj,ji))
+                        MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
+                        
+                        if (ObsDataSeik(jj,ji)>0.01d0) then
+                            ObsBaseMember(jj,ji)=1/(log((ObsDataSeik(jj,ji)-0.01d0)/(ObsErrorValue*ObsDataSeik(jj,ji)))**2)
+                            ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
+                            
+                        else
+                            ComputedObsSeik(jj,ji)=0.0d0
+                            ObsDataSeik(jj,ji)=0.0d0
+                            MisfitSeik(jj,ji)=0.0d0
+                        end if
+                        
+                        MisfitSeik(jj,ji)=ObsDataSeik(jj,ji)-MisfitSeik(jj,ji)
+                    end if
+                end do
+            end do
+            ObsErrorDiag1=reshape(ObsBaseMember,(/ObsSpaceDim/))*ObsErrorArea
+        end if
 
 !call mpi_barrier(mpi_comm_world, ierr)
 !write(*,*) EnsembleRank, myrank, "analisi5"
