@@ -16,7 +16,7 @@ subroutine SeikInit
     CutTop=(.not.(nlej==jpj))
     CutBottom=(.not.(nldj==1))
 
-    
+if (.false.) then    
     call readnc_slice_double_2d("BC/TIN_yyyy0115-00:00:00.nc", "riv_N3n", TempMask2D)
     call readnc_slice_double("BC/GIB_yyyy0215-12:00:00.nc", "gib_N6r", TempMask3D)
     SeikMask=0
@@ -50,12 +50,24 @@ subroutine SeikInit
             end do
         end do
     end do
+end if
+    
+    SeikMask=BfmMask
+    
+    if (.false.) then ! true if you want to set the mask without coastal zones
+        do indexi=1, jpi
+            do indexj=1, jpj
+                !11=50m, 17=100m, 25=200m
+                if (bfmMask(26,jpj, jpi)==0) SeikMask(1:25,jpj,jpi)=0
+            end do
+        end do
+    end if
 
-    SeikMask=BfmMask !per il momento preferisco la bfmmask
     SeikTrcMask=0
     do indexi=1,jptra
         !if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili di clorofilla
-        SeikTrcMask(:,:,:,indexi)=SeikMask
+        !SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi tutte le variabili
+        if (IsSEIKVariable(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili definite su DAVariables
     end do
 
 
@@ -99,10 +111,23 @@ subroutine SeikInit
 !end do
 
 !procedura temporanea per dare meno varianza alle variabili non chl
-do indexi=1,jptra
-    !if (.not.(isaDAVAR(ctrcnm(indexi)))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*100 
-    !if (isaDAVAR(ctrcnm(indexi))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*0.01d0
-    if (IsHighVariance(ctrcnm(indexi))) BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*0.01d0
+do indexk=1,jptra
+    !if (.not.(isaDAVAR(ctrcnm(indexk)))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*100 
+    !if (isaDAVAR(ctrcnm(indexk))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+    if (IsHighVariance(ctrcnm(indexk))) then
+        !BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+    
+        if (.true.) then ! true if you want to set small model error on the coasts
+            do indexi=1, jpi
+                do indexj=1, jpj
+                    !11=50m, 17=100m, 25=200m
+                    if (SeikMask(26,jpj, jpi)/=0) BaseMember(:,jpj,jpi,indexk)=BaseMember(:,jpj,jpi,indexk)*0.001d0
+                end do
+            end do
+        else
+            BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+        end if
+    end if
 end do
 
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
@@ -133,6 +158,15 @@ end if
 
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum obs=", totalsum
+    
+    if (.true.) then ! true if you want to set high obs error on the coasts
+        do indexi=1, jpi
+            do indexj=1, jpj
+                !11=50m, 17=100m, 25=200m
+                if (SeikMask(26,jpj, jpi)/=0) ObsBaseMember(jpj,jpi)=ObsBaseMember(jpj,jpi)*0.01d0
+            end do
+        end do
+    end if
     
     ObsErrorArea=reshape(ObsBaseMember,(/ObsSpaceDim/))/totalsum
     

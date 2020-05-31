@@ -30,7 +30,7 @@ end function
 end module
 
 
-subroutine PCASeik !ATTENTION! This routine need a correction: It is necessary to put ghost cells to zero!
+subroutine PCASeik 
     use mpi
     use myalloc
     use StatSEIK
@@ -102,13 +102,18 @@ if (.false.) then !true to calcolate mean, false for svd
 
 else    
     
-    write(*,*) "r=", myrank, "sum SeikMask=", sum(SeikMask)
+!write(*,*) "r=", myrank, "sum SeikMask=", sum(SeikMask)
+
     do indexi=1, nHistoryForSVD
-        do indexj=1, jptra
-            where (SeikMask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0 !instead of bfmmask
-            !HistoryForSVD(:,:,:,indexj, indexi)=HistoryForSVD(:,:,:,indexj, indexi)*bfmmask
-        end do
+    
+if (.false.) then !true for seikmask, false for SeikTrcMask
+do indexj=1, jptra
+where (SeikMask==0) HistoryForSVD(:,:,:,indexj, indexi)=0.0d0 !instead of bfmmask
+!HistoryForSVD(:,:,:,indexj, indexi)=HistoryForSVD(:,:,:,indexj, indexi)*bfmmask
+end do
+else
         where (SeikTrcMask==0) HistoryForSVD(:,:,:,:, indexi)=0.0d0
+end if
         call CutCellsTracer(HistoryForSVD(:,:,:,:, indexi))
     end do
     PCAVar=0.0d0

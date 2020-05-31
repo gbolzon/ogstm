@@ -173,7 +173,7 @@ if (SeikDim>0) then
                         MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
                         
                         if (ObsDataSeik(jj,ji)>0.01d0) then
-                            ObsBaseMember(jj,ji)=1/(log((ObsDataSeik(jj,ji)-0.01d0)/(ObsErrorValue*ObsDataSeik(jj,ji)))**2)
+                            ObsBaseMember(jj,ji)=1/(log((ObsDataSeik(jj,ji)-0.002d0)/(ObsErrorValue*ObsDataSeik(jj,ji)))**2)
                             ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
                             
                         else

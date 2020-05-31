@@ -16,4 +16,17 @@ module DAVariables
         end if
     end function
     
+    function IsSEIKVariable(name)
+        implicit none
+        
+        character(LEN=*), intent(in) :: name
+        logical :: IsSEIKVariable
+        
+        if ((name(1:1).eq."P").or.(name(1:1).eq."N").or.(name(1:1).eq."O")) then
+            IsSEIKVariable=.true.
+        else
+            IsSEIKVariable=.false.
+        end if
+    end function
+    
 end module
