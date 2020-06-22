@@ -111,7 +111,7 @@
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
             ModelErrorDiag1 = 1/(log(1.2d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
-            ObsErrorValue=1.01d0
+            ObsErrorValue=1.03d0
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
             ObsErrorDiag1 = 1/(log(ObsErrorValue)**2) 
@@ -551,14 +551,32 @@
             implicit none
             double precision, dimension(0:SeikDim,SeikDim) :: matrixT
             integer :: indexi
+            if (.false.) then ! true if you want to build T matrix first, false if you want to make it faster.
             
-            do indexi=1, SeikDim
-                matrixT(:,indexi)=-AllWeights
-                matrixT(indexi-1,indexi)=matrixT(indexi-1,indexi)+1
-            end do
-            do indexi=1, SeikDim
-                TTTSeik(:,indexi)=matmul(matrixT(:,indexi)/AllWeights,matrixT)
-            end do
+                do indexi=1, NotWorkingMember
+                    matrixT(:,indexi)=-AllWeights
+                    matrixT(indexi-1,indexi)=matrixT(indexi-1,indexi)+1
+                end do
+                do indexi=NotWorkingMember+1, SeikDim
+                    matrixT(:,indexi)=-AllWeights
+                    matrixT(indexi,indexi)=matrixT(indexi,indexi)+1
+                end do
+                do indexi=1, SeikDim
+                    TTTSeik(:,indexi)=matmul(matrixT(:,indexi)/AllWeights,matrixT)
+                end do
+                
+            else
+            
+                do indexi=1, NotWorkingMember
+                    TTTSeik(:,indexi)=-1
+                    TTTSeik(indexi,indexi)=1/AllWeights(indexi-1)-1
+                end do
+                do indexi=NotWorkingMember+1, SeikDim
+                    TTTSeik(:,indexi)=-1
+                    TTTSeik(indexi,indexi)=1/AllWeights(indexi)-1
+                end do
+            
+            end if
             
       end subroutine
 
