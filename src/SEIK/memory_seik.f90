@@ -12,15 +12,16 @@
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
+      logical, parameter :: UseLocalForecast=.true., UseLocalAnalysis=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4
       double precision, allocatable, dimension (:,:,:,:) :: MaxVarVec
-      logical :: MaxVarFirstTime
+      logical :: FirstTimeSampling
 
       double precision, allocatable, dimension (:,:,:,:) :: trnEnsemble, trnEnsembleWeighted, BaseMember
       double precision, allocatable, dimension (:) :: ModelErrorDiag1
-      double precision, allocatable, dimension (:,:) :: LSeik
+      double precision, allocatable, dimension (:,:), target :: LSeik
       double precision :: SeikWeight 
       double precision, allocatable, dimension (:,:) :: ChangeBaseSeik
       double precision, allocatable, dimension (:) :: ChangeCoefSeik
@@ -80,11 +81,22 @@
       
       ! Per UseHighOrder
       double precision, allocatable, dimension (:,:) :: LSeikT, SvdMatrix, eigenvectors
-      double precision, allocatable, dimension (:) :: eigenvalues, work, iwork
-      integer, allocatable, dimension(:) :: isuppz
+      double precision, allocatable, dimension (:) :: eigenvalues, work
+      integer, allocatable, dimension(:) :: isuppz, iwork
       integer :: lwork, liwork
       integer :: HighOrderDim
       double precision, allocatable, dimension (:,:) :: HighOrderMatrix, HighOrderRotation     
+      
+      ! Localization
+      integer :: LocalRange, LocalMaxRange
+      integer ::  nonoea,    nonowe,    nosoea,    nosowe, xRank, yRank
+      double precision, dimension(:,:,:), allocatable :: LocalPatch, VerticalPatch, HorizontalPatch, DiagonalPatch
+      integer, dimension(:), allocatable :: LocalMpiCountCov, LocalMpiDisplacementCov
+      double precision, allocatable, dimension(:,:,:) :: BaseMember_jic, BaseMember_sji
+      double precision, allocatable, dimension(:,:) :: BaseMember_ji
+      double precision, allocatable, dimension(:,:,:,:) :: LTQ1L_sjis
+      double precision, pointer :: LSeik_reshape(:,:,:,:,:)
+      !double precision, allocatable :: LSeik_reshape(:,:,:,:,:)
                 
       CONTAINS
        
@@ -93,6 +105,8 @@
             double precision :: dlamch
             integer, intent(in) :: LocalRank        
             integer :: indexi, ierr, neigenvalues
+            
+            LocalRange=5
 
             SeikWeight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             
@@ -123,9 +137,10 @@
                 allocate(MaxVarVec(jpk,jpj,jpi,jptra))
                 MaxVarVec=Huge(MaxVarVec(1,1,1,1))
                 MaxVarVec=MaxVarSEIK*(27800*22220*3) ! area media di una cella in superficie
-                
-                MaxVarFirstTime=.true.
+
             end if
+            
+            FirstTimeSampling=.true.
             
             if (UseDiffCov) then
                 UDiffSpaceDim=jpk*jpj*(jpi-1)*jptra
@@ -387,7 +402,7 @@
             allocate(trnVariance(jpk,jpj,jpi,jptra))
             trnVariance = huge(trnVariance(1,1,1,1))
 
-            if(LocalRank==0) then
+            !if(LocalRank==0) then
                 
                 allocate(TempSliceSeik2(SeikDim))
                 TempSliceSeik2 = huge(TempSliceSeik2(1))
@@ -407,7 +422,7 @@
                 allocate(copy_inSeik(jpiglo, jpjglo, jpk))
                 copy_inSeik = huge(copy_inSeik(1,1,1))
                     
-            end if
+            !end if
             
             
             if(EnsembleRank==NotWorkingMember) then
@@ -415,7 +430,7 @@
                 allocate(CovSeik1(SeikDim,SeikDim))
                 CovSeik1 = huge(CovSeik1(1,1))
                     
-                if(LocalRank==0) then
+                !if(LocalRank==0) then
 
                     allocate(AllWeights(0:SeikDim))                    
                     AllWeights = huge(AllWeights(0))
@@ -449,7 +464,7 @@
                     allocate(HLTR1HL(SeikDim,SeikDim))
                     HLTR1HL = huge(HLTR1HL(1,1))
                     
-                end if
+                !end if
                 
             end if
             
@@ -463,56 +478,56 @@
                     SvdMatrix = huge(SvdMatrix(1,1))
                 end if
  
-                if (LocalRank==0) then
-                allocate(eigenvalues(SeikDim))
-                eigenvalues = huge(eigenvalues(1))
+                !if (LocalRank==0) then
+                    allocate(eigenvalues(SeikDim))
+                    eigenvalues = huge(eigenvalues(1))
 
-                allocate(eigenvectors(SeikDim,SeikDim))
-                eigenvectors = huge(eigenvectors(1,1))
+                    allocate(eigenvectors(SeikDim,SeikDim))
+                    eigenvectors = huge(eigenvectors(1,1))
 
-                allocate(isuppz(2*SeikDim))
-                isuppz = huge(isuppz(1))
+                    allocate(isuppz(2*SeikDim))
+                    isuppz = huge(isuppz(1))
 
-                allocate(work(SeikDim*SeikDim))
-                work = huge(work(1))
+                    allocate(work(SeikDim*SeikDim))
+                    work = huge(work(1))
 
-                allocate(iwork(SeikDim*SeikDim))
-                iwork = huge(iwork(1))
+                    allocate(iwork(SeikDim*SeikDim))
+                    iwork = huge(iwork(1))
 
-                call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
-                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
-                        isuppz, work, -1, iwork, -1, ierr)
-! for some reason the workspace query does not work on iwork. I'll use minimum value= 10*n
-!write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-!                write(*,*) 'Parameters for dsyevr:'
-!                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
-!                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+                    call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+                            dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+                            isuppz, work, -1, iwork, -1, ierr)
+    ! for some reason the workspace query does not work on iwork. I'll use minimum value= 10*n
+    !write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    !                write(*,*) 'Parameters for dsyevr:'
+    !                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
+    !                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-                lwork=Int(work(1))
-                deallocate(work)
-                allocate(work(lwork))
-                work = huge(work(1))
+                    lwork=Int(work(1))
+                    deallocate(work)
+                    allocate(work(lwork))
+                    work = huge(work(1))
 
-!                call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
-!                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
-!                        isuppz, work, lwork, iwork, -1, ierr)
-!
-!write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-!                write(*,*) 'Parameters for dsyevr:'
-!                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
-!                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    !                call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+    !                        dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
+    !                        isuppz, work, lwork, iwork, -1, ierr)
+    !
+    !write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    !                write(*,*) 'Parameters for dsyevr:'
+    !                write(*,*) 'lwork= ', work(1), ' liwork= ', iwork(1)
+    !                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-                liwork=10*SeikDim !Int(iwork(1))
-                deallocate(iwork)
-                allocate(iwork(liwork))
-                iwork = huge(iwork(1))
+                    liwork=10*SeikDim !Int(iwork(1))
+                    deallocate(iwork)
+                    allocate(iwork(liwork))
+                    iwork = huge(iwork(1))
 
-                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-                write(*,*) 'Parameters for dsyevr:'
-                write(*,*) 'lwork= ', lwork, ' liwork= ', liwork
-                write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+                    write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+                    write(*,*) 'Parameters for dsyevr:'
+                    write(*,*) 'lwork= ', lwork, ' liwork= ', liwork
+                    write(*,*) '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-            end if
+                !end if
             end if
 
             if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
@@ -544,6 +559,44 @@
                 PCAMatrixT = huge(PCAMatrixT(1,1))
 
             end if
+            
+            if (LocalRange>LocalMaxRange) then
+                write(*,*) 'LocalRange too big for this kind of implementation. Reduce the number of cells in domdec if you need a bigger radius.'
+                write(*,*) 'New LocalRange = ', LocalMaxRange
+                LocalRange=LocalMaxRange
+            end if
+            
+            allocate(LocalPatch(SeikDim, 1-LocalRange:jpj+LocalRange, 1-LocalRange:jpi+LocalRange))
+            LocalPatch=huge(LocalPatch(1,1,1))
+            
+            allocate(LocalMpiCountCov(0:SeikDim))
+            LocalMpiCountCov = huge(LocalMpiCountCov(1))
+            LocalMpiCountCov=SeikDim*jpi*jpj
+            LocalMpiCountCov(NotWorkingMember)=0
+            
+            allocate(LocalMpiDisplacementCov(0:SeikDim))
+            LocalMpiDisplacementCov = huge(LocalMpiDisplacementCov(1))
+            LocalMpiDisplacementCov(0)=0
+            do indexi=1, SeikDim
+                LocalMpiDisplacementCov(indexi)=LocalMpiDisplacementCov(indexi-1)+LocalMpiCountCov(indexi-1)
+            end do
+            
+            allocate(BaseMember_jic(jpj, jpi, jptra))
+            BaseMember_jic=Huge(BaseMember_jic(1,1,1))
+            
+            allocate(BaseMember_sji(SeikDim, jpj, jpi))
+            BaseMember_sji=Huge(BaseMember_sji(1,1,1))
+            
+            allocate(BaseMember_ji(jpj, jpi))
+            BaseMember_ji=Huge(BaseMember_ji(1,1))
+            
+            allocate(LTQ1L_sjis(SeikDim,jpj, jpi, SeikDim))
+            LTQ1L_sjis=Huge(LTQ1L_sjis(1,1,1,1))
+    
+            LSeik_reshape(1:jpk,1:jpj,1:jpi,1:jptra, 1:SeikDim) => LSeik
+            !allocate(LSeik_reshape(jpk,jpj,jpi,jptra, SeikDim))
+            !LSeik_reshape=Huge(LSeik_reshape(1,1,1,1,1))
+            
             
       end subroutine 
       
@@ -665,13 +718,13 @@
             end if
             
             if ((EnsembleRank==NotWorkingMember) .and. ((.not.(UseCholesky)).or.(UseHighOrder)) .and. (SeikDim>0)) then
-                if (LocalRank==0) then
-                deallocate(eigenvalues)
-                deallocate(eigenvectors)
-                deallocate(work)
-                deallocate(iwork)
-                deallocate(isuppz)
-                end if
+                !if (LocalRank==0) then
+                    deallocate(eigenvalues)
+                    deallocate(eigenvectors)
+                    deallocate(work)
+                    deallocate(iwork)
+                    deallocate(isuppz)
+                !end if
 
                 if (UseHighOrder) then
                     deallocate(LSeikT)
@@ -683,17 +736,17 @@
                 end if
             end if
            
-            if (LocalRank==0) then
+            !if (LocalRank==0) then
                 deallocate(TempSliceSeik2)
                 deallocate(MpiCountCov)
                 deallocate(MpiDisplacementCov)
                 deallocate(copy_inSeik)
-            end if
+            !end if
             
             if (EnsembleRank==NotWorkingMember) then
                 deallocate(CovSeik1)
                 
-                if (LocalRank==0) then
+                !if (LocalRank==0) then
                     deallocate(AllWeights)
                     deallocate(TTTSeik)
                     deallocate(AllWeightsSqrt)
@@ -703,7 +756,7 @@
                     deallocate(OrtMatrixSampling)
                     deallocate(ChangeBaseSeik)
                     deallocate(HLTR1HL)
-                end if
+                !end if
             end if
             
             if ((PCANeeded.eq."read").or.(PCANeeded.eq."write")) then
@@ -715,6 +768,17 @@
                 deallocate(PCAMatrix)
                 deallocate(PCAMatrixT)
             end if
+            
+            deallocate(LocalPatch)
+            deallocate(LocalMpiCountCov)
+            deallocate(LocalMpiDisplacementCov)
+            deallocate(BaseMember_jic)
+            deallocate(BaseMember_sji)
+            deallocate(BaseMember_ji)
+            deallocate(LTQ1L_sjis)
+            deallocate(VerticalPatch)
+            deallocate(HorizontalPatch)
+            deallocate(DiagonalPatch)
        
       end subroutine
 

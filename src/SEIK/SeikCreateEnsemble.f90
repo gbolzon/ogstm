@@ -57,6 +57,10 @@ end if
                     call dpotrf( 'L', SeikDim, CovSeik1, SeikDim, ierr )
                     if (ierr.ne.0) error stop 'Cholesky failed!'
                 else
+                
+                    call SymChangeBase(0,0)
+                
+if (.false.) then !vecchio codice messo all'interno di una routine
                     call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
                         dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
                         isuppz, work, lwork, iwork, liwork, ierr)
@@ -75,6 +79,7 @@ end if
                     end do
                     CovSeik1=Transpose(CovSeik1)
                     CovSeik1=MatMul(eigenvectors,CovSeik1)
+end if
 
 write(*,*) "After Sym change of base= ", CovSeik1
 
@@ -198,5 +203,5 @@ end if
 
     BaseMember=exp(BaseMember)
     trn=trn*BaseMember
-    trb=trn
+    !trb=trn
 end subroutine

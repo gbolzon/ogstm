@@ -71,6 +71,11 @@
         IF(jj.eq.nprocj) nlej=nlcj
         nperio=0
 ! ------------------------------------------------
+
+#ifdef ExecDA
+        if (SeikDim.gt.0) call LocalInit(domdec, ji, jj)
+#endif
+
       IF(lwp) THEN
       WRITE(numout,*) ' '
       WRITE(numout,*) 'Dom_Size'

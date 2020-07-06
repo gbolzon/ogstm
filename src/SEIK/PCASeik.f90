@@ -49,7 +49,8 @@ subroutine PCASeik
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
     integer :: indexi, indexj, indexk, indexc, indexn, ierr
     
-    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA, iworkPCA
+    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA
+    integer, dimension(nHistoryForSVD*nHistoryForSVD) :: iworkPCA
     integer, dimension(2*maxNeigenvectorsPCA) :: isuppzPCA
     double precision dlamch
     
@@ -297,7 +298,8 @@ subroutine PCASeikOld !ATTENTION! This routine need a correction: It is necessar
     double precision, dimension(nHistoryForSVD,nHistoryForSVD) :: NormalizedLogMatrix2, NormalizedLogMatrix2part
     integer :: indexi, indexj, ierr
     
-    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA, iworkPCA
+    double precision, dimension(nHistoryForSVD*nHistoryForSVD) :: workPCA
+    integer, dimension(nHistoryForSVD*nHistoryForSVD) :: iworkPCA
     integer, dimension(2*maxNeigenvectorsPCA) :: isuppzPCA
     double precision dlamch
     

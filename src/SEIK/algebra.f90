@@ -11,7 +11,8 @@ subroutine InvMatMul(A,B,nside,ierr)
     !call dpotrs( 'U', nside, nside, A, nside, B, nside, ierr)
     !if (ierr.ne.0) error stop 'Matrix inversion failed!'
     call dposv( 'U', nside, nside, A, nside, B, nside, ierr)
-    if (ierr.ne.0) error stop 'Matrix inversion failed!'
+    !if (ierr.ne.0) error stop 'Matrix inversion failed!'
+    if (ierr.ne.0) write(*,*) 'Matrix inversion failed!'
 end subroutine InvMatMul
 
 subroutine OrtMatrix(CurrentMatrix, ColumnSize,TotalRows, RowSize, nRows)

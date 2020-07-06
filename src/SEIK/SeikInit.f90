@@ -15,6 +15,15 @@ subroutine SeikInit
     CutRight=(.not.(nlei==jpi))
     CutTop=(.not.(nlej==jpj))
     CutBottom=(.not.(nldj==1))
+    
+    allocate(VerticalPatch(SeikDim, LocalRange+1, nlei-nldi+1))
+    VerticalPatch=Huge(VerticalPatch(1,1,1))
+    
+    allocate(HorizontalPatch(SeikDim, nlej-nldj+1, LocalRange+1))
+    HorizontalPatch=Huge(HorizontalPatch(1,1,1))
+    
+    allocate(DiagonalPatch(SeikDim, LocalRange+1, LocalRange+1))
+    DiagonalPatch=Huge(DiagonalPatch(1,1,1))
 
 if (.false.) then    
     call readnc_slice_double_2d("BC/TIN_yyyy0115-00:00:00.nc", "riv_N3n", TempMask2D)
@@ -66,8 +75,8 @@ end if
     SeikTrcMask=0
     do indexi=1,jptra
         !if (isaDAVAR(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili di clorofilla
-        !SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi tutte le variabili
-        if (IsSEIKVariable(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili definite su DAVariables
+        SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi tutte le variabili
+        !if (IsSEIKVariable(ctrcnm(indexi))) SeikTrcMask(:,:,:,indexi)=SeikMask !usa questa se vuoi solo le variabili definite su DAVariables
     end do
 
 
@@ -89,10 +98,14 @@ end if
         do indexj=1, jpk
             BaseMember(indexj,:,:,indexi)=e1t*e2t
         end do
-        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t_0*SeikMask
+        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*e3t_0
     end do
     
     MaxVarVec=MaxVarVec/BaseMember
+    
+    do indexi=1, jptra
+        BaseMember(:,:,:,indexi)=BaseMember(:,:,:,indexi)*SeikMask
+    end do
     
     call CutCellsTracer(BaseMember)
     
@@ -111,24 +124,37 @@ end if
 !end do
 
 !procedura temporanea per dare meno varianza alle variabili non chl
-do indexk=1,jptra
-    !if (.not.(isaDAVAR(ctrcnm(indexk)))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*100 
-    !if (isaDAVAR(ctrcnm(indexk))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
-    if (IsHighVariance(ctrcnm(indexk))) then
-        !BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
-    
-        if (.true.) then ! true if you want to set small model error on the coasts
-            do indexi=1, jpi
-                do indexj=1, jpj
-                    !11=50m, 17=100m, 25=200m
-                    if (SeikMask(26,jpj, jpi)/=0) BaseMember(:,jpj,jpi,indexk)=BaseMember(:,jpj,jpi,indexk)*0.001d0
-                end do
-            end do
-        else
-            BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
-        end if
+    if (.false.) then !true se vuoi dare piu' varianza alle variabili di chl e altre
+        do indexk=1,jptra
+            !if (.not.(isaDAVAR(ctrcnm(indexk)))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*100 
+            !if (isaDAVAR(ctrcnm(indexk))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+            if (IsHighVariance(ctrcnm(indexk))) then
+                !BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+            
+                if (.false.) then ! true if you want to set small model error on the coasts by var
+                    do indexi=1, jpi
+                        do indexj=1, jpj
+                            !11=50m, 17=100m, 25=200m
+                            if (SeikMask(26,jpj, jpi)/=0) BaseMember(:,jpj,jpi,indexk)=BaseMember(:,jpj,jpi,indexk)*0.001d0
+                        end do
+                    end do
+                else
+                    BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.01d0
+                end if
+            end if
+        end do
     end if
-end do
+    
+    if (.false.) then ! true if you want to set small model error on the coast (not by var)
+        do indexi=1, jpi
+            do indexj=1, jpj
+                !11=50m, 17=100m, 25=200m
+                if ((mbathy(indexj, indexi)<=25).and.(SeikMask(1,indexj, indexi)==1)) then 
+                    BaseMember(:,jpj,jpi,:)=BaseMember(:,jpj,jpi,:)*(27-mbathy(indexj, indexi))
+                end if
+            end do
+        end do
+    end if
 
     call mpi_allreduce(partialsum, totalsum, 1, MPI_real8, MPI_sum, LocalComm, ierr)
     if (lwp) write (*,*) "total sum=", totalsum

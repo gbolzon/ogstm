@@ -242,6 +242,14 @@ use StringSEIK
 
         !if ((SeikDim.gt.0).and.(IsaDataAssimilation(DATEstring))) then            
         if (IsaDataAssimilation(DATEstring)) then
+            
+            if (UseLocalForecast.or.FirstTimeSampling) then
+                trb=trn !forse non serve
+                call SeikCreateEnsemble
+                trnEnsemble=trn
+                trn=trb
+            end if
+            
             CALL MainAssimilationSeik(DATEstring)            
             if (lwp) B = writeTemporization("DATA_ASSIMILATION____", DAparttime)
         endif
@@ -250,6 +258,7 @@ use StringSEIK
 
         if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
             call SeikCreateEnsemble()
+            trb=trn
 
             if (.false.) then !.true. if u want to save the ensemble before the evolution
                 call trcwriSeik(datestring, EnsembleRank, 'ENSEMBLE/', trn)
@@ -308,8 +317,12 @@ end if
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/', trn)
             endif
 
-            call SeikForecast(datestring)
-
+            if (UseLocalForecast) then
+                call LocalForecast
+            else
+                call SeikForecast(datestring)
+            end if
+            
         endif
 #endif
 
@@ -370,16 +383,8 @@ call mpi_barrier(mpi_comm_world, ierr)
       
 ! PCA if needed
 #ifdef ExecDA
-!end if
         if ((PCANeeded.eq."read").and.(EnsembleRank==0)) call PCAReadMatrices
-if ((.false.).and.(myrank==29)) then
-    do ji=1,3
-        write(*,*) "Level ", ji
-        write(*,*) HistoryForSVD(ji,9,3,3,:)
-        write(*,*) ""
-    end do
-    call mpi_abort(mpi_comm_world,1,ierr)
-end if
+
         if (((PCANeeded.eq."read").or.(PCANeeded.eq."write")).and.(EnsembleRank==0)) then
             call mpi_barrier(LocalComm, ierr)
             call PCASeik
