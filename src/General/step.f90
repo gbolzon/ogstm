@@ -243,14 +243,7 @@ use StringSEIK
         !if ((SeikDim.gt.0).and.(IsaDataAssimilation(DATEstring))) then            
         if (IsaDataAssimilation(DATEstring)) then
             
-            if (UseLocalForecast.or.FirstTimeSampling) then
-                trb=trn !forse non serve
-                call SeikCreateEnsemble
-                trnEnsemble=trn
-                trn=trb
-            end if
-            
-            CALL MainAssimilationSeik(DATEstring)            
+            CALL AnalysisWrapper(DateString)         
             if (lwp) B = writeTemporization("DATA_ASSIMILATION____", DAparttime)
         endif
 

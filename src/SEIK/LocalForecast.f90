@@ -34,7 +34,7 @@ subroutine LocalForecast
     !if (CutTop) BaseMember(:,jpj,:,:)=0.0d0
     !if (CutBottom) BaseMember(:,1,:,:)=0.0d0
 
-    if (UseDiffCov) then 
+    if (UseDiffCov) then !to be done ,not working atm
         do indexi=1, jptra
             do indexj=1, jpk
                 UDiffBaseMember(indexj,:,:,indexi)=(BaseMember(indexj,:,2:jpi,indexi)-BaseMember(indexj,:,1:jpi-1,indexi))/e1u(:,1:jpi-1)
@@ -63,7 +63,7 @@ subroutine LocalForecast
         where (trnVariance>MaxVarVec) BaseMember=BaseMember*sqrt(MaxVarVec/trnVariance)
         
         !qui bisognerebbe introdurre maxvarUvec ecc
-        if (UseDiffCov) then
+        if (UseDiffCov) then !to be done, not working atm
             TempUDiffBaseMember=UDiffBaseMember**2*SeikWeight
             call MPI_AllReduce(TempUDiffBaseMember, UVariance, UDiffSpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
             where (UVariance>MaxVarSEIK) UDiffBaseMember=UDiffBaseMember*sqrt(MaxVarSEIK/UVariance)
@@ -82,7 +82,7 @@ subroutine LocalForecast
     if (EnsembleRank==NotWorkingMember) then
         call mpi_allgatherv(0,0,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
         
-        if (UseDiffCov) then
+        if (UseDiffCov) then !to be done, not working atm
             call mpi_allgatherv(0,0,mpi_real8,ULSeik,UDiffMpiCount,UDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
             call mpi_allgatherv(0,0,mpi_real8,VLSeik,VDiffMpiCount,VDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
             call mpi_allgatherv(0,0,mpi_real8,WLSeik,WDiffMpiCount,WDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
@@ -100,7 +100,7 @@ if (myRank==40) then
     write(*,*) "---------------------------------------------------------"
     write(*,*) "LTQ1L_sjis"
     write(*,*) "rank 40, x=5, y=5"
-    do indexi=1, 3
+    do indexi=1, SeikDim
         write(*,*) LTQ1L_sjis(:,5,5, indexi)
     end do
     write(*,*) "---------------------------------------------------------"
@@ -115,7 +115,7 @@ call mpi_barrier(LocalComm, ierr)
                         
                         call ForecastMatrixOp
                         
-                        call SymChangeBase(indexi, indexj)
+                        call SymChangeBase(CovSeik1,indexi, indexj)
                         
                         LTQ1L_sjis(:,indexj,indexi,:)=CovSeik1
                         
@@ -159,7 +159,7 @@ end if
     else
         call mpi_allgatherv(BaseMember,SpaceDim,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
         
-        if (UseDiffCov) then
+        if (UseDiffCov) then ! to be done, not working
             call mpi_allgatherv(UDiffBaseMember,UDiffSpaceDim,mpi_real8,ULSeik,UDiffMpiCount,UDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
             call mpi_allgatherv(VDiffBaseMember,VDiffSpaceDim,mpi_real8,VLSeik,VDiffMpiCount,VDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
             call mpi_allgatherv(WDiffBaseMember,WDiffSpaceDim,mpi_real8,WLSeik,WDiffMpiCount,WDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
@@ -179,30 +179,7 @@ end if
 
             call LocalSendRecive(BaseMember_sji)
             
-            BaseMember_sji=0.0d0
-            do indexi=-LocalRange,LocalRange
-                temp=floor(sqrt((0.5d0+LocalRange)**2-indexi**2))
-                do indexj=-temp+1, temp+1
-                    BaseMember_sji(:,1,1)=BaseMember_sji(:,1,1)+LocalPatch(:,indexj, 1+indexi)
-                end do
-            end do
-            do indexj=2, jpj
-                BaseMember_sji(:,indexj,1)=BaseMember_sji(:,indexj-1,1)
-                do indexi=-LocalRange,LocalRange
-                    temp=floor(sqrt((0.5d0+LocalRange)**2-indexi**2))
-                    BaseMember_sji(:,indexj,1)=BaseMember_sji(:,indexj,1)-LocalPatch(:,indexj-1-temp, 1+indexi)+LocalPatch(:,indexj+temp, 1+indexi)
-                end do
-            end do
-            do indexi=2, jpi
-                do indexj=1,jpj
-                    BaseMember_sji(:,indexj,indexi)=BaseMember_sji(:,indexj,indexi-1)
-                    do indexk=-LocalRange,LocalRange
-                        temp=floor(sqrt((0.5d0+LocalRange)**2-indexk**2))
-                        BaseMember_sji(:,indexj,indexi)=BaseMember_sji(:,indexj,indexi)-LocalPatch(:,indexj+indexk, indexi-1-temp)+ &
-                            LocalPatch(:,indexj+indexk, indexi+temp)
-                    end do
-                end do
-            end do
+            call SummingLocalPatch(BaseMember_sji)
                       
 !write(*,*) "myrank=", myrank, " EnsembleRank=", EnsembleRank, " riga 191"
             
@@ -212,18 +189,7 @@ end if
             
 !LSeik_reshape=reshape(LSeik, (/jpk, jpj, jpi, jptra, SeikDim/))
             
-            do indexi=1, jpi
-                do indexj=1, jpj
-                    if (SeikMask(1,indexj, indexi)==1) then
-                        BaseMember(:, indexj, indexi, :)=BaseMember_sji(1,indexj, indexi)*LSeik_reshape(:,indexj, indexi, :, 1)
-                        do indexk=2, SeikDim
-                            BaseMember(:, indexj, indexi, :)=BaseMember(:, indexj, indexi, :)+BaseMember_sji(indexk,indexj, indexi)*LSeik_reshape(:,indexj, indexi, :, indexk)
-                        end do
-                    else
-                        BaseMember(:, indexj, indexi, :)=0.0d0
-                    end if
-                end do
-            end do
+            call LocalProduct(BaseMember_sji, BaseMember)
             
 !write(*,*) "myrank=", myrank, " EnsembleRank=", EnsembleRank, " riga 208"
             
@@ -234,7 +200,7 @@ if (.false.) then !codice della versione non locale
             TempVecSeik=TempVecSeik*ModelErrorDiag1
             TempSliceSeik=matmul(TempVecSeik,LSeik)
             
-            if (UseDiffCov) then
+            if (UseDiffCov) then !to be done, not working atm
                 TempUDiffVecSeik=reshape(UDiffBaseMember,(/UDiffSpaceDim/))
                 TempUDiffVecSeik=TempUDiffVecSeik*UDiffModelErrorDiag1
                 TempSliceSeik=TempSliceSeik+matmul(TempUDiffVecSeik,ULSeik)

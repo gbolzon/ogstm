@@ -30,18 +30,19 @@ subroutine ForecastMatrixOp
     
 end subroutine
 
-subroutine SymChangeBase(positionx, positiony)
+subroutine SymChangeBase(matrix, positionx, positiony)
     Use myalloc
     use mpi
     
     implicit none
+    double precision, dimension(SeikDim, SeikDim), intent(inout) :: matrix
 integer, intent(in) :: positionx, positiony
     integer :: ierr, indexi, neigenvalues
     double precision dlamch
     
-TempMatrixSeik=CovSeik1
+!TempMatrixSeik=matrix !usare tempmatrixseik qui e' rischioso, se non te ne accorgi e la usi fuori dalla procedura diventi matto
     
-    call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
+    call dsyevr("V", "A", "U", SeikDim, matrix, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
         dlamch('S'), neigenvalues, eigenvalues, eigenvectors, SeikDim, &
         isuppz, work, lwork, iwork, liwork, ierr)
 
@@ -57,16 +58,16 @@ TempMatrixSeik=CovSeik1
     if (eigenvalues(1)<10**-10) then
         write(*,*) myrank, ",", EnsembleRank,",",positionx,",", positiony ,", SymChangeBase small eigenvalue:"
         write(*,*) myrank, ",", EnsembleRank, ":", eigenvalues
-        write(*,*) myrank, ",", EnsembleRank, ", CovSeik1:"
-        do indexi=1, SeikDim
-            write(*,*) myrank, ",", EnsembleRank, ":", TempMatrixSeik(:,indexi)
-        end do
+!write(*,*) myrank, ",", EnsembleRank, ", CovSeik1:"
+!do indexi=1, SeikDim
+!    write(*,*) myrank, ",", EnsembleRank, ":", TempMatrixSeik(:,indexi)
+!end do
         call mpi_abort(mpi_comm_world, 1, ierr)
     end if
     
     do indexi=1, SeikDim
-        TempMatrixSeik(indexi,:)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
+        matrix(indexi,:)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
     end do
-    CovSeik1=MatMul(eigenvectors,TempMatrixSeik)
+    matrix=MatMul(eigenvectors,matrix)
 
 end subroutine

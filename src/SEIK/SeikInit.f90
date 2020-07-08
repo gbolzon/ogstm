@@ -67,7 +67,7 @@ end if
         do indexi=1, jpi
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
-                if (bfmMask(26,jpj, jpi)==0) SeikMask(1:25,jpj,jpi)=0
+                if (bfmMask(26,indexj, indexi)==0) SeikMask(1:25,indexj,indexi)=0
             end do
         end do
     end if
@@ -135,7 +135,7 @@ end if
                     do indexi=1, jpi
                         do indexj=1, jpj
                             !11=50m, 17=100m, 25=200m
-                            if (SeikMask(26,jpj, jpi)/=0) BaseMember(:,jpj,jpi,indexk)=BaseMember(:,jpj,jpi,indexk)*0.001d0
+                            if (SeikMask(26,indexj, indexi)/=0) BaseMember(:,indexj,indexi,indexk)=BaseMember(:,indexj,indexi,indexk)*0.001d0
                         end do
                     end do
                 else
@@ -150,7 +150,7 @@ end if
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
                 if ((mbathy(indexj, indexi)<=25).and.(SeikMask(1,indexj, indexi)==1)) then 
-                    BaseMember(:,jpj,jpi,:)=BaseMember(:,jpj,jpi,:)*(27-mbathy(indexj, indexi))
+                    BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)*(27-mbathy(indexj, indexi))
                 end if
             end do
         end do
@@ -189,7 +189,12 @@ end if
         do indexi=1, jpi
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
-                if (SeikMask(26,jpj, jpi)/=0) ObsBaseMember(jpj,jpi)=ObsBaseMember(jpj,jpi)*0.01d0
+                !if (SeikMask(26,indexj, indexi)/=0) ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)*0.01d0
+                
+                !11=50m, 17=100m, 25=200m
+                if ((mbathy(indexj, indexi)<=25).and.(SeikMask(1,indexj, indexi)==1)) then 
+                    ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)/(27-mbathy(indexj, indexi))
+                end if
             end do
         end do
     end if

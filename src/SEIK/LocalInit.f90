@@ -45,3 +45,15 @@ subroutine LocalInit(domdec, xpos, ypos)
     LocalMaxRange=minval(domdec(:,4:5))-3
     
 end subroutine
+
+subroutine LocalWeightFunction(radius2, localweight)
+    use myalloc
+    
+    implicit none
+    double precision, intent(in) :: radius2
+    double precision, intent(out) :: localweight
+    
+    localweight=(radius2/((LocalRange+1)**2)-1.0d0)**2
+
+end subroutine 
+

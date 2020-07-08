@@ -12,7 +12,7 @@
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
-      logical, parameter :: UseLocalForecast=.true., UseLocalAnalysis=.true.
+      logical, parameter :: UseLocalForecast=.true., UseLocalAnalysis=.true., UseLocalObsDumping=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
       double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4
@@ -94,7 +94,7 @@
       integer, dimension(:), allocatable :: LocalMpiCountCov, LocalMpiDisplacementCov
       double precision, allocatable, dimension(:,:,:) :: BaseMember_jic, BaseMember_sji
       double precision, allocatable, dimension(:,:) :: BaseMember_ji
-      double precision, allocatable, dimension(:,:,:,:) :: LTQ1L_sjis
+      double precision, allocatable, dimension(:,:,:,:) :: LTQ1L_sjis, HLTR1HL_sjis
       double precision, pointer :: LSeik_reshape(:,:,:,:,:)
       !double precision, allocatable :: LSeik_reshape(:,:,:,:,:)
                 
@@ -597,6 +597,9 @@
             !allocate(LSeik_reshape(jpk,jpj,jpi,jptra, SeikDim))
             !LSeik_reshape=Huge(LSeik_reshape(1,1,1,1,1))
             
+            allocate(HLTR1HL_sjis(SeikDim,jpj,jpi,SeikDim))
+            HLTR1HL_sjis=Huge(HLTR1HL_sjis(1,1,1,1))
+            
             
       end subroutine 
       
@@ -779,6 +782,7 @@
             deallocate(VerticalPatch)
             deallocate(HorizontalPatch)
             deallocate(DiagonalPatch)
+            deallocate(HLTR1HL_sjis)
        
       end subroutine
 

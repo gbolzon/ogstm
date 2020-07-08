@@ -144,3 +144,82 @@ subroutine LocalSendRecive(patch)
     end if
    
 end subroutine
+
+subroutine SummingLocalPatch(patch)
+    use myalloc
+    
+    implicit none
+    double precision, dimension(SeikDim, jpj, jpi), intent(out) :: patch
+    integer :: indexi, indexj, indexk, temp
+    
+    patch=0.0d0
+    do indexi=-LocalRange,LocalRange
+        temp=floor(sqrt((0.5d0+LocalRange)**2-indexi**2))
+        do indexj=-temp+1, temp+1
+            patch(:,1,1)=patch(:,1,1)+LocalPatch(:,indexj, 1+indexi)
+        end do
+    end do
+    do indexj=2, jpj
+        patch(:,indexj,1)=patch(:,indexj-1,1)
+        do indexi=-LocalRange,LocalRange
+            temp=floor(sqrt((0.5d0+LocalRange)**2-indexi**2))
+            patch(:,indexj,1)=patch(:,indexj,1)-LocalPatch(:,indexj-1-temp, 1+indexi)+LocalPatch(:,indexj+temp, 1+indexi)
+        end do
+    end do
+    do indexi=2, jpi
+        do indexj=1,jpj
+            patch(:,indexj,indexi)=patch(:,indexj,indexi-1)
+            do indexk=-LocalRange,LocalRange
+                temp=floor(sqrt((0.5d0+LocalRange)**2-indexk**2))
+                patch(:,indexj,indexi)=patch(:,indexj,indexi)-LocalPatch(:,indexj+indexk, indexi-1-temp)+LocalPatch(:,indexj+indexk, indexi+temp)
+            end do
+        end do
+    end do
+    
+end subroutine
+
+subroutine SummingLocalPatchWeighted(patch)
+    use myalloc
+    
+    implicit none
+    double precision, dimension(SeikDim, jpj, jpi), intent(out) :: patch
+    integer :: indexi, indexj, indexk, indexl, temp
+    double precision :: localweight
+    
+    patch=0.0d0
+    do indexi=1, jpi
+        do indexj=1,jpj
+            do indexk=-LocalRange,LocalRange
+                temp=floor(sqrt((0.5d0+LocalRange)**2-indexk**2))
+                do indexl=-temp,temp
+                    call LocalWeightFunction(dble(indexk**2+ indexl**2), localweight)
+                    patch(:,indexj,indexi)=patch(:,indexj,indexi)+LocalPatch(:,indexj+indexl,indexi+indexk)*localweight
+                end do
+            end do
+        end do
+    end do
+    
+end subroutine
+
+subroutine LocalProduct(ChangeBase_sji, output)
+    use myalloc
+    
+    implicit none
+    double precision, dimension(SeikDim, jpj, jpi), intent(in) :: ChangeBase_sji
+    double precision, dimension(jpk, jpj, jpi, jptra), intent(out) :: output
+    integer :: indexi, indexj, indexk
+    
+    do indexi=1, jpi
+        do indexj=1, jpj
+            if (SeikMask(1,indexj, indexi)==1) then
+                output(:, indexj, indexi, :)=ChangeBase_sji(1,indexj, indexi)*LSeik_reshape(:,indexj, indexi, :, 1)
+                do indexk=2, SeikDim
+                    output(:, indexj, indexi, :)=output(:, indexj, indexi, :)+ChangeBase_sji(indexk,indexj, indexi)*LSeik_reshape(:,indexj, indexi, :, indexk)
+                end do
+            else
+                output(:, indexj, indexi, :)=0.0d0
+            end if
+        end do
+    end do
+    
+end subroutine

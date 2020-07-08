@@ -22,6 +22,7 @@
         
         INTEGER jk,jj,ji,jn
         double precision :: fillValue, fillvalue999
+        integer :: BaseIndex
 
       DAparttime  = MPI_WTIME()
       MONTH=datestr(5:6)
@@ -196,7 +197,21 @@ if (SeikDim>0) then
         if (UseModSeik) then
             call ModSeikAnalysis
         else
-            call SeikAnalysis
+            if (UseLocalAnalysis) then
+                call LocalAnalysis
+                if (EnsembleRank/=NotWorkingMember) then
+                    if (EnsembleRank>NotWorkingMember) then
+                        BaseIndex=EnsembleRank
+                    else
+                        BaseIndex=EnsembleRank+1
+                    end if
+                    
+                    call trcwriSeik(DateStr, BaseIndex, 'DA_SEIK/BASE/', BaseMember)
+                end if
+        
+            else
+                call SeikAnalysis
+            end if
         end if
         
 !call mpi_barrier(mpi_comm_world, ierr)
@@ -205,7 +220,7 @@ if (SeikDim>0) then
         
         if (EnsembleRank==0) then
             call trcwriSeik(DATEstr, -1, 'DA_SEIK/', trn)
-            if (myrank==0) call WriteCov1Seik('DA_SEIK/COV1.'//DateStr//'.csv')
+            if (myrank==0) call WriteCov1Seik('DA_SEIK/BASE/COV1.'//DateStr//'.csv')
             if (SeikDim==1) call trcwriSeik(DATEstr, -1, 'DA_SEIK/RATIO/', trnEnsemble) ! only if we dont' have a 3rd ensemble member for parallel writing
         else if (EnsembleRank==1) then
             trb=trn-trb

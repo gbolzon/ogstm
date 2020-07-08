@@ -58,7 +58,7 @@ end if
                     if (ierr.ne.0) error stop 'Cholesky failed!'
                 else
                 
-                    call SymChangeBase(0,0)
+                    call SymChangeBase(CovSeik1,0,0)
                 
 if (.false.) then !vecchio codice messo all'interno di una routine
                     call dsyevr("V", "A", "U", SeikDim, CovSeik1, SeikDim, 0.0d0, 0.0d0,0.0d0, 0.0d0, &
@@ -192,8 +192,8 @@ if (UseMaxVarSEIK) then
 ! stata fatta con UseMaxVarSEIK). Bisognerebbe metterla su ReadBaseSeik.
 ! Per il momento la tolgo, tanto al massimo avrò un po' di instabilita' al primo timestep.
 !reinserito con firsttime
-if (MaxVarFirstTime) then
-    MaxVarFirstTime=.false.
+if (FirstTimeSampling) then
+    FirstTimeSampling=.false.
     trnEnsembleWeighted=BaseMember**2
     trnEnsembleWeighted=trnEnsembleWeighted*SeikWeight
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)

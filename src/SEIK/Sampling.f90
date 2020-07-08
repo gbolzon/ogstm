@@ -29,10 +29,10 @@ subroutine Sampling(CovMatrix1, nside, ChangeBase, ierr)
         end if
 
         do indexi=1, SeikDim
-            CovSeik1(:,indexi)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
+            CovMatrix1(:,indexi)=eigenvectors(:,indexi)/sqrt(eigenvalues(indexi))
         end do
-        CovSeik1=Transpose(CovSeik1)
-        CovSeik1=MatMul(eigenvectors,CovSeik1)
+        CovMatrix1=Transpose(CovMatrix1)
+        CovMatrix1=MatMul(eigenvectors,CovMatrix1)
     end if
     
 !!! ATTENZIONE!!! qui ci sono seikdim al posto di nside, verifica!!!!
