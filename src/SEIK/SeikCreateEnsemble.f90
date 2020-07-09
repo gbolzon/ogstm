@@ -5,6 +5,7 @@ subroutine SeikCreateEnsemble()
     implicit none
     integer :: ierr, indexi, neigenvalues
     double precision dlamch
+integer :: indexj, indexk, indexn, indexe, indexr
     
     if (UseHighOrder) then
 
@@ -199,6 +200,31 @@ if (FirstTimeSampling) then
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     where (trnVariance>MaxVarSEIK) BaseMember=BaseMember*sqrt(MaxVarSEIK/trnVariance)
 end if
+end if
+
+if (.false.) then
+call trcwriSeik("12345678901234567", EnsembleRank, 'ENSEMBLE/', BaseMember)
+do indexe=0, EnsembleSize-1
+if (indexe==EnsembleRank) then
+do indexr=0, CommSize-1
+if (indexr==myrank) then
+do indexn=1, jptra
+    do indexi=1, jpi
+        do indexj=1, jpj
+            do indexk =1, jpk
+                if (abs(BaseMember(indexk, indexj, indexi, indexn))>300.0d0) then
+                    write(*,*) "r,e,n,i,j,k,v=", MyRank, EnsembleRank, ctrcnm(indexn),indexn,indexi, indexj, indexk, BaseMember(indexk, indexj, indexi, indexn)
+                end if
+            end do
+        end do
+    end do
+end do
+end if
+call mpi_barrier(LocalComm, ierr)
+end do
+end if
+call mpi_barrier(EnsembleComm, ierr)
+end do
 end if
 
     BaseMember=exp(BaseMember)

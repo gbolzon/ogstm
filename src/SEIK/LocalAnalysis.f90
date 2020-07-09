@@ -43,17 +43,18 @@ integer indexk
     
         call mpi_gatherv(0,0,mpi_real8,HLTR1HL_sjis,LocalMpiCountCov,LocalMpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
         
-
+if (.true.) then
 if (myRank==40) then
     write(*,*) "---------------------------------------------------------"
     write(*,*) "HLTR1HL_sjis"
-    write(*,*) "rank 40, x=5, y=5"
+    write(*,*) "rank 76, x=5, y=5"
     do indexi=1, SeikDim
         write(*,*) HLTR1HL_sjis(:,5,5, indexi)
     end do
     write(*,*) "---------------------------------------------------------"
 else
     call mpi_barrier(LocalComm, ierr)
+end if
 end if
 
         do indexi=1, jpi
@@ -63,31 +64,42 @@ end if
                     !HLTR1HL=HLTR1HL_sjis(:,indexj,indexi,:)
                     ChangeCoefSeik=BaseMember_sji(:,indexj, indexi)
                     
+                    !CovSeik1=CovSeik1+HLTR1HL
+                    TempMatrixSeik=CovSeik1+HLTR1HL_sjis(:,indexj,indexi,:)
+                    !TempMatrixSeik=CovSeik1+HLTR1HL
+                    
+if (.true.) then
 if ((myRank==40).and.(indexi==5).and.(indexj==5)) then
 write(*,*) "---------------------------------------------------------"
+write(*,*) "rank,x,y=",myRank,indexi, indexj
+write(*,*) "---------------------------------------------------------"
+write(*,*) "MisfitSeik", MisfitSeik(indexj,indexi)
+!write(*,*) "---------------------------------------------------------"
+!write(*,*) "HLSeik"
+!write(*,*) HLSeik( (indexi-1)*jpj+indexj,:)
+write(*,*) "---------------------------------------------------------"
+write(*,*) "ObsErrorDiag1", ObsErrorDiag1( (indexi-1)*jpj+indexj)
+write(*,*) "---------------------------------------------------------"
 write(*,*) "CovSeik1"
-write(*,*) "rank 40, x=5, y=5"
 do indexk=1, SeikDim
     write(*,*) CovSeik1(:, indexk)
 end do
 write(*,*) "---------------------------------------------------------"
-end if
-    
-                    !CovSeik1=CovSeik1+HLTR1HL
-                    TempMatrixSeik=CovSeik1+HLTR1HL_sjis(:,indexj,indexi,:)
-                    
-if ((myRank==40).and.(indexi==5).and.(indexj==5)) then
+write(*,*) "HLTR1HL"
+do indexk=1, SeikDim
+    write(*,*) HLTR1HL_sjis(:,indexj, indexi, indexk)
+    !write(*,*) HLTR1HL(:, indexk)
+end do
 write(*,*) "---------------------------------------------------------"
 write(*,*) "CovSeik1post"
-write(*,*) "rank 40, x=5, y=5"
 do indexk=1, SeikDim
     write(*,*) TempMatrixSeik(:, indexk) !CovSeik1
 end do
 write(*,*) "---------------------------------------------------------"
 write(*,*) "ChangeCoefSeik"
-write(*,*) "rank 40, x=5, y=5"
 write(*,*) ChangeCoefSeik
 write(*,*) "---------------------------------------------------------"
+end if
 end if
 
 if (.false.) then
@@ -113,7 +125,21 @@ end if
                     
                     BaseMember_sji(:,indexj, indexi)=matmul(TempMatrixSeik,ChangeCoefSeik)
                     HLTR1HL_sjis(:,indexj,indexi,:)=TempMatrixSeik
-                    
+
+if (.true.) then
+if ((myRank==40).and.(indexi==5).and.(indexj==5)) then
+write(*,*) "---------------------------------------------------------"
+write(*,*) "SymChangeBase"
+do indexk=1, SeikDim
+    write(*,*) TempMatrixSeik(:, indexk)
+end do
+write(*,*) "---------------------------------------------------------"
+write(*,*) "new ChangeCoefSeik"
+write(*,*) BaseMember_sji(:,indexj, indexi)
+write(*,*) "---------------------------------------------------------"
+end if
+end if
+
                 else
                     BaseMember_sji(:,indexj, indexi)=0.0d0
                     HLTR1HL_sjis(:,indexj,indexi,:)=0.0d0
@@ -121,7 +147,9 @@ end if
             end do
         end do
         
+if (.true.) then
 if (myRank==40) call mpi_barrier(LocalComm, ierr)
+end if
 
         call MPI_Scatterv(HLTR1HL_sjis, LocalMpiCountCov, LocalMpiDisplacementCov, mpi_real8, 0, 0, mpi_real8, NotWorkingMember, EnsembleComm, ierr)
         
