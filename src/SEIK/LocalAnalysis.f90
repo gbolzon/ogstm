@@ -47,7 +47,7 @@ if (.true.) then
 if (myRank==40) then
     write(*,*) "---------------------------------------------------------"
     write(*,*) "HLTR1HL_sjis"
-    write(*,*) "rank 76, x=5, y=5"
+    write(*,*) "rank 40, x=5, y=5"
     do indexi=1, SeikDim
         write(*,*) HLTR1HL_sjis(:,5,5, indexi)
     end do
