@@ -151,7 +151,7 @@ end if
                 !11=50m, 17=100m, 25=200m
                 if ((mbathy(indexj, indexi)<=30).and.(SeikMask(1,indexj, indexi)==1)) then 
                     !BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)*(27-mbathy(indexj, indexi)) !linear
-                    BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)*(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)/(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
                 end if
             end do
         end do
@@ -195,7 +195,7 @@ end if
                 !11=50m, 17=100m, 25=200m
                 if ((mbathy(indexj, indexi)<=30).and.(SeikMask(1,indexj, indexi)==1)) then 
                     !ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)/(27-mbathy(indexj, indexi)) !linear
-                    ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)/(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)*(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
                 end if
             end do
         end do
