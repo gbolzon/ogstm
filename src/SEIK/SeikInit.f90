@@ -63,11 +63,11 @@ end if
     
     SeikMask=BfmMask
     
-    if (.false.) then ! true if you want to set the mask without coastal zones
+    if (.true.) then ! true if you want to set the mask without coastal zones
         do indexi=1, jpi
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
-                if (bfmMask(26,indexj, indexi)==0) SeikMask(1:25,indexj,indexi)=0
+                if (bfmMask(12,indexj, indexi)==0) SeikMask(1:11,indexj,indexi)=0
             end do
         end do
     end if
@@ -124,6 +124,7 @@ end if
 !end do
 
 !procedura temporanea per dare meno varianza alle variabili non chl
+if (.false.) then ! vecchia versione
     if (.false.) then !true se vuoi dare piu' varianza alle variabili di chl e altre
         do indexk=1,jptra
             !if (.not.(isaDAVAR(ctrcnm(indexk)))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*100 
@@ -144,14 +145,21 @@ end if
             end if
         end do
     end if
-    
+end if
+
+    if (.true.) then !true if you want to set high model error on some variables
+        if (isaDAVAR(ctrcnm(indexk))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.25d0
+        if (IsHighVariance(ctrcnm(indexk))) BaseMember(:,:,:,indexk)=BaseMember(:,:,:,indexk)*0.25d0
+    end if
+
     if (.true.) then ! true if you want to set small model error on the coast (not by var)
         do indexi=1, jpi
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
                 if ((mbathy(indexj, indexi)<=30).and.(SeikMask(1,indexj, indexi)==1)) then 
                     !BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)*(27-mbathy(indexj, indexi)) !linear
-                    BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)/(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    !BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)/(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    BaseMember(:,indexj, indexi,:)=BaseMember(:,indexj, indexi,:)/(((31-mbathy(indexj, indexi))/(31-11))**2-1.0d0)**2 !4th degree
                 end if
             end do
         end do
@@ -195,7 +203,8 @@ end if
                 !11=50m, 17=100m, 25=200m
                 if ((mbathy(indexj, indexi)<=30).and.(SeikMask(1,indexj, indexi)==1)) then 
                     !ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)/(27-mbathy(indexj, indexi)) !linear
-                    ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)*(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    !ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)*(((31-mbathy(indexj, indexi))/31)**2-1.0d0)**2 !4th degree
+                    ObsBaseMember(indexj,indexi)=ObsBaseMember(indexj,indexi)*(((31-mbathy(indexj, indexi))/(31-11))**2-1.0d0)**2 !4th degree
                 end if
             end do
         end do

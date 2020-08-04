@@ -50,7 +50,7 @@
       integer :: ObsSpaceDim
       double precision, allocatable, dimension(:,:) :: ObsDataSeik, ComputedObsSeik, MisfitSeik
       double precision, allocatable, dimension(:) :: ObsErrorDiag1, ObsErrorArea
-      double precision :: ObsErrorValue
+      double precision :: ObsErrorValue, ObsAdditiveError
       double precision, allocatable, dimension(:,:) :: ComputedObsMean, ObsBaseMember
       double precision, allocatable, dimension(:,:) :: HLSeik 
       integer, allocatable, dimension (:) :: MpiCountObs, MpiDisplacementObs
@@ -106,7 +106,7 @@
             integer, intent(in) :: LocalRank        
             integer :: indexi, ierr, neigenvalues
             
-            LocalRange=5
+            LocalRange=3
 
             SeikWeight=1.0d0/(SeikDim+1) ! it needs a better initialization after AllWeights
             
@@ -123,9 +123,10 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.5d0)**2)!*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.075d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
-            ObsErrorValue=1.015d0 !1.03d0
+            ObsErrorValue=1.006d0 !1.015d0 !1.03d0
+            ObsAdditiveError=0.0002d0 !0.002d0
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
             ObsErrorDiag1 = 1/(log(ObsErrorValue)**2) 
@@ -611,11 +612,11 @@
             
                 do indexi=1, NotWorkingMember
                     matrixT(:,indexi)=-AllWeights
-                    matrixT(indexi-1,indexi)=matrixT(indexi-1,indexi)+1
+                    matrixT(indexi-1,indexi)=matrixT(indexi-1,indexi)+1.0d0
                 end do
                 do indexi=NotWorkingMember+1, SeikDim
                     matrixT(:,indexi)=-AllWeights
-                    matrixT(indexi,indexi)=matrixT(indexi,indexi)+1
+                    matrixT(indexi,indexi)=matrixT(indexi,indexi)+1.0d0
                 end do
                 do indexi=1, SeikDim
                     TTTSeik(:,indexi)=matmul(matrixT(:,indexi)/AllWeights,matrixT)
@@ -624,12 +625,12 @@
             else
             
                 do indexi=1, NotWorkingMember
-                    TTTSeik(:,indexi)=-1
-                    TTTSeik(indexi,indexi)=1/AllWeights(indexi-1)-1
+                    TTTSeik(:,indexi)=-1.0d0
+                    TTTSeik(indexi,indexi)=1.0d0/AllWeights(indexi-1)-1.0d0
                 end do
                 do indexi=NotWorkingMember+1, SeikDim
-                    TTTSeik(:,indexi)=-1
-                    TTTSeik(indexi,indexi)=1/AllWeights(indexi)-1
+                    TTTSeik(:,indexi)=-1.0d0
+                    TTTSeik(indexi,indexi)=1.0d0/AllWeights(indexi)-1.0d0
                 end do
             
             end if

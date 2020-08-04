@@ -193,13 +193,15 @@ if (UseMaxVarSEIK) then
 ! stata fatta con UseMaxVarSEIK). Bisognerebbe metterla su ReadBaseSeik.
 ! Per il momento la tolgo, tanto al massimo avrò un po' di instabilita' al primo timestep.
 !reinserito con firsttime
-if (FirstTimeSampling) then
-    FirstTimeSampling=.false.
+!reinserito sempre
     trnEnsembleWeighted=BaseMember**2
     trnEnsembleWeighted=trnEnsembleWeighted*SeikWeight
     call MPI_AllReduce(trnEnsembleWeighted, trnVariance, SpaceDim, mpi_real8, MPI_SUM, EnsembleComm,ierr)
     where (trnVariance>MaxVarSEIK) BaseMember=BaseMember*sqrt(MaxVarSEIK/trnVariance)
 end if
+
+if (FirstTimeSampling) then
+    FirstTimeSampling=.false.
 end if
 
 if (.false.) then
