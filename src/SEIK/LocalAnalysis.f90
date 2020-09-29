@@ -183,6 +183,17 @@ end if
     
     trnEnsemble=exp(trnEnsemble)
     trn=trn*trnEnsemble
+    
+    if (UseCutOffN) then
+        do indexi=1,jptra
+            if (ctrcnm(indexi).eq."N1p") then
+                where (trn(:,:,:,indexi)>CutOffN1p) trn(:,:,:,indexi)=CutOffN1p
+            else if (ctrcnm(indexi).eq."N3n") then
+                where (trn(:,:,:,indexi)>CutOffN3n) trn(:,:,:,indexi)=CutOffN3n
+            end if
+        end do
+    end if
+    
     !trb=trn
         
 if (.false.) then

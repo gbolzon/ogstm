@@ -13,9 +13,10 @@
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
       logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       logical, parameter :: UseLocalForecast=.true., UseLocalAnalysis=.true., UseLocalObsDumping=.true.
+      logical, parameter :: UseCutOffSat=.true., UseCutOffN=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
-      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4
+      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4, CutOffSat=2.0d0, CutOffN3n=20.0d0, CutOffN1p=0.6d0
       double precision, allocatable, dimension (:,:,:,:) :: MaxVarVec
       logical :: FirstTimeSampling
 

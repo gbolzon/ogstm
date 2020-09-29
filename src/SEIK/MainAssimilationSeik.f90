@@ -146,6 +146,9 @@ if (SeikDim>0) then
                         end if
                         
                         if (ObsDataSeik(jj,ji)>0.01d0) then
+                            if (UseCutOffSat) then 
+                                if (ObsDataSeik(jj,ji)>2.0d0) ObsDataSeik(jj,ji)=CutOffSat
+                            end if
                             ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
                         else
                             ObsDataSeik(jj,ji)=log(0.01d0)
@@ -174,6 +177,9 @@ if (SeikDim>0) then
                         MisfitSeik(jj,ji)=log(MisfitSeik(jj,ji))
                         
                         if (ObsDataSeik(jj,ji)>0.01d0) then
+                            if (UseCutOffSat) then 
+                                if (ObsDataSeik(jj,ji)>2.0d0) ObsDataSeik(jj,ji)=CutOffSat
+                            end if
                             ObsBaseMember(jj,ji)=1/(log((ObsDataSeik(jj,ji)-ObsAdditiveError)/(ObsErrorValue*ObsDataSeik(jj,ji)))**2)
                             ObsDataSeik(jj,ji)=log(ObsDataSeik(jj,ji))
                             
