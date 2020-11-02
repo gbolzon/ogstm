@@ -16,7 +16,6 @@ MODULE MPI_GATHER_INFO
         !               - CLEAN_MEMORY_INIT_MPI_GATHERV_COUNTS_INFO()
 
 
-
         USE calendar
         USE myalloc
         USE IO_mem
