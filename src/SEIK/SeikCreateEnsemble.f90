@@ -243,4 +243,9 @@ end if
     end if
     
     !trb=trn
+    
+call mpi_barrier(LocalComm, ierr)
+call mpi_barrier(EnsembleComm, ierr)
+if (lwp) write(*,*) 'Fine SeikCreateEnsemble'
+
 end subroutine

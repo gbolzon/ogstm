@@ -124,10 +124,10 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.075d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.05d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             ObsErrorValue=1.006d0 !1.015d0 !1.03d0
-            ObsAdditiveError=0.0002d0 !0.002d0
+            ObsAdditiveError=0.0002d0 !0.0002d0 !0.002d0
             allocate(ObsErrorDiag1(ObsSpaceDim))                    
             ObsErrorDiag1 = huge(ObsErrorDiag1(1))
             ObsErrorDiag1 = 1/(log(ObsErrorValue)**2) 

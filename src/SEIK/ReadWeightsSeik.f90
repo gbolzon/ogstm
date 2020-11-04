@@ -47,19 +47,25 @@ SUBROUTINE ReadWeightsSeik
             end if
 
             AllWeightsSqrt=HighOrderMatrix(:,1)
-            AllWeights=AllWeightsSqrt**2
-            AllWeightsSqrt1=1.0d0/AllWeightsSqrt
-            call TTTSeik_builder()
-            call MPI_Scatter(AllWeights,1,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
-
-write(*,*) "HighOrderMatrix= ", HighOrderMatrix
-write(*,*) "AllWeights= ", AllWeights
-
+            
         end if
         
+        call MPI_Bcast(AllWeightsSqrt,SeikDim+1, MPI_Real8,0, LocalComm, ierr) 
+        AllWeights=AllWeightsSqrt**2
+        AllWeightsSqrt1=1.0d0/AllWeightsSqrt
+        call TTTSeik_builder()
+        call MPI_Scatter(AllWeights,1,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
+
+if (myrank==0) then
+write(*,*) "HighOrderMatrix= ", HighOrderMatrix
+write(*,*) "AllWeights= ", AllWeights
+end if
+        
     else
-        if (myrank==0) call MPI_Scatter(0,0,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
+        !if (myrank==0) 
+        call MPI_Scatter(0,0,MPI_Real8,SeikWeight,1,MPI_Real8,NotWorkingMember,EnsembleComm,ierr)
+        !end if
     end if
-    call MPI_Bcast( SeikWeight, 1, MPI_Real8, 0,LocalComm, ierr)
+    !call MPI_Bcast( SeikWeight, 1, MPI_Real8, 0,LocalComm, ierr)
 
 END SUBROUTINE

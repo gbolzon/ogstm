@@ -64,10 +64,11 @@ end if
     SeikMask=BfmMask
     
     if (.true.) then ! true if you want to set the mask without coastal zones
-        do indexi=1, jpi
+        do indexi=1, jpi            
             do indexj=1, jpj
                 !11=50m, 17=100m, 25=200m
                 if (bfmMask(12,indexj, indexi)==0) SeikMask(1:11,indexj,indexi)=0
+                if (glamt(indexj,indexi).le.-5.0d0) SeikMask(:,indexj,indexi)=0 !keep this if you want to mask longitude<-5
             end do
         end do
     end if
