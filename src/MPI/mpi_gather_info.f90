@@ -94,7 +94,7 @@ MODULE MPI_GATHER_INFO
         ALLOCATE (jpdispl_count_2d(mpi_glcomm_size))
 
 
-        DO wr_procs=1, nodes
+        DO wr_procs=1, nodes*num_of_wr_procs_perNODE
 
                 if (myrank==writing_procs(wr_procs))then
                         allocate(tottrnIO(jpk,jpjglo,jpiglo)) 
@@ -111,7 +111,7 @@ MODULE MPI_GATHER_INFO
                 end if
         end do
 
-        DO wr_procs=2, nodes
+        DO wr_procs=2, nodes*num_of_wr_procs_perNODE
 
                 if (myrank==writing_procs(wr_procs))then
                         
@@ -170,7 +170,7 @@ MODULE MPI_GATHER_INFO
 
         communication_start_time_gather_info= MPI_Wtime()
 
-        DO wr_procs=1, nodes
+        DO wr_procs=1, nodes*num_of_wr_procs_perNODE
 
 
 

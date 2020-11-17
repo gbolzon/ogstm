@@ -56,7 +56,8 @@ MODULE NODES_MODULE
 
         CALL MPI_GATHER( local_array, lengt,MPI_CHAR, total_array,lengt,MPI_CHAR, 0, MPI_COMM_WORLD, IERROR)
 
-       
+        num_of_wr_procs_perNODE = 2    !in the future in the namelist
+
         IF (myrank == 0) THEN
                 nodes = 1
                 p=1
@@ -115,30 +116,39 @@ MODULE NODES_MODULE
         ! cycle to fill writing procs array with num_of_wr_procs_perNODE per
         ! node
                 
-                ALLOCATE (writing_procs(nodes*num_of_wr_procs_perNODE))
+                !ALLOCATE (writing_procs(nodes*num_of_wr_procs_perNODE))
                 
-                num_of_wr_procs_perNODE = 2
-       
-                cycle_cont = 0
+                !num_of_wr_procs_perNODE = 2
 
-                DO i=1,nodes
-                        IF (nodes==1) THEN
-                                !if the number of node is one break, no sense to
-                                !calculate, avoid problems
-                                EXIT
-                        ELSE
-                                writing_procs(i + cycle_cont) = writing_procs_base(i)
-                                writing_procs(i + cycle_cont +1) = writing_procs_base(i) + 20
-                                cycle_cont = cycle_cont + 1
-                        END IF
-                END DO
-                
+                if (num_of_wr_procs_perNODE == 1) then
+                        ALLOCATE(writing_procs(nodes))
+                        do i=1, nodes
+                                writing_procs(i) = writing_procs_base(i)
+                        end do
+                else 
+                        ALLOCATE (writing_procs(nodes*num_of_wr_procs_perNODE))       
+                        
+                        cycle_cont = 0
+
+                        DO i=1,nodes
+                                IF (nodes==1) THEN
+                                        !if the number of node is one break, no sense to
+                                        !calculate, avoid problems
+                                        EXIT
+                                ELSE
+                                        writing_procs(i + cycle_cont) = writing_procs_base(i)
+                                        writing_procs(i + cycle_cont +1) = writing_procs_base(i) + 20
+                                        cycle_cont = cycle_cont + 1
+                                END IF
+                        END DO
+                end if
+                        
 
         !rank 0 send to all ranks writing_procs
 
                 DO i=1, mpi_glcomm_size - 1
-                        CALL MPI_Send(num_of_wr_procs_perNODE,1,MPI_INT,i,8,MPI_COMM_WORLD,IERROR)
-                        CALL MPI_Send(writing_procs,nodes,MPI_INT,i,3,MPI_COMM_WORLD,IERROR)
+                        !CALL MPI_Send(num_of_wr_procs_perNODE,1,MPI_INT,i,8,MPI_COMM_WORLD,IERROR)
+                        CALL MPI_Send(writing_procs,nodes*num_of_wr_procs_perNODE,MPI_INT,i,3,MPI_COMM_WORLD,IERROR)
                 END DO
 
         END IF
@@ -149,13 +159,13 @@ MODULE NODES_MODULE
         IF (myrank >0) THEN
                 
                 CALL MPI_Recv(nodes,1,MPI_INT,0,4,MPI_COMM_WORLD,MPI_STATUS_IGNORE, IERROR)
-                CALL MPI_Recv(num_of_wr_procs_perNODE,1,MPI_INT,0,8,MPI_COMM_WORLD,MPI_STATUS_IGNORE, IERROR)
+                !CALL MPI_Recv(num_of_wr_procs_perNODE,1,MPI_INT,0,8,MPI_COMM_WORLD,MPI_STATUS_IGNORE, IERROR)
                 
                 ALLOCATE (writing_procs(nodes*num_of_wr_procs_perNODE))
 
-                CALL MPI_Recv(writing_procs,nodes,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE, IERROR)
+                CALL MPI_Recv(writing_procs,nodes*num_of_wr_procs_perNODE,MPI_INT,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE, IERROR)
 
-                DO k=1, nodes
+                DO k=1, nodes*num_of_wr_procs_perNODE
                         write (*,*) 'writing procs position is ', k, writing_procs(k)
                 END DO
         END IF

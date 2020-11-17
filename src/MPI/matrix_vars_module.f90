@@ -71,53 +71,53 @@ MODULE MATRIX_VARS
 
         ! define how many rows will be in the procs matrix
         
-        matrix_col = nodes
+        matrix_col = nodes*num_of_wr_procs_perNODE
         novars="novars_input"
         
 
         !IF (FREQ_GROUP.eq.2) THEN
 
-        IF (MOD(jptra,nodes)==0)THEN
-                matrix_state_2_row = (jptra/nodes)
+        IF (MOD(jptra,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_state_2_row = (jptra/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_state_2_row = (jptra/nodes) + 1
+                matrix_state_2_row = (jptra/nodes*num_of_wr_procs_perNODE) + 1
         END IF
         
         !ELSE
         
-        IF (MOD(jptra_high,nodes)==0)THEN
-                matrix_state_1_row = (jptra_high/nodes)
+        IF (MOD(jptra_high,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_state_1_row = (jptra_high/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_state_1_row = (jptra_high/nodes) + 1
+                matrix_state_1_row = (jptra_high/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
         !END IF
-        IF (MOD(jptra_dia_2d,nodes)==0)THEN
-                matrix_diag_2d_2_row = (jptra_dia_2d/nodes)
+        IF (MOD(jptra_dia_2d,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_diag_2d_2_row =(jptra_dia_2d/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_diag_2d_2_row = (jptra_dia_2d/nodes) + 1
+                matrix_diag_2d_2_row =(jptra_dia_2d/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
         !ELSE
 
-        IF (MOD(jptra_dia2d_high,nodes)==0)THEN
-                matrix_diag_2d_1_row = (jptra_dia2d_high/nodes)
+        IF (MOD(jptra_dia2d_high,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_diag_2d_1_row =(jptra_dia2d_high/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_diag_2d_1_row = (jptra_dia2d_high/nodes) + 1
+                matrix_diag_2d_1_row =(jptra_dia2d_high/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
-        IF (MOD(jptra_dia,nodes)==0)THEN
-                matrix_diag_2_row = (jptra_dia/nodes)
+        IF (MOD(jptra_dia,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_diag_2_row = (jptra_dia/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_diag_2_row = (jptra_dia/nodes) + 1
+                matrix_diag_2_row = (jptra_dia/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
         !ELSE
 
-        IF (MOD(jptra_dia_high,nodes)==0)THEN
-                matrix_diag_1_row = (jptra_dia_high/nodes)
+        IF (MOD(jptra_dia_high,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_diag_1_row =(jptra_dia_high/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_diag_1_row = (jptra_dia_high/nodes) + 1
+                matrix_diag_1_row =(jptra_dia_high/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
         !allocate matrix
