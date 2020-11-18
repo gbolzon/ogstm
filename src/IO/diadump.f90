@@ -256,7 +256,7 @@
 
         DUMPING_LOOP_2d: DO jv = 1, n_dumping_cycles
 
-                DO ivar = 1 , nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE
 
                         writing_rank = writing_procs(ivar)
 
@@ -298,7 +298,15 @@
 
                 IF (WRITING_RANK_WR)then
 
-                        ind_col = (myrank / n_ranks_per_node) +1
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do
+
+
+!                        ind_col = (myrank / n_ranks_per_node) +1
 
                         if (FREQ_GROUP.eq.2) then
                                 var_to_store_diag_2d = matrix_diag_2d_2(jv,ind_col)%var_name
@@ -379,7 +387,7 @@
 
         DUMPING_LOOP_3d: DO jv = 1, n_dumping_cycles
 
-                DO ivar = 1 , nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE
 
                         writing_rank = writing_procs(ivar)
 
@@ -425,7 +433,14 @@
 ! *********** START WRITING **************************
                 IF (WRITING_RANK_WR)then
 
-                        ind_col = (myrank / n_ranks_per_node)+1
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do
+
+!                        ind_col = (myrank / n_ranks_per_node)+1
 
                         if (FREQ_GROUP.eq.2) then
                                 var_to_store_diag = matrix_diag_2(jv,ind_col)%var_name
@@ -477,9 +492,9 @@
 
         if (.not.IsBackup) then
                 if (FREQ_GROUP.eq.2) then
-                        tra_DIA_IO(jn,:,:,:) = 0.
+                        tra_DIA_IO(:,:,:,:) = 0.
                 else
-                        tra_DIA_IO_HIGH(jn_high,:,:,:) = 0.
+                        tra_DIA_IO_HIGH(:,:,:,:) = 0.
                 endif
         endif
 

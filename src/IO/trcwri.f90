@@ -22,7 +22,7 @@
 ! local declarations
 ! ==================
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji,jn
+        INTEGER jk,jj,ji
         double precision julian
 
 
@@ -56,7 +56,7 @@
 
         RESTARTS_LOOP: DO jv = 1, n_dumping_cycles
                                 
-                DO ivar = 1 , nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE
         
                         writing_rank = writing_procs(ivar)
                         IF (COUNTER_VAR_TRCWRI > JPTRA)then
@@ -84,7 +84,13 @@
                 END DO
 
                 if(WRITING_RANK_WR) then
-                        ind_col = (myrank / n_ranks_per_node)+1
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do
+                        !ind_col = (myrank / n_ranks_per_node)+1
                         var_to_store =matrix_state_2(jv,ind_col)%var_name
                         IF (var_to_store == "novars_input")then
                                 EXIT

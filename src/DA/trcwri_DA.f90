@@ -79,7 +79,7 @@ SUBROUTINE trcwriDA(datestring)
  
         DA_LOOP: DO jv = 1, n_dumping_cycles
 
-                DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE!number of variables for each round corresponds to the number of nodes
 
                         writing_rank = writing_procs(ivar)
 
@@ -113,8 +113,15 @@ SUBROUTINE trcwriDA(datestring)
         !WRITING RANKS
 
                 if(WRITING_RANK_WR) then
-
-                        ind_col = (myrank / n_ranks_per_node)+1
+                                
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do 
+                
+!                        ind_col = (myrank / n_ranks_per_node)+1
 
                         var_to_store = matrix_DA(jv,ind_col)%var_name
 

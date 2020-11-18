@@ -40,7 +40,7 @@
       namelist /natnum/ rdt,variable_rdt, rsc,rtrn,ncor,ndttrc,ladv, lhdf, lsbc, lbfm, lzdf, lsnu, lhtp, latmosph, &
       ahtrb0,trcrat,ahtrc0,vsed,vsedO5c, photop,atlantic_bfm,bottom_flux,Euphotic_lev, IS_FREE_SURFACE
       NAMELIST/General_IO/ nwritetrc, freq_ave_phys, freq_flux_dump, save_bkp_group2, deflate_ave, deflate_level_ave, deflate_rst, &
-          deflate_level_rst, isCheckLOG, read_W_from_file, internal_sponging, ingv_files_direct_reading, ingv_lon_shift
+          deflate_level_rst, isCheckLOG, read_W_from_file, internal_sponging, ingv_files_direct_reading, ingv_lon_shift, num_of_wr_procs_perNODE
 
       NAMELIST/Domain_Characteristic/  jperio
       NAMELIST/Number_Fluxes/ jpflx, jpwind, jpemp,jpkef, jpice, jpqsr
@@ -240,7 +240,7 @@
           endif
       endif
 
-
+      WRITE(numout,*) 'num_of_wr_procs_perNODE is ',num_of_wr_procs_perNODE
 
 
 ! ... namelist.init: Domain_Characteristic

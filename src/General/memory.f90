@@ -109,7 +109,7 @@
       double precision, allocatable :: gdept(:), gdepw(:)
 #else
       double precision, allocatable :: gdept(:,:,:), gdepw(:)
-#fi
+#endif
       double precision, allocatable,dimension(:,:,:), save :: e3t, e3t_back, e3u, e3v, e3w
       double precision, allocatable,dimension(:,:,:), save :: e3t_0, e3u_0, e3v_0, e3w_0
       double precision, allocatable :: spongeT(:,:) , spongeVel(:,:,:)
@@ -314,7 +314,10 @@
       double precision, allocatable ::  buf(:,:,:)
       double precision, allocatable ::  buf2(:,:)
       INTEGER, allocatable, dimension(:) :: highfreq_table,highfreq_table_dia, highfreq_table_dia2d
+!!-------------------------------------------------------------------------
+!I/O parameter
 
+      INTEGER :: num_of_wr_procs_perNODE
 !!----------------------------------------------------------------------
 !!
 !! COMMON /cot3ad/ non-centered advection scheme (smolarkiewicz)

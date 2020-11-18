@@ -33,14 +33,14 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
         INTEGER, INTENT(IN) :: FREQ_GROUP ! 1 = HIGH FREQ, 2 = LOW FREQ #cannot change value inside te value
         double precision ::  Miss_val =1.e20
 
-        INTEGER jk,jj,ji, jn, jn_high,i,j,k
+        INTEGER jk,jj,ji,i,j,k
         INTEGER ind, i_contribution, j_contribution
         double precision :: elapsed_time
 
         !new declarations
         INTEGER counter_var, counter_var_high, new_counter_var, new_counter_var_high, nVARS, jv, ivar, n_dumping_cycles
         INTEGER col_var, row_var, writing_rank
-        CHARACTER(len=20), DIMENSION(nodes) :: matrix_row_to_write
+        !CHARACTER(len=20), DIMENSION(nodes*num_of_wr_procs_perNODE) :: matrix_row_to_write
 
         CHARACTER(LEN=56) output_file_nc  ! AVE_FREQ_1/ave.20091231-12:00:00.P1n.nc
         CHARACTER(LEN=20) var
@@ -100,7 +100,7 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
 
                 gatherv_init_time = MPI_Wtime()
 
-                DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE!number of variables for each round corresponds to the number of nodes
 
                         writing_rank = writing_procs(ivar)
 
@@ -159,7 +159,13 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
 
                         writing_rank_init_time = MPI_Wtime()
 
-                        ind_col = (myrank / n_ranks_per_node)+1
+                        !ind_col = (myrank / n_ranks_per_node)+1
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do
 
                         if (FREQ_GROUP.eq.2) then
                                 var_to_store = matrix_state_2(jv,ind_col)%var_name

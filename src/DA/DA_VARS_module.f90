@@ -90,10 +90,10 @@ MODULE DA_VARS_module
         DA_vars_parallel=num_DA_vars-PX_DA
 
         !define the DA_matrix for printing in parallel
-        IF (MOD(DA_vars_parallel,nodes)==0)THEN
-                matrix_DA_row = (DA_vars_parallel/nodes)
+        IF (MOD(DA_vars_parallel,nodes*num_of_wr_procs_perNODE)==0)THEN
+                matrix_DA_row = (DA_vars_parallel/nodes*num_of_wr_procs_perNODE)
         ELSE
-                matrix_DA_row = (DA_vars_parallel/nodes) + 1
+                matrix_DA_row = (DA_vars_parallel/nodes*num_of_wr_procs_perNODE) + 1
         END IF
 
         allocate(matrix_DA(matrix_DA_row,matrix_col))

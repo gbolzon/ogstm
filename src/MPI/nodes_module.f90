@@ -35,7 +35,7 @@ MODULE NODES_MODULE
         
         INTEGER, allocatable, dimension (:) :: writing_procs
         INTEGER, allocatable, dimension (:) :: writing_procs_base
-        INTEGER :: num_of_wr_procs_perNODE
+        !INTEGER :: num_of_wr_procs_perNODE
         
         CONTAINS
 
@@ -56,7 +56,7 @@ MODULE NODES_MODULE
 
         CALL MPI_GATHER( local_array, lengt,MPI_CHAR, total_array,lengt,MPI_CHAR, 0, MPI_COMM_WORLD, IERROR)
 
-        num_of_wr_procs_perNODE = 2    !in the future in the namelist
+        !num_of_wr_procs_perNODE = 2    !in the future in the namelist
 
         IF (myrank == 0) THEN
                 nodes = 1

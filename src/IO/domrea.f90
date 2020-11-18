@@ -80,7 +80,7 @@
 
 ! 1. Horzontal grid-point position
 ! --------------------------------
-      DO wr_procs=1, nodes
+      DO wr_procs=1, nodes*num_of_wr_procs_perNODE
                 if (myrank==writing_procs(wr_procs))then
                         call readnc_global_double_2d(maskfile,'glamt',totglamt)
                         call readnc_global_double_2d(maskfile,'gphit',totgphit)
