@@ -17,7 +17,7 @@
 
       CHARACTER(LEN=17), INTENT(IN) :: datemean, dateFrom, dateTo
       INTEGER, INTENT(IN) :: FREQ_GROUP
-      INTEGER jk,jj,ji
+      INTEGER jk,jj,ji,i
       INTEGER ind, i_contribution, j_contribution
       CHARACTER(10) newfile
       CHARACTER(LEN=42) forcing_file
