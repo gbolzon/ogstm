@@ -41,7 +41,7 @@ SUBROUTINE trcwriDA(datestring)
 ! local declarations
 ! ==================
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji,jn
+        INTEGER jk,jj,ji,jn,i
         INTEGER s, nc, counter
         integer timid, depid, yid, xid, idvar
         double precision julian
@@ -204,7 +204,7 @@ SUBROUTINE CHL_subroutine(datestring)
         CHARACTER(LEN=17), INTENT(IN) :: datestring
 
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji,jn
+        INTEGER jk,jj,ji,jn,i
         INTEGER s, nc, counter
         integer timid, depid, yid, xid, idvar
         double precision julian

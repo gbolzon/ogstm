@@ -6,6 +6,7 @@
       use ogstm_mpi_module
       use mpi_str, only: Var3DCommunicator
       use calendar
+      USE TREd_var_MP
 
       IMPLICIT NONE
 
@@ -51,7 +52,7 @@
       CHLSUP_FOR_DA = 'DA__FREQ_1/chl.' // datestr // '.nc'
       CALL trcwriDA(DATEstr)  ! Dumps Before Assimilation real*4
 
-      if (myrank .lt. DA_Nprocs ) then
+      if (V3D_VAR_PARALLEL) then
 
           allocate(DA_VarList(NBioVar))
           do ii=1,NBioVar

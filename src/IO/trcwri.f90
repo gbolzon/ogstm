@@ -22,7 +22,7 @@
 ! local declarations
 ! ==================
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji
+        INTEGER jk,jj,ji,i
         double precision julian
 
 
