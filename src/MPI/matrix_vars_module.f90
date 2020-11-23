@@ -88,46 +88,51 @@ MODULE MATRIX_VARS
         !IF (FREQ_GROUP.eq.2) THEN
 
         IF (MOD(jptra,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_state_2_row = (jptra/nodes*num_of_wr_procs_perNODE)
+                matrix_state_2_row = (jptra/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_state_2_row = (jptra/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_state_2_row = (jptra/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
         
         !ELSE
         
         IF (MOD(jptra_high,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_state_1_row = (jptra_high/nodes*num_of_wr_procs_perNODE)
+                matrix_state_1_row = (jptra_high/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_state_1_row = (jptra_high/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_state_1_row = (jptra_high/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
+        
+        write(*,*) 'nodes*num_of_wr_procs_perNODE',nodes*num_of_wr_procs_perNODE
+        write(*,*) 'jptra_high is', jptra_high
+        WRITE(*,*) 'DIVISION IS', (jptra_high/(nodes*num_of_wr_procs_perNODE))
+        write(*,*) 'matrix_state_1_row is', matrix_state_1_row 
 
         !END IF
         IF (MOD(jptra_dia_2d_wri,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_diag_2d_2_row = (jptra_dia_2d_wri/nodes*num_of_wr_procs_perNODE)
+                matrix_diag_2d_2_row = (jptra_dia_2d_wri/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_diag_2d_2_row = (jptra_dia_2d_wri/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_diag_2d_2_row = (jptra_dia_2d_wri/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
 
         !ELSE
 
         IF (MOD(jptra_dia_2d_high_wri,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_diag_2d_1_row = (jptra_dia_2d_high_wri/nodes*num_of_wr_procs_perNODE)
+                matrix_diag_2d_1_row = (jptra_dia_2d_high_wri/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_diag_2d_1_row = (jptra_dia_2d_high_wri/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_diag_2d_1_row = (jptra_dia_2d_high_wri/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
 
         IF (MOD(jptra_dia_wri,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_diag_2_row = (jptra_dia_wri/nodes*num_of_wr_procs_perNODE)
+                matrix_diag_2_row = (jptra_dia_wri/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_diag_2_row = (jptra_dia_wri/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_diag_2_row = (jptra_dia_wri/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
 
         !ELSE
 
         IF (MOD(jptra_dia_high_wri,nodes*num_of_wr_procs_perNODE)==0)THEN
-                matrix_diag_1_row = (jptra_dia_high_wri/nodes*num_of_wr_procs_perNODE)
+                matrix_diag_1_row = (jptra_dia_high_wri/(nodes*num_of_wr_procs_perNODE))
         ELSE
-                matrix_diag_1_row = (jptra_dia_high_wri/nodes*num_of_wr_procs_perNODE) + 1
+                matrix_diag_1_row = (jptra_dia_high_wri/(nodes*num_of_wr_procs_perNODE)) + 1
         END IF
 
         !allocate matrix
@@ -250,6 +255,8 @@ MODULE MATRIX_VARS
                         END IF
                 END DO
         END DO
+
+        call MATRIX_PRINT()
 !OK
         END SUBROUTINE POPULATE_MATRIX_VARS
 !----------------------------------------------------------
@@ -333,6 +340,21 @@ MODULE MATRIX_VARS
 
 
         END SUBROUTINE DIA_MATRIX_VARS
+!------------------------------------------------------------
+        SUBROUTINE MATRIX_PRINT()
+        
+        INTEGER :: i,j,counter_print
+
+        counter_print = 1
+        WRITE(*,*) 'State Variables AVE FREQ 1'
+        DO j=1, matrix_state_1_row
+                do i=1, nodes*num_of_wr_procs_perNODE
+                        WRITE(*,*) 'n°',' ',counter_print,'WR PROC rank',' ',writing_procs(i),'dump',' ', matrix_state_1(j,i)
+                        counter_print=counter_print + 1
+                end do
+        END DO
+
+        END SUBROUTINE MATRIX_PRINT
 !------------------------------------------------------------
         SUBROUTINE CLEAN_MATRIX_VARS()
 

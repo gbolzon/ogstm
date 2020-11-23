@@ -98,8 +98,6 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
 
         DUMPING_LOOP: DO jv = 1, n_dumping_cycles
 
-                gatherv_init_time = MPI_Wtime()
-
                 DO ivar = 1 , nodes*num_of_wr_procs_perNODE!number of variables for each round corresponds to the number of nodes
 
                         writing_rank = writing_procs(ivar)
@@ -143,11 +141,6 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         END IF
 
                 END DO
-                gatherv_fin_time = MPI_Wtime()
-
-                gatherv_delta_time = gatherv_fin_time - gatherv_init_time
-                CALL MPI_Reduce( gatherv_delta_time, gatherv_sum_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
-
 
                 ! *************** COLLECTING DATA *****************************
 
@@ -159,9 +152,12 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         do i=1, nodes*num_of_wr_procs_perNODE
                                 if(myrank == writing_procs(i))then
                                         ind_col=i
+                                        !write(*,*) 'myrankis', myrank,'indcol is',ind_col,'writing_proc is', writing_procs(i),'iis', i, 'jvis', jv
                                         exit
                                 end if
                         end do
+                        !write(*,*) 'myrankis', myrank,' ', 'indcol is',ind_col,'writing_proc is', writing_procs(i)
+        
 
                         if (FREQ_GROUP.eq.2) then
                                 var_to_store = matrix_state_2(jv,ind_col)%var_name
@@ -169,7 +165,10 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                 var_to_store = matrix_state_1(jv,ind_col)%var_name
                         end if
 
+                        write(*,*)'var_to_store is',var_to_store,' ', myrank,' ', jv,' ',ind_col
+
                         IF (var_to_store == "novars_input")then
+                                !write(*,*)'exit_dumping', myrank
                                 EXIT
                         ELSE
                                 DO idrank = 0,mpi_glcomm_size-1
@@ -208,13 +207,9 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                         CALL WRITE_AVE(output_file_nc,var_to_store,datefrom, dateTo, tottrnIO, deflate_ave, deflate_level_ave)
                                 endif
                         END IF
-                        !writing_rank_fin_time = MPI_Wtime()
-                        !writing_rank_delta_time = writing_rank_fin_time - writing_rank_init_time
-                        !writing_rank_sum_time = writing_rank_delta_time + writing_rank_sum_time
-                        !write(*,*)'writingtime', writing_rank_sum_time,'   ',jv, '   ', myrank
-                END IF
+                END IF  !(writing_rank)
         END DO DUMPING_LOOP
-
+       
         if (.not.IsBackup) then
                 if (FREQ_GROUP.eq.2) then
                         traIO(:,:,:,:) = 0.  !      we reset matrix for new average
@@ -222,15 +217,5 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         traIO_HIGH(:,:,:,:) = 0.
                 endif
         end if
-
-        finish_time_trcdit_info= MPI_Wtime()
-        proctime_time_trcdit_info=finish_time_trcdit_info - start_time_trcdit_info
-
-        CALL MPI_Reduce( proctime_time_trcdit_info,max_time_trcdit_info, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD,IERROR)
-
-        !if(myrank == 0) then
-        !        write(*,*) 'TRCDIT TIME is', max_time_trcdit_info
-        !end if
-
 
 END SUBROUTINE trcdit
