@@ -46,7 +46,7 @@ MODULE NODES_MODULE
         INTEGER :: IERROR
         CHARACTER*(MPI_MAX_PROCESSOR_NAME) buff_recv
         
-        INTEGER ::  cycle_cont
+        INTEGER ::  cycle_cont, tot_cycle_cont
 
         CHARACTER (len = lengt), dimension(mpi_glcomm_size) :: total_array
         
@@ -128,7 +128,7 @@ MODULE NODES_MODULE
                 else 
                         ALLOCATE (writing_procs(nodes*num_of_wr_procs_perNODE))       
                         
-                        cycle_cont = 0
+                        cycle_cont = 1
 
                         DO i=1,nodes
                                 IF (nodes==1) THEN
@@ -136,9 +136,27 @@ MODULE NODES_MODULE
                                         !calculate, avoid problems
                                         EXIT
                                 ELSE
-                                        writing_procs(i + cycle_cont) = writing_procs_base(i)
-                                        writing_procs(i + cycle_cont +1) = writing_procs_base(i) + 20
-                                        cycle_cont = cycle_cont + 1
+                                        !if((num_of_wr_procs_perNODE/2) == 1) then
+                                        !        writing_procs(i + cycle_cont) = writing_procs_base(i)
+                                        !        writing_procs(i + cycle_cont +1) = writing_procs_base(i) + 20
+                                        !        cycle_cont = cycle_cont + 1
+                                        !writing_procs(i + cycle_cont) = writing_procs_base(i)
+                                        !writing_procs(i + cycle_cont +1) = writing_procs_base(i) + 20
+                                        !cycle_cont = cycle_cont + 1
+                                        
+                                        !writing_procs(i) = writing_procs_base(i+ cycle_cont)
+                                        !cycle_cont = 1
+                                        tot_cycle_cont = i - 1
+                                        do j=1, num_of_wr_procs_perNODE
+                                                if(j<(num_of_wr_procs_perNODE/2) + 1)then
+                                                        writing_procs(cycle_cont) = writing_procs_base(i) + j - 1
+                                                        cycle_cont = cycle_cont + 1
+                                                else
+                                                        writing_procs(cycle_cont) = writing_procs_base(i) + j - (num_of_wr_procs_perNODE/2) + 19
+                                                        cycle_cont = cycle_cont + 1 
+                                                end if
+                                                !tot_cycle_cont = tot_cycle_cont + 1
+                                        end do
                                 END IF
                         END DO
                 end if
