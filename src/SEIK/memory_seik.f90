@@ -16,7 +16,7 @@
       logical, parameter :: UseCutOffSat=.true., UseCutOffN=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
       logical, parameter :: PCAFullYear=.false.
-      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4, CutOffSat=2.0d0, CutOffN3n=20.0d0, CutOffN1p=0.6d0
+      double precision, parameter :: MaxVarSEIK=1.0d0, CutOffValue=1.0d-4, CutOffSat=2.0d0, CutOffN3n=20.0d0, CutOffN4n=10.0d0, CutOffN1p=0.6d0
       double precision, allocatable, dimension (:,:,:,:) :: MaxVarVec
       logical :: FirstTimeSampling
 
@@ -124,7 +124,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.05d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.075d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             ObsErrorValue=1.006d0 !1.015d0 !1.03d0
             ObsAdditiveError=0.0002d0 !0.0002d0 !0.002d0

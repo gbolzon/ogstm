@@ -238,6 +238,8 @@ end if
                 where (trn(:,:,:,indexi)>CutOffN1p) trn(:,:,:,indexi)=CutOffN1p
             else if (ctrcnm(indexi).eq."N3n") then
                 where (trn(:,:,:,indexi)>CutOffN3n) trn(:,:,:,indexi)=CutOffN3n
+            else if (ctrcnm(indexi).eq."N4n") then
+                where (trn(:,:,:,indexi)>CutOffN4n) trn(:,:,:,indexi)=CutOffN4n
             end if
         end do
     end if
