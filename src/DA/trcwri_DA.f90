@@ -60,11 +60,13 @@ SUBROUTINE trcwriDA(datestring)
         INTEGER SysErr, system
         INTEGER :: jv,n_dumping_cycles,writing_rank,counter_var_DA,ivar,jn_da,ind_col
         CHARACTER(LEN=20)  var_to_store
+        DOUBLE PRECISION :: packing_trwrida_sum_time,start_time_trcwrida,packing_trcwrida_init_time,gatherv_trcwrida_init_time,gatherv_trcwrida_fin_time,packing_trcwrida_fin_time,gatherv_trcwrida_delta_time,packing_trcwrida_delta_time,gatherv_trcwrida_sum_time,unpacking_trcwrida_rank_init_time,unpacking_trcwrida_rank_fin_time,writing_trcwrida_rank_fin_time,writing_trcwrida_rank_delta_time,unpacking_trcwrida_rank_delta_time,writing_trcwrida_rank_sum_time,unpacking_trcwrida_rank_sum_time,writing_trcwrida_rank_init_time,packing_trcwrida_sum_time
+        
 
         julian=datestring2sec(datestring)
 
         if(WRITING_rank_wr)write(*,*) 'trcwri DA ------------  myrank =', myrank,' datestring = ', datestring 
-       
+        start_time_trcwrida = MPI_Wtime()       
 
         trcwriparttime = MPI_WTIME() ! cronometer-start
         call mppsync()
@@ -74,13 +76,16 @@ SUBROUTINE trcwriDA(datestring)
         if (WRITING_RANK_WR) tottrn = Miss_val
         n_dumping_cycles = matrix_DA_row
         counter_var_DA = 1
-      
+        writing_trcwrida_rank_sum_time = 0
+        unpacking_trcwrida_rank_sum_time = 0
+        packing_trwrida_sum_time = 0
+        gatherv_trcwrida_fin_time = 0
         !all ranks
  
         DA_LOOP: DO jv = 1, n_dumping_cycles
 
                 DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
-
+                        packing_trcwrida_init_time = MPI_Wtime()
                         writing_rank = writing_procs(ivar)
 
                         IF (COUNTER_VAR_DA + PX_DA > num_DA_vars )then
@@ -102,12 +107,26 @@ SUBROUTINE trcwriDA(datestring)
                                 enddo
 
                                 counter_var_DA = counter_var_DA + 1
-
+                                gatherv_trcwrida_init_time = MPI_Wtime()
                                 CALL MPI_GATHERV(bufftrn, sendcount, MPI_DOUBLE_PRECISION, bufftrn_TOT, jprcv_count, jpdispl_count, MPI_DOUBLE_PRECISION, writing_rank, MPI_COMM_WORLD, IERR)
-
+                                gatherv_trcwrida_fin_time = gatherv_trcwrida_fin_time + MPI_Wtime()
                         END IF
 
                 END DO
+                packing_trcwrida_fin_time = MPI_Wtime()
+
+                gatherv_trcwrida_delta_time = gatherv_trcwrida_fin_time - gatherv_trcwrida_init_time
+                packing_trcwrida_delta_time = packing_trcwrida_fin_time - packing_trcwrida_init_time
+                packing_trwrida_sum_time = packing_trwrida_sum_time + packing_trcwrida_delta_time
+
+                CALL MPI_Reduce( gatherv_trcwrida_delta_time, gatherv_trcwrida_sum_time, 1,MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                CALL MPI_Reduce( packing_trcwrida_delta_time, packing_trwrida_sum_time,2,MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+
+                if(myrank==0)then
+                        write(*,*)' gatherv_sum_time_trcwrida is ',gatherv_trcwrida_sum_time
+                        write(*,*)'packing_sum_time_trcwrida is ',packing_trcwrida_sum_time
+                end if
+
 
 
         !WRITING RANKS
@@ -117,7 +136,7 @@ SUBROUTINE trcwriDA(datestring)
                         ind_col = (myrank / n_ranks_per_node)+1
 
                         var_to_store = matrix_DA(jv,ind_col)%var_name
-
+                        unpacking_trcwrida_rank_init_time = MPI_WTIME()
                         IF (var_to_store == "novars_input")then
                                 EXIT
                         ELSE
@@ -147,6 +166,7 @@ SUBROUTINE trcwriDA(datestring)
                                                 enddo
                                         enddo
                                 END DO
+                                unpacking_trcwrida_rank_fin_time = MPI_WTIME()
 
                                 BeforeName = 'DA__FREQ_1/RSTbefore.'//datestring//'.'//var_to_store//'.nc'
                                 BeforeNameShort = 'DA__FREQ_1/RSTbefore.'//datestring(1:11)//datestring(13:14)//datestring(16:17)//'.'//var_to_store//'.nc'
@@ -157,14 +177,27 @@ SUBROUTINE trcwriDA(datestring)
                                                 end do
                                         end do
                                 end do
+                                writing_trcwrida_rank_init_time = MPI_WTIME()
                                 CALL write_BeforeAss(BeforeName, var_to_store)
-
+                                writing_trcwrida_rank_fin_time = MPI_Wtime()
                                 !process 0 creates link to the restart file
                                 !since parallel-netcdf seems to do not 
                                 !read filenames with colons
                                 SysErr = system("ln -sf $PWD/"//BeforeName//" "//BeforeNameShort)
                                 if(SysErr /= 0) call MPI_Abort(MPI_COMM_WORLD, -1, SysErr)
                         END IF
+                        !writing_trcwrida_rank_fin_time = MPI_Wtime()
+
+                        writing_trcwrida_rank_delta_time = writing_trcwrida_rank_fin_time - writing_trcwrida_rank_init_time
+                        unpacking_trcwrida_rank_delta_time = unpacking_trcwrida_rank_fin_time - unpacking_trcwrida_rank_init_time
+                        writing_trcwrida_rank_sum_time = writing_trcwrida_rank_delta_time + writing_trcwrida_rank_sum_time
+                        unpacking_trcwrida_rank_sum_time = unpacking_trcwrida_rank_delta_time + unpacking_trcwrida_rank_sum_time
+                        if (myrank==0) then
+
+                                write(*,*)'writingtottime_trcwrida', writing_trcwrida_rank_sum_time,' ',jv
+                                write(*,*)'unpackingtottime_trcwrida',unpacking_trcwrida_rank_sum_time,' ',jv
+                        end if
+
                 END IF
         END DO DA_LOOP
         CALL CHL_subroutine(datestring)
@@ -215,6 +248,8 @@ SUBROUTINE CHL_subroutine(datestring)
         INTEGER SysErr, system
         INTEGER ::jv,n_dumping_cycles,writing_rank,counter_var_DA,ivar,jn_da,ind_col
         CHARACTER(LEN=20)  var_to_store
+        DOUBLE PRECISION ::chl_start,gatherv_chl_init_time,gatherv_chl_fin_time,chl_writing,chl_writing_end,chl_sum_writing,chl_end,chl_delta
+
 
         julian=datestring2sec(datestring)
         buf     = Miss_val
@@ -222,7 +257,7 @@ SUBROUTINE CHL_subroutine(datestring)
         if (myrank==0) tottrn = Miss_val 
 
          
-
+        chl_start = MPI_WTIME()
 
         if(MYRANK ==0) CHLtot = 0.0
 
@@ -243,11 +278,13 @@ SUBROUTINE CHL_subroutine(datestring)
                                 enddo
                         enddo
                 enddo
-
+                gatherv_chl_init_time = MPI_Wtime()
                 CALL MPI_GATHERV(bufftrn, sendcount, MPI_DOUBLE_PRECISION, bufftrn_TOT, jprcv_count, jpdispl_count, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, IERR)
+                gatherv_chl_fin_time = gatherv_chl_fin_time + MPI_Wtime()
+                
 
                 if(MYRANK == 0) then
-
+                        write(*,*)'chl_gatherv_time is ',gatherv_chl_fin_time
                         var_to_store = PX_matrix(jv)%var_name
 
                         DO idrank = 0,mpi_glcomm_size-1
@@ -289,7 +326,12 @@ SUBROUTINE CHL_subroutine(datestring)
                                         end do
                                 end do
                         end do
+                        chl_writing = MPI_WTIME()
                         CALL write_BeforeAss(BeforeName, var_to_store)
+                        chl_writing_end = MPI_WTIME()
+                        chl_sum_writing = chl_sum_writing + chl_writing_end
+
+                        write(*,*) ' chl_writing_time_is', chl_sum_writing
 
                         !process 0 creates link to the restart file
                         !since parallel-netcdf seems to do not 
@@ -327,6 +369,12 @@ SUBROUTINE CHL_subroutine(datestring)
                 s=nf90_close(nc)
         
         END IF
+        chl_end = MPI_WTIME()
+        chl_delta = chl_end - chl_start
+
+        if(myrank==0)then
+                write(*,*)'chl_subroutines is ', chl_delta
+        end if
 
 END SUBROUTINE CHL_subroutine
 

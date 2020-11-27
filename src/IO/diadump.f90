@@ -40,7 +40,11 @@
       INTEGER :: n_dumping_cycles, jv, ivar, writing_rank, ind_col
       INTEGER :: var_to_send_2D, var_high_to_send_2D
       INTEGER :: var_to_send, var_high_to_send
-     ! call mppsync()
+
+      DOUBLE PRECISION :: first_part_diadump_start, first_part_diadump_delta, first_part_diadump_finish
+      DOUBLE PRECISION :: v2d_diadump_start,gatherv_init_time,gatherv_fin_time,gatherv_delta_time,gatherv_sum_time,v2d_diadump_writing_start,v2d_diadump_writing_fin,v2d_writing_delta,v2d_writing_sum,v2d_diadump_finish,v2d_diadump_delta,v2d_diadump_max_time
+      DOUBLE PRECISION :: v3d_diadump_start,v3d_gatherv_init_time,v3d_gatherv_fin_time,v3d_gatherv_delta_time,v3d_gatherv_sum_time,v3d_diadump_writing_start,v3d_diadump_writing_fin,v3d_writing_delta,v3d_writing_sum,v3d_diadump_finish,v3d_diadump_delta,v3d_diadump_max_time 
+      DOUBLE PRECISION :: unpacking_2d, unpacking_2d_start, packing_time_2d,packing_time_2d_start
 ! ----------------------------------------
       IsBackup =  (datemean.eq.dateTo)
       if (lwp) write(*,*) 'diadump IsBackup = ',IsBackup, ' group ' ,FREQ_GROUP
@@ -61,7 +65,8 @@
        elapsed_time=elapsed_time_2
        DIR='AVE_FREQ_2/'
       END SELECT
-
+      
+      first_part_diadump_start = MPI_WTIME()
       if (lwp) then
           totsnIO   = Miss_val
           tottnIO   = Miss_val
@@ -225,7 +230,7 @@
       if(myrank == 0) then ! IF LABEL 4,
          if (IsBackup) then
 
-            call PhysDump_bkp(forcing_file, datefrom, dateTo,elapsed_time)
+            !call PhysDump_bkp(forcing_file, datefrom, dateTo,elapsed_time)
           else
             call PhysDump(forcing_file, datefrom, dateTo)
          endif
@@ -233,12 +238,17 @@
 
       endif !if ( freq_ave_phys.eq.FREQ_GROUP)
 
-
-
+      first_part_diadump_finish = MPI_WTIME()
+      first_part_diadump_delta = first_part_diadump_finish - first_part_diadump_start
+      
+      if(myrank==0)then
+                write(*,*)'firstpart_diadump_time is ',first_part_diadump_delta
+      end if
+        
       if (WRITING_RANK_WR) tottrnIO2d = Miss_val
 ! ******************  DIAGNOSTIC OUTPUT   2D *******************
 
-        
+        v2d_diadump_start = MPI_WTIME()  
         IF (FREQ_GROUP==1)then
                 elapsed_time=elapsed_time_1
                 DIR='AVE_FREQ_1/'
@@ -250,7 +260,7 @@
                 DIR='AVE_FREQ_2/'
                 n_dumping_cycles=matrix_diag_2d_2_row
         END IF
-
+        v2d_writing_sum = 0
 
         COUNTER_VAR_2d = 1
         COUNTER_VAR_HIGH_2d = 1
@@ -272,7 +282,7 @@
                                 var_to_send_2D = lowfreq_table_dia_2d_wri(counter_var_2d)
                                 !if (FREQ_GROUP.eq.1) var_high_to_send_2D = highfreq_table_dia_2d_wri(counter_var_high_2d)                        
 
-        
+                                packing_time_2d_start = MPI_WTIME()
                                 if (FREQ_GROUP.eq.2) then
                                         do ji =1 , jpi
                                                 i_contribution = jpj * (ji-1)
@@ -290,15 +300,33 @@
                                                 enddo
                                         enddo
                                 endif
+                                packing_time_2d = MPI_WTIME() - packing_time_2d_start
+                                if(myrank==0)then
+                                        write(*,*)'packingtime2dis',packing_time_2d
+                                end if
                                 counter_var_2d = counter_var_2d + 1
                                 if (FREQ_GROUP.eq.1) counter_var_high_2d = counter_var_high_2d + 1
-
+                                gatherv_init_time = MPI_Wtime()
                                 CALL MPI_GATHERV(buffDIA2d, sendcount_2d,MPI_DOUBLE_PRECISION, buffDIA2d_TOT,jprcv_count_2d,jpdispl_count_2d, MPI_DOUBLE_PRECISION,writing_rank, MPI_COMM_WORLD, IERR)
+                                gatherv_fin_time = MPI_Wtime()
+                                gatherv_delta_time = gatherv_fin_time - gatherv_init_time
+                !CALL MPI_Reduce( gatherv_delta_time,
+                !gatherv_sum_time,1, MPI_DOUBLE, MPI_SUM, 0,
+                !MPI_COMM_WORLD,IERROR)
+                                if(myrank==0)then
+                                        write(*,*)'gatherv_delta_2d_dia',gatherv_delta_time
+                                end if
 
                         END IF
                 END DO
+                !gatherv_delta_time = gatherv_fin_time - gatherv_init_time
+                !CALL MPI_Reduce( gatherv_delta_time, gatherv_sum_time,1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                !if(myrank==0)then
+                     !   write(*,*)' gatherv_sum_time_2d_dia is ',gatherv_sum_time
+                !end if
 
-        !---------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
         !if writitng rank assembling and dumping
 
                 IF (WRITING_RANK_WR)then
@@ -314,7 +342,7 @@
                         IF (var_to_store_diag_2d == "novars_input")then
                                 EXIT
                         ELSE
-
+                                unpacking_2d_start = MPI_WTIME()
                                 do idrank = 0,mpi_glcomm_size-1
                                          irange    = iPe_a(idrank+1) - iPd_a(idrank+1) + 1
                                          jrange    = jPe_a(idrank+1) - jPd_a(idrank+1) + 1
@@ -334,11 +362,16 @@
                                                 enddo
                                          enddo
                                 enddo
+                                unpacking_2d = MPI_WTIME() - unpacking_2d_start
+                                if(myrank==0)then
+                                        write(*,*)'unpackingtime2d is',unpacking_2d
+                                end if
                                 !if (FREQ_GROUP.eq.2)write(*,*) 'CHECK ', var_to_store_diag_2d,var_to_send_2d
                                 !if (FREQ_GROUP.eq.1) write(*,*)'CHECK_h', var_to_store_diag_2d, COUNTER_VAR_HIGH_2d
                                 bkpname     = DIR//'ave.'//datemean//'.'//trim(var_to_store_diag_2d)//'.nc.bkp'
                                 dia_file_nc = DIR//'ave.'//datemean//'.'//trim(var_to_store_diag_2d)//'.nc'
-
+                                
+                                v2d_diadump_writing_start = MPI_WTIME()
                                 if (IsBackup) then
                                         CALL WRITE_AVE_2d_BKP(bkpname,var_to_store_diag_2d,datefrom, dateTo,tottrnIO2d, elapsed_time)
 
@@ -347,7 +380,17 @@
                                         CALL WRITE_AVE_2d(dia_file_nc,var_to_store_diag_2d,datefrom,dateTo, d2f2d)
 
                                 endif
+                                v2d_diadump_writing_fin = MPI_WTIME()
+                                v2d_writing_delta = v2d_diadump_writing_fin - v2d_diadump_writing_start 
+                                !v2d_writing_sum = v2d_writing_sum + v2d_writing_delta
+                                if(myrank == 0)then
+                                        write(*,*)'2d_writing_delt_time',v2d_writing_delta, jv
+                                end if 
+        
                         end if
+                        !if(myrank == 0)then
+                        !        write(*,*)'2d_writing_sum_time is ', v2d_writing_sum
+                        !end if
                 END IF
         END DO DUMPING_LOOP_2d
 
@@ -358,9 +401,14 @@
                         tra_DIA_2d_IO_HIGH(:,:,:) = 0.
                 endif
         endif
-
+        v2d_diadump_finish = MPI_WTIME()
+        v2d_diadump_delta = v2d_diadump_finish - v2d_diadump_start
+        CALL MPI_Reduce( v2d_diadump_delta, v2d_diadump_max_time,3,MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD,IERROR)
+        if(myrank==0)then
+                write(*,*)'2d_diadump_max_time is ',v2d_diadump_max_time
+        end if
 !------------------------------------------------------------------------------------------------
-
+        v3d_diadump_start = MPI_WTIME()
         if (WRITING_RANK_WR) tottrnIO = Miss_val
 ! ! ******************  3D DIAGNOSTIC OUTPUT   *******************
 
@@ -378,7 +426,7 @@
                 n_dumping_cycles=matrix_diag_2_row
         END IF
 
-
+        v3d_writing_sum = 0
         COUNTER_VAR_diag = 1
         COUNTER_VAR_diag_HIGH = 1
 
@@ -427,10 +475,21 @@
                                 if (FREQ_GROUP.eq.1) counter_var_diag_high = counter_var_diag_high + 1
 
                                 !GATHERV TO THE WRITING RANK
-
+                                v3d_gatherv_init_time = MPI_Wtime()
                                 CALL MPI_GATHERV(buffDIA, sendcount,MPI_DOUBLE_PRECISION, buffDIA_TOT,jprcv_count, jpdispl_count,MPI_DOUBLE_PRECISION, writing_rank,MPI_COMM_WORLD, IERR)
+                                v3d_gatherv_fin_time = MPI_Wtime()
+                                v3d_gatherv_delta_time = v3d_gatherv_fin_time - v3d_gatherv_init_time
+                                !CALL MPI_Reduce(v3d_gatherv_delta_time,v3d_gatherv_sum_time,7,MPI_DOUBLE, MPI_SU, 0, MPI_COMM_WORLD,IERROR)
+                                if(myrank==0)then
+                                        write(*,*)' gatherv_delt_3d_dia',v3d_gatherv_delta_time
+                                end if
                         END IF
                 END DO
+                !v3d_gatherv_delta_time = v3d_gatherv_fin_time - v3d_gatherv_init_time
+                !CALL MPI_Reduce(v3d_gatherv_delta_time,v3d_gatherv_sum_time,7,MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                !if(myrank==0)then
+                !        write(*,*)' gatherv_sum_time_3d_dia is ',v3d_gatherv_sum_time
+!                end if
 
 ! *********** START WRITING **************************
                 IF (WRITING_RANK_WR)then
@@ -474,15 +533,22 @@
                                 !if (FREQ_GROUP.eq.1)write(*,*) 'CHECK_h', var_to_store_diag, COUNTER_VAR_diag_HIGH
                                 bkpname     = DIR//'ave.'//datemean//'.'//trim(var_to_store_diag)//'.nc.bkp'
                                 dia_file_nc = DIR//'ave.'//datemean//'.'//trim(var_to_store_diag)//'.nc'
-              
+                                v3d_diadump_writing_start = MPI_WTIME()
                                 if (IsBackup) then
                                         CALL WRITE_AVE_BKP(bkpname,var_to_store_diag,datefrom, dateTo,tottrnIO,elapsed_time,deflate_ave, deflate_level_ave)
                                 else
                                         CALL WRITE_AVE(dia_file_nc,var_to_store_diag,datefrom,dateTo, tottrnIO,deflate_ave, deflate_level_ave)
                                 endif
-
-
+                                v3d_diadump_writing_fin = MPI_WTIME()
+                                v3d_writing_delta = v3d_diadump_writing_fin - v3d_diadump_writing_start 
+                                !v3d_writing_sum = v3d_writing_sum + v3d_writing_delta
+                                if(myrank == 0)then
+                                        write(*,*)'v3d_writing_delt_time is',v3d_writing_delta
+                                end if
                         END IF
+                        !if(myrank == 0)then
+                        !        write(*,*)'v3d_writing_sum_time is ', v3d_writing_sum
+                        !end if
                 END IF
         END DO DUMPING_LOOP_3d
 
@@ -507,6 +573,12 @@
                 avtIO    = 0.
                 e3tIO    = 0
         endif
+        v3d_diadump_finish = MPI_WTIME()
+        v3d_diadump_delta = v3d_diadump_finish - v3d_diadump_start
+        CALL MPI_Reduce( v3d_diadump_delta, v3d_diadump_max_time,11,MPI_DOUBLE, MPI_MAX, 0,MPI_COMM_WORLD,IERROR)
+        if(myrank==0)then
+                write(*,*)'3d_diadump_max_time is ',v3d_diadump_max_time
+        end if
 
 
         end SUBROUTINE diadump

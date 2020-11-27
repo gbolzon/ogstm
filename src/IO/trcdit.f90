@@ -54,8 +54,8 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
         DOUBLE PRECISION :: start_time_trcdit_info,finish_time_trcdit_info, proctime_time_trcdit_info, max_time_trcdit_info
         DOUBLE PRECISION :: gatherv_fin_time,gatherv_init_time,gatherv_delta_time,gatherv_sum_time,gatherv_mean_time
         DOUBLE PRECISION :: writing_rank_fin_time, writing_rank_init_time,writing_rank_delta_time, writing_rank_sum_time
-
-
+        DOUBLE PRECISION :: packing_init_time,packing_fin_time,packing_delta_time, packing_sum_time
+        DOUBLE PRECISION :: unpacking_rank_init_time,unpacking_rank_fin_time,unpacking_rank_delta_time,unpacking_rank_sum_time
         !----------------------------------------------------------------------
         ! statement functions
         ! ===================
@@ -92,13 +92,14 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
         !-----------------------
         !starting big loop
         start_time_trcdit_info= MPI_Wtime()
-
+        gatherv_fin_time = 0
         COUNTER_VAR = 1
         COUNTER_VAR_HIGH = 1
-
+        WRITING_RANK_SUM_TIME = 0
+        unpacking_rank_sum_time = 0
         DUMPING_LOOP: DO jv = 1, n_dumping_cycles
 
-                gatherv_init_time = MPI_Wtime()
+                !packing_init_time = MPI_Wtime()
 
                 DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
 
@@ -109,7 +110,7 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         else if (COUNTER_VAR_HIGH > JPTRA_HIGH)then
                                 EXIT
                         ELSE
-
+                                packing_init_time = MPI_Wtime()
                                 if (FREQ_GROUP.eq.2) then
                                         do ji =1 , jpi
                                                 i_contribution= jpk*jpj * (ji - 1 )
@@ -133,27 +134,41 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                                 enddo
                                         enddo
                                 endif
-
+                                packing_fin_time = MPI_Wtime() 
                                 counter_var = counter_var + 1
                                 if (FREQ_GROUP.eq.1) counter_var_high = counter_var_high + 1
-
+                                gatherv_init_time = MPI_Wtime()
                                 !GATHERV TO THE WRITING RANK
                                 CALL MPI_GATHERV(bufftrn, sendcount, MPI_DOUBLE_PRECISION, bufftrn_TOT, jprcv_count, jpdispl_count, MPI_DOUBLE_PRECISION, writing_rank, MPI_COMM_WORLD, IERR)
-
+                                gatherv_fin_time = MPI_Wtime()
+                                packing_delta_time = packing_fin_time - packing_init_time
+                                gatherv_delta_time = gatherv_fin_time - gatherv_init_time
+                                CALL MPI_Reduce( packing_delta_time,packing_sum_time, 2,MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                                CALL MPI_Reduce( gatherv_delta_time,gatherv_sum_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD,IERROR)
+                                if(myrank==0)then 
+                                        write(*,*)' gatherv_max_time_trcdit is',gatherv_sum_time
+                                        write(*,*)'packing_sum_time_trcdit is ',packing_sum_time
+                                end if
                         END IF
 
                 END DO
-                gatherv_fin_time = MPI_Wtime()
+                !packing_fin_time = MPI_Wtime()
 
-                gatherv_delta_time = gatherv_fin_time - gatherv_init_time
-                CALL MPI_Reduce( gatherv_delta_time, gatherv_sum_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
-
+                !gatherv_delta_time = gatherv_fin_time - gatherv_init_time
+                !packing_delta_time = packing_fin_time - packing_init_time
+                !CALL MPI_Reduce( gatherv_delta_time, gatherv_sum_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                !CALL MPI_Reduce( packing_delta_time, packing_sum_time, 2,MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD,IERROR)
+                !if(myrank==0)then
+                        !write(*,*)' gatherv_sum_time_trcdit is ',gatherv_sum_time
+                 !       write(*,*)'packing_sum_time_trcdit is ', packing_sum_time
+                !end if
 
                 ! *************** COLLECTING DATA *****************************
 
                 IF (WRITING_RANK_WR)then
 
                         writing_rank_init_time = MPI_Wtime()
+                        unpacking_rank_init_time = MPI_WTIME()
 
                         ind_col = (myrank / n_ranks_per_node)+1
 
@@ -192,7 +207,8 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                                         enddo
                                         enddo
                                 END DO
-
+                                unpacking_rank_fin_time = MPI_WTIME()
+        
                                 output_file_nc = DIR//'ave.'//datemean//'.'//trim(var_to_store)//'.nc'
                                 bkpname = DIR//'ave.'//datemean//'.'//trim(var_to_store)//'.nc.bkp'
 
@@ -202,10 +218,17 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                         CALL WRITE_AVE(output_file_nc,var_to_store,datefrom, dateTo, tottrnIO, deflate_ave, deflate_level_ave)
                                 endif
                         END IF
-                        !writing_rank_fin_time = MPI_Wtime()
-                        !writing_rank_delta_time = writing_rank_fin_time - writing_rank_init_time
-                        !writing_rank_sum_time = writing_rank_delta_time + writing_rank_sum_time
-                        !write(*,*)'writingtime', writing_rank_sum_time,'   ',jv, '   ', myrank
+                        writing_rank_fin_time = MPI_Wtime()
+                        
+                        writing_rank_delta_time = writing_rank_fin_time - writing_rank_init_time
+                        unpacking_rank_delta_time = unpacking_rank_fin_time - unpacking_rank_init_time
+                        writing_rank_sum_time = writing_rank_delta_time + writing_rank_sum_time
+                        unpacking_rank_sum_time = unpacking_rank_delta_time + unpacking_rank_sum_time
+                        if (myrank==0) then
+        
+                                write(*,*)'writingtottime', writing_rank_sum_time,' ',jv
+                                write(*,*)'unpackingtottime',unpacking_rank_sum_time, ' ',jv
+                        end if
                 END IF
         END DO DUMPING_LOOP
 
@@ -217,10 +240,10 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                 endif
         end if
 
-        finish_time_trcdit_info= MPI_Wtime()
-        proctime_time_trcdit_info=finish_time_trcdit_info - start_time_trcdit_info
+        !finish_time_trcdit_info= MPI_Wtime()
+        !proctime_time_trcdit_info=finish_time_trcdit_info - start_time_trcdit_info
 
-        CALL MPI_Reduce( proctime_time_trcdit_info,max_time_trcdit_info, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD,IERROR)
+        !CALL MPI_Reduce( proctime_time_trcdit_info,max_time_trcdit_info, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD,IERROR)
 
         !if(myrank == 0) then
         !        write(*,*) 'TRCDIT TIME is', max_time_trcdit_info
