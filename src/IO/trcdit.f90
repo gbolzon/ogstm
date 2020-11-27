@@ -40,7 +40,7 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
         !new declarations
         INTEGER counter_var, counter_var_high, new_counter_var, new_counter_var_high, nVARS, jv, ivar, n_dumping_cycles
         INTEGER col_var, row_var, writing_rank
-        CHARACTER(len=20), DIMENSION(nodes) :: matrix_row_to_write
+        !CHARACTER(len=20), DIMENSION(nodes*num_of_wr_procs_perNODE) :: matrix_row_to_write
 
         CHARACTER(LEN=56) output_file_nc  ! AVE_FREQ_1/ave.20091231-12:00:00.P1n.nc
         CHARACTER(LEN=20) var
@@ -99,9 +99,7 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
         unpacking_rank_sum_time = 0
         DUMPING_LOOP: DO jv = 1, n_dumping_cycles
 
-                !packing_init_time = MPI_Wtime()
-
-                DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE!number of variables for each round corresponds to the number of nodes
 
                         writing_rank = writing_procs(ivar)
 
@@ -170,7 +168,16 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         writing_rank_init_time = MPI_Wtime()
                         unpacking_rank_init_time = MPI_WTIME()
 
-                        ind_col = (myrank / n_ranks_per_node)+1
+                        !ind_col = (myrank / n_ranks_per_node)+1
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        !write(*,*) 'myrankis', myrank,'indcol is',ind_col,'writing_proc is', writing_procs(i),'iis', i, 'jvis', jv
+                                        exit
+                                end if
+                        end do
+                        !write(*,*) 'myrankis', myrank,' ', 'indcol is',ind_col,'writing_proc is', writing_procs(i)
+        
 
                         if (FREQ_GROUP.eq.2) then
                                 var_to_store = matrix_state_2(jv,ind_col)%var_name
@@ -178,7 +185,10 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                                 var_to_store = matrix_state_1(jv,ind_col)%var_name
                         end if
 
+                        write(*,*)'var_to_store is',var_to_store,' ', myrank,' ', jv,' ',ind_col
+
                         IF (var_to_store == "novars_input")then
+                                !write(*,*)'exit_dumping', myrank
                                 EXIT
                         ELSE
                                 DO idrank = 0,mpi_glcomm_size-1
@@ -231,7 +241,7 @@ SUBROUTINE trcdit(datemean,datefrom,dateTo,FREQ_GROUP)
                         end if
                 END IF
         END DO DUMPING_LOOP
-
+       
         if (.not.IsBackup) then
                 if (FREQ_GROUP.eq.2) then
                         traIO(:,:,:,:) = 0.  !      we reset matrix for new average

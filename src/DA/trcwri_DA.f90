@@ -41,7 +41,7 @@ SUBROUTINE trcwriDA(datestring)
 ! local declarations
 ! ==================
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji,jn
+        INTEGER jk,jj,ji,jn,i
         INTEGER s, nc, counter
         integer timid, depid, yid, xid, idvar
         double precision julian
@@ -84,8 +84,13 @@ SUBROUTINE trcwriDA(datestring)
  
         DA_LOOP: DO jv = 1, n_dumping_cycles
 
+<<<<<<< HEAD
                 DO ivar = 1 , nodes!number of variables for each round corresponds to the number of nodes
                         packing_trcwrida_init_time = MPI_Wtime()
+=======
+                DO ivar = 1 , nodes*num_of_wr_procs_perNODE!number of variables for each round corresponds to the number of nodes
+
+>>>>>>> 2a6e2ff45c1648244bcf74b65b8928f989d0c3c4
                         writing_rank = writing_procs(ivar)
 
                         IF (COUNTER_VAR_DA + PX_DA > num_DA_vars )then
@@ -132,8 +137,15 @@ SUBROUTINE trcwriDA(datestring)
         !WRITING RANKS
 
                 if(WRITING_RANK_WR) then
-
-                        ind_col = (myrank / n_ranks_per_node)+1
+                                
+                        do i=1, nodes*num_of_wr_procs_perNODE
+                                if(myrank == writing_procs(i))then
+                                        ind_col=i
+                                        exit
+                                end if
+                        end do 
+                
+!                        ind_col = (myrank / n_ranks_per_node)+1
 
                         var_to_store = matrix_DA(jv,ind_col)%var_name
                         unpacking_trcwrida_rank_init_time = MPI_WTIME()
@@ -230,7 +242,7 @@ SUBROUTINE CHL_subroutine(datestring)
         CHARACTER(LEN=17), INTENT(IN) :: datestring
 
         double precision ::  Miss_val =1.e20
-        INTEGER jk,jj,ji,jn
+        INTEGER jk,jj,ji,jn,i
         INTEGER s, nc, counter
         integer timid, depid, yid, xid, idvar
         double precision julian

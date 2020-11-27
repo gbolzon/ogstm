@@ -51,6 +51,7 @@
    internal_sponging = .true.
    ingv_files_direct_reading = .true.
    ingv_lon_shift   = 222
+   num_of_wr_procs_perNODE = 2
 /
 
 

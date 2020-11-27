@@ -314,7 +314,10 @@
       double precision, allocatable ::  buf(:,:,:)
       double precision, allocatable ::  buf2(:,:)
       INTEGER, allocatable, dimension(:) :: highfreq_table,highfreq_table_dia, highfreq_table_dia2d
+!!-------------------------------------------------------------------------
+!I/O parameter
 
+      INTEGER :: num_of_wr_procs_perNODE
 !!----------------------------------------------------------------------
 !!
 !! COMMON /cot3ad/ non-centered advection scheme (smolarkiewicz)
