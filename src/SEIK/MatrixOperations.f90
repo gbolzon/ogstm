@@ -4,8 +4,8 @@ subroutine ForecastMatrixOp
     implicit none
     integer :: ierr, indexi
     
-    CovSmoother1part=TTTSeik+LTQ1L
-    CovSeik1=TTTSeik
+    CovSeik1=ForgettingFactor*TTTSeik
+    CovSmoother1part=CovSeik1+LTQ1L
     TempMatrixSeik=CovSmoother1part
     call InvMatMul(TempMatrixSeik,CovSeik1,SeikDim,ierr)
     

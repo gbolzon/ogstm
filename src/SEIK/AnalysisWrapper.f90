@@ -24,6 +24,10 @@ subroutine AnalysisWrapper(DateString)
             call mpi_allgatherv(BaseMember,SpaceDim,mpi_real8,LSeik,MpiCount,MpiDisplacement,mpi_real8,EnsembleComm,ierr)
         end if
         
+    else if (.not.UseLocalForecast) then
+        if (EnsembleRank==NotWorkingMember) then
+            call MPI_Bcast(CovSeik1,SeikDim*SeikDim, MPI_Real8,0, LocalComm, ierr) 
+        end if
     end if
     
     CALL MainAssimilationSeik(DateString) 

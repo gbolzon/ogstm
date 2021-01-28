@@ -11,7 +11,7 @@
       INTEGER :: EnsembleComm, EnsembleRank, EnsembleSize !, BaseComm
       
       integer, parameter :: NotWorkingMember=0, UnitSEIK=1001
-      logical, parameter :: UseInflation=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
+      logical, parameter :: UseInflationOnly=.false., UseHighOrder=.true., UseModSeik=.false., UseMaxVarSEIK=.true., UseDiffCov=.false., UseCholesky=.false.
       logical, parameter :: UseLocalForecast=.true., UseLocalAnalysis=.true., UseLocalObsDumping=.true.
       logical, parameter :: UseCutOffSat=.true., UseCutOffN=.true.
       character(len=*), parameter :: PCANeeded="none" ! "read" = read the matrices in the SAVE folder and do pca, "write"= save the matrices and do pca, anything else means no pca 
@@ -115,7 +115,7 @@
             
             ObsSpaceDim=jpj*jpi
             
-            ForgettingFactor=1.0d0 !0.9d0
+            ForgettingFactor=0.9d0 !1.0d0 !0.9d0
             
             !CutLeft=(.not.(nldi==1)) !these are definied in myalloc, here we don't have nldi etc...
             !CutRight=(.not.(nlei==jpi))
@@ -490,7 +490,8 @@
                     allocate(isuppz(2*SeikDim))
                     isuppz = huge(isuppz(1))
 
-                    allocate(work(SeikDim*SeikDim))
+                    !allocate(work(SeikDim*SeikDim))
+                    allocate(work(100*SeikDim))
                     work = huge(work(1))
 
                     allocate(iwork(SeikDim*SeikDim))

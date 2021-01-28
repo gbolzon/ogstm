@@ -88,7 +88,7 @@ subroutine LocalForecast
             call mpi_allgatherv(0,0,mpi_real8,WLSeik,WDiffMpiCount,WDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
         end if
         
-        if (UseInflation) then
+        if (UseInflationOnly) then
             CovSeik1=ForgettingFactor*TTTSeik
         else
         
@@ -144,7 +144,7 @@ call mpi_barrier(LocalComm, ierr)
                         
 if (.false.) then !non locale
         if (MyRank==0) then
-            if (UseInflation) then
+            if (UseInflationOnly) then
                 CovSeik1=ForgettingFactor*TTTSeik
             else
                 call mpi_gatherv(0,0,mpi_real8,LTQ1L,MpiCountCov,MpiDisplacementCov,mpi_real8,NotWorkingMember, EnsembleComm, ierr)
@@ -165,7 +165,7 @@ end if
             call mpi_allgatherv(WDiffBaseMember,WDiffSpaceDim,mpi_real8,WLSeik,WDiffMpiCount,WDiffMpiDisplacement,mpi_real8,EnsembleComm,ierr)
         end if
         
-        if (.not.UseInflation) then
+        if (.not.UseInflationOnly) then
         
             do indexi=1, SeikDim
                 TempVecSeik=reshape(BaseMember,(/SpaceDim/))
