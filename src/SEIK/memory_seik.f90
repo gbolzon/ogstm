@@ -98,6 +98,7 @@
       double precision, allocatable, dimension(:,:,:,:) :: LTQ1L_sjis, HLTR1HL_sjis
       double precision, pointer :: LSeik_reshape(:,:,:,:,:)
       !double precision, allocatable :: LSeik_reshape(:,:,:,:,:)
+      
                 
       CONTAINS
        
@@ -115,7 +116,7 @@
             
             ObsSpaceDim=jpj*jpi
             
-            ForgettingFactor=0.9d0 !1.0d0 !0.9d0
+            ForgettingFactor=0.5d0 !0.7d0 !1.0d0 !0.9d0
             
             !CutLeft=(.not.(nldi==1)) !these are definied in myalloc, here we don't have nldi etc...
             !CutRight=(.not.(nlei==jpi))
@@ -124,7 +125,7 @@
             
             allocate(ModelErrorDiag1(SpaceDim))
             ModelErrorDiag1 = huge(ModelErrorDiag1(1))
-            ModelErrorDiag1 = 1/(log(1.075d0)**2) !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
+            ModelErrorDiag1 = 1/(log(1.075d0)**2)/5 !1/(log(1.5d0)**2) !*500 !500=1500 profondita' media / 3 profondita' prima cella. significa che stiamo considerando la varianza sulla superficie
             
             ObsErrorValue=1.006d0 !1.015d0 !1.03d0
             ObsAdditiveError=0.0002d0 !0.0002d0 !0.002d0

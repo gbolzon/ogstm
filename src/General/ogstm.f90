@@ -421,6 +421,10 @@ SUBROUTINE ogstm_finalize()
       call clean_memory_io()
       call clean_memory_adv()
       call clean_memory_zdf()
+      
+#ifdef ExecDA
+    call SeikDeInit
+#endif
 
       END SUBROUTINE ogstm_finalize
 

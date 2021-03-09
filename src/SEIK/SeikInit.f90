@@ -3,6 +3,7 @@ subroutine SeikInit
     use mpi
     USE DA_mem
     use DAVariables
+    use TimeManagerSeik
     
     implicit none
     
@@ -353,6 +354,8 @@ end if
         
         
     end if
+    
+    call LoadTimeManagerSeik
 
 end subroutine
 

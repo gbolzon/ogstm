@@ -8,6 +8,7 @@ MODULE module_step
       USE mpi
       USE mod_atmbc
       USE mod_cbc
+      use TimeManagerSeik
       ! USE mod_gibbc
       ! USE mod_tinbc
 
@@ -249,7 +250,8 @@ use StringSEIK
 
 ! Ensemble creation
 
-        if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
+        !if ((SeikDim.gt.0).and.(datestring(10:17).eq."00:00:00")) then
+        if ((SeikDim.gt.0).and.(isaforecast(datestring))) then
             call SeikCreateEnsemble()
             trb=trn
 
@@ -304,7 +306,8 @@ end do
 end if
 
 #ifdef ExecDA
-        if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
+        !if ((SeikDim.gt.0).and.(NextDateString(10:17).eq."00:00:00")) then
+        if ((SeikDim.gt.0).and.(isaforecast(NextDateString))) then
 
             if (.false.) then !.true. if you want to save the ensamble after the evolution
                 call trcwriSeik(datestring, EnsembleRank, 'PENSEMBLE/', trn)
